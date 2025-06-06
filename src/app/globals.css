@@ -23,8 +23,8 @@
     --muted: 45 20% 92%; /* #EDEBE8 - For TabsList background */
     --muted-foreground: 20 15% 45%; /* Muted text color */
 
-    --accent: 20 20% 70%;
-    --accent-foreground: 20 15% 20%;
+    --accent: 280 50% 92%; /* #E6D9EB - Light desaturated violet */
+    --accent-foreground: 280 25% 30%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
@@ -43,6 +43,8 @@
     --paper-pastel-bg: 320 70% 95%; /* Light pastel pink/purple for editor */
     --paper-pastel-fg: 320 30% 35%; /* Darker pastel for text on editor */
     
+    /* Base line height for Textarea (text-base * leading-relaxed = 1rem * 1.625 = 1.625rem) */
+    --text-line-height: 1.625rem; 
     --line-color: var(--border); /* Color for lines/grid on paper, using main border color */
   }
 
@@ -66,8 +68,8 @@
     --muted: 240 5% 18%; /* Muted for dark mode TabsList */
     --muted-foreground: 0 0% 60%;
 
-    --accent: 20 20% 50%;
-    --accent-foreground: 0 0% 95%;
+    --accent: 280 30% 85%;
+    --accent-foreground: 280 50% 25%;
 
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
@@ -100,8 +102,6 @@
 }
 
 @layer utilities {
-  /* Removed frosted-tabs-list and frosted-tab-trigger as we'll use default ShadCN Tab styling with overrides */
-
   .page-theme-light {
     background-color: hsl(var(--paper-light-bg));
     color: hsl(var(--paper-light-fg));
@@ -116,13 +116,17 @@
   }
 
   .page-bg-lined {
-    background-image: linear-gradient(to bottom, transparent calc(2em - 1px), hsl(var(--line-color)) calc(2em - 1px));
-    background-size: 100% 2em; /* Comfortable line spacing */
+    background-image: linear-gradient(to bottom, 
+      transparent calc(var(--text-line-height) - 1px), 
+      hsl(var(--line-color)) calc(var(--text-line-height) - 1px),
+      hsl(var(--line-color)) var(--text-line-height)
+    );
+    background-size: 100% var(--text-line-height);
   }
   .page-bg-grid {
     background-image: 
       linear-gradient(to right, hsl(var(--line-color)) 1px, transparent 1px), 
       linear-gradient(to bottom, hsl(var(--line-color)) 1px, transparent 1px);
-    background-size: 20px 20px;
+    background-size: 20px 20px; /* Standard grid size, can be themed if needed */
   }
 }
