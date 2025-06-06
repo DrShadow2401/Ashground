@@ -30,7 +30,18 @@ export default function Home() {
 
     if (savedNote) setNoteContent(savedNote);
     if (savedBg) setPageBackground(savedBg);
-    if (savedTheme) setPageTheme(savedTheme);
+    if (savedTheme) {
+      setPageTheme(savedTheme);
+      // Apply initial app theme based on saved editor theme
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    } else {
+      // Default to light app theme if no saved theme
+       document.documentElement.classList.remove('dark');
+    }
   }, []);
 
   useEffect(() => {
@@ -48,6 +59,11 @@ export default function Home() {
   useEffect(() => {
     if(isMounted) {
       localStorage.setItem('ashground_theme', pageTheme);
+      if (pageTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
     }
   }, [pageTheme, isMounted]);
 
