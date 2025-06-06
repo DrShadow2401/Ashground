@@ -4,46 +4,46 @@
 
 @layer base {
   :root {
-    --background: 48 43% 96%; /* #F9F6EF - Very light desaturated yellow */
-    --background-end: 48 43% 92%; /* Slightly darker for gradient */
-    --foreground: 30 10% 25%; /* Dark grayish brown for text */
+    --background: 45 30% 96%; /* #F9F7F5 - Very light warm grey */
+    --background-end: 45 30% 93%; /* Slightly darker for gradient */
+    --foreground: 20 15% 30%; /* #524D4A - Dark brownish grey */
 
-    --card: 40 50% 96%; /* #F8F5F0 - Off-white for general cards/tool area bg */
-    --card-foreground: 30 10% 25%;
+    --card: 0 0% 100%; /* #FFFFFF - White for cards, editor, active tab */
+    --card-foreground: 20 15% 30%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
+    --popover-foreground: 20 15% 30%;
 
-    --primary: 280 33% 88%; /* #E6D9EB - Light desaturated violet (Accent) */
-    --primary-foreground: 280 25% 25%; /* Darker violet for text on accent */
+    --primary: 20 20% 70%; /* #C2BBB6 - Subtle warm grey accent */
+    --primary-foreground: 20 15% 20%; /* Darker text for on primary */
 
-    --secondary: 45 30% 92%; /* Lighter variant of background for secondary elements */
-    --secondary-foreground: 30 10% 25%;
+    --secondary: 45 25% 94%; /* #F3F1EF - Lighter variant for secondary elements */
+    --secondary-foreground: 20 15% 30%;
 
-    --muted: 45 30% 94%; /* For muted elements, slightly lighter than secondary */
-    --muted-foreground: 30 10% 45%; /* Muted text color */
+    --muted: 45 20% 92%; /* #EDEBE8 - For TabsList background */
+    --muted-foreground: 20 15% 45%; /* Muted text color */
 
-    --accent: 280 33% 88%; /* #E6D9EB - Same as primary */
-    --accent-foreground: 280 25% 25%;
+    --accent: 20 20% 70%;
+    --accent-foreground: 20 15% 20%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 40 30% 88%; /* Border color, related to card/paper but slightly darker/more visible */
-    --input: 40 30% 88%;
-    --ring: 280 33% 82%; /* Slightly darker accent for rings */
+    --border: 45 20% 85%; /* #E3E0DD - Subtle border */
+    --input: 45 20% 85%;
+    --ring: 20 20% 65%; /* Slightly darker accent for rings */
 
     --radius: 0.5rem;
 
     /* Page specific theme variables */
-    --paper-light-bg: 40 50% 96%; /* #F8F5F0 */
-    --paper-light-fg: 30 10% 25%;
-    --paper-dark-bg: 240 6% 18%; /* Dark gray for dark page theme */
-    --paper-dark-fg: 40 30% 90%; /* Light text for dark page theme */
-    --paper-pastel-bg: 320 50% 95%; /* Light pastel pink/purple */
-    --paper-pastel-fg: 320 30% 35%; /* Darker pastel for text */
+    --paper-light-bg: 0 0% 100%; /* White for light theme editor card */
+    --paper-light-fg: 20 15% 30%; /* Match foreground for text on light editor */
+    --paper-dark-bg: 20 10% 20%; /* Dark gray for dark page theme editor */
+    --paper-dark-fg: 0 0% 90%; /* Light text for dark page theme editor */
+    --paper-pastel-bg: 320 70% 95%; /* Light pastel pink/purple for editor */
+    --paper-pastel-fg: 320 30% 35%; /* Darker pastel for text on editor */
     
-    --line-color: 30 10% 80%; /* Color for lines/grid on paper */
+    --line-color: var(--border); /* Color for lines/grid on paper, using main border color */
   }
 
   .dark {
@@ -51,36 +51,36 @@
     --background-end: 240 5% 8%;
     --foreground: 0 0% 95%;
 
-    --card: 240 5% 15%;
+    --card: 240 5% 12%; /* Slightly lighter card for dark mode */
     --card-foreground: 0 0% 95%;
 
     --popover: 240 5% 10%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 280 40% 70%;
-    --primary-foreground: 280 15% 15%;
+    --primary: 20 20% 50%; /* Darker subtle warm grey for dark mode */
+    --primary-foreground: 0 0% 95%;
 
     --secondary: 240 5% 20%;
     --secondary-foreground: 0 0% 95%;
 
-    --muted: 240 5% 22%;
+    --muted: 240 5% 18%; /* Muted for dark mode TabsList */
     --muted-foreground: 0 0% 60%;
 
-    --accent: 280 40% 70%;
-    --accent-foreground: 280 15% 15%;
+    --accent: 20 20% 50%;
+    --accent-foreground: 0 0% 95%;
 
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 240 5% 25%;
     --input: 240 5% 25%;
-    --ring: 280 40% 60%;
+    --ring: 20 20% 45%;
 
     /* Page specific theme variables for dark mode */
-    --paper-light-bg: 240 6% 18%; 
-    --paper-light-fg: 40 30% 90%;
-    --paper-dark-bg: 40 50% 96%; 
-    --paper-dark-fg: 30 10% 25%;
+    --paper-light-bg: 240 5% 12%; /* Match card for light theme on dark mode editor */
+    --paper-light-fg: 0 0% 95%;
+    --paper-dark-bg: 0 0% 100%; /* White editor for dark theme (inverted example) */
+    --paper-dark-fg: 20 15% 30%;
     --paper-pastel-bg: 320 30% 25%; 
     --paper-pastel-fg: 320 50% 90%;
 
@@ -100,15 +100,7 @@
 }
 
 @layer utilities {
-  .frosted-tabs-list {
-    @apply inline-flex h-10 items-center justify-center rounded-lg bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-lg border border-white/30 dark:border-black/30 p-1;
-  }
-  .frosted-tab-trigger {
-    @apply inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 text-foreground/80 hover:bg-accent/30 hover:text-accent-foreground;
-  }
-  .frosted-tab-trigger[data-state="active"] {
-    @apply bg-accent/70 text-accent-foreground shadow-sm;
-  }
+  /* Removed frosted-tabs-list and frosted-tab-trigger as we'll use default ShadCN Tab styling with overrides */
 
   .page-theme-light {
     background-color: hsl(var(--paper-light-bg));

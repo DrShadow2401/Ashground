@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import AshgroundHeader from '@/components/ashground-header';
 import PageEditor from '@/components/page-editor';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import HomeTools from '@/components/tool-sections/home-tools';
+import HomeTools from '@/components/tool-sections/home-tools'; // Will be used if Home tab needs more than editor
 import DrawTools from '@/components/tool-sections/draw-tools';
 import ViewTools from '@/components/tool-sections/view-tools';
 import ExportTools from '@/components/tool-sections/export-tools';
@@ -19,7 +19,6 @@ export default function Home() {
   const [pageBackground, setPageBackground] = useState<PageBackground>('plain');
   const [pageTheme, setPageTheme] = useState<PageTheme>('light');
   
-  // Avoid hydration mismatch for localStorage
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -31,7 +30,6 @@ export default function Home() {
     if (savedNote) setNoteContent(savedNote);
     if (savedBg) setPageBackground(savedBg);
     if (savedTheme) setPageTheme(savedTheme);
-
   }, []);
 
   useEffect(() => {
@@ -52,9 +50,7 @@ export default function Home() {
     }
   }, [pageTheme, isMounted]);
 
-
   if (!isMounted) {
-    // Optional: render a loading state or null
     return null; 
   }
 
@@ -69,38 +65,48 @@ export default function Home() {
     <main className="flex flex-col items-center min-h-screen py-6 md:py-10 px-4">
       <AshgroundHeader />
 
-      <div className="w-full max-w-4xl mt-6 md:mt-8">
-        <Tabs defaultValue="home" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="frosted-tabs-list mx-auto w-fit">
-            {tabItems.map(tab => (
-              <TabsTrigger key={tab.value} value={tab.value} className="frosted-tab-trigger">
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+      <Tabs defaultValue="home" value={activeTab} onValueChange={setActiveTab} className="w-full max-w-4xl mt-6 md:mt-8">
+        <TabsList className="mx-auto w-fit bg-muted rounded-lg shadow-md p-1 mb-8">
+          {tabItems.map(tab => (
+            <TabsTrigger 
+              key={tab.value} 
+              value={tab.value} 
+              className="px-4 py-1.5 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-lg rounded-md text-sm"
+            >
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
-          <div className="mt-6 p-4 rounded-lg shadow-lg bg-card/60 dark:bg-card/60 backdrop-blur-sm border border-foreground/10 min-h-[80px] mb-8">
-            <TabsContent value="home" className="mt-0"><HomeTools /></TabsContent>
-            <TabsContent value="draw" className="mt-0"><DrawTools /></TabsContent>
-            <TabsContent value="view" className="mt-0">
-              <ViewTools
-                selectedBackground={pageBackground}
-                onBackgroundChange={setPageBackground}
-                selectedTheme={pageTheme}
-                onThemeChange={setPageTheme}
-              />
-            </TabsContent>
-            <TabsContent value="export" className="mt-0"><ExportTools noteContent={noteContent} /></TabsContent>
+        <TabsContent value="home" className="mt-0">
+          <PageEditor
+            noteContent={noteContent}
+            onNoteChange={setNoteContent}
+            backgroundStyle={pageBackground} // ViewTools will control editor's background (lines/grid)
+            pageTheme={pageTheme} // ViewTools will control editor's theme (light/dark/pastel card)
+          />
+        </TabsContent>
+        <TabsContent value="draw" className="mt-0">
+          <div className="p-4 rounded-lg shadow-lg bg-card min-h-[120px]">
+            <DrawTools />
           </div>
-        </Tabs>
-      </div>
-
-      <PageEditor
-        noteContent={noteContent}
-        onNoteChange={setNoteContent}
-        backgroundStyle={pageBackground}
-        pageTheme={pageTheme}
-      />
+        </TabsContent>
+        <TabsContent value="view" className="mt-0">
+           <div className="p-4 rounded-lg shadow-lg bg-card min-h-[120px]">
+            <ViewTools
+              selectedBackground={pageBackground}
+              onBackgroundChange={setPageBackground}
+              selectedTheme={pageTheme}
+              onThemeChange={setPageTheme}
+            />
+          </div>
+        </TabsContent>
+        <TabsContent value="export" className="mt-0">
+          <div className="p-4 rounded-lg shadow-lg bg-card min-h-[120px]">
+            <ExportTools noteContent={noteContent} />
+          </div>
+        </TabsContent>
+      </Tabs>
     </main>
   );
 }
