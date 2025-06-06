@@ -47,7 +47,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
       </h2>
       <div
         className={cn(
-          'flex-grow relative', // This div will take the remaining space and host the background
+          'flex-1 relative flex flex-col min-h-0', 
           backgroundClassMap[backgroundStyle]
         )}
       >
@@ -56,7 +56,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
           onChange={(e) => onNoteChange(e.target.value)}
           placeholder={placeholderText}
           className={cn(
-            "w-full h-full bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-base leading-relaxed font-body resize-none",
+            "w-full flex-1 bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-base leading-relaxed font-body resize-none",
             textAreaPaddingTop
           )}
         />
