@@ -1,10 +1,12 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import AshgroundHeader from '@/components/ashground-header';
 import PageEditor from '@/components/page-editor';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import HomeTools from '@/components/tool-sections/home-tools'; // Will be used if Home tab needs more than editor
+// HomeTools is not used when PageEditor is directly in the Home tab content.
+// import HomeTools from '@/components/tool-sections/home-tools'; 
 import DrawTools from '@/components/tool-sections/draw-tools';
 import ViewTools from '@/components/tool-sections/view-tools';
 import ExportTools from '@/components/tool-sections/export-tools';
@@ -51,6 +53,7 @@ export default function Home() {
   }, [pageTheme, isMounted]);
 
   if (!isMounted) {
+    // Render nothing or a loading indicator SSR/hydration mismatch
     return null; 
   }
 
@@ -66,12 +69,12 @@ export default function Home() {
       <AshgroundHeader />
 
       <Tabs defaultValue="home" value={activeTab} onValueChange={setActiveTab} className="w-full max-w-4xl mt-6 md:mt-8">
-        <TabsList className="mx-auto w-fit bg-muted rounded-lg shadow-md p-1 mb-8">
+        <TabsList className="mx-auto w-full max-w-sm bg-card rounded-xl shadow-lg p-1.5 mb-8 flex justify-around items-center">
           {tabItems.map(tab => (
             <TabsTrigger 
               key={tab.value} 
               value={tab.value} 
-              className="px-4 py-1.5 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-lg rounded-md text-sm"
+              className="px-3 py-1.5 data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground hover:text-foreground/80 transition-colors rounded-md text-sm"
             >
               {tab.label}
             </TabsTrigger>
@@ -79,20 +82,21 @@ export default function Home() {
         </TabsList>
 
         <TabsContent value="home" className="mt-0">
+          {/* PageEditor is now directly part of the "Home" tab content */}
           <PageEditor
             noteContent={noteContent}
             onNoteChange={setNoteContent}
-            backgroundStyle={pageBackground} // ViewTools will control editor's background (lines/grid)
-            pageTheme={pageTheme} // ViewTools will control editor's theme (light/dark/pastel card)
+            backgroundStyle={pageBackground} 
+            pageTheme={pageTheme} 
           />
         </TabsContent>
         <TabsContent value="draw" className="mt-0">
-          <div className="p-4 rounded-lg shadow-lg bg-card min-h-[120px]">
+          <div className="p-4 rounded-lg shadow-lg bg-card min-h-[120px]  max-w-3xl mx-auto">
             <DrawTools />
           </div>
         </TabsContent>
         <TabsContent value="view" className="mt-0">
-           <div className="p-4 rounded-lg shadow-lg bg-card min-h-[120px]">
+           <div className="p-4 rounded-lg shadow-lg bg-card min-h-[120px]  max-w-3xl mx-auto">
             <ViewTools
               selectedBackground={pageBackground}
               onBackgroundChange={setPageBackground}
@@ -102,7 +106,7 @@ export default function Home() {
           </div>
         </TabsContent>
         <TabsContent value="export" className="mt-0">
-          <div className="p-4 rounded-lg shadow-lg bg-card min-h-[120px]">
+          <div className="p-4 rounded-lg shadow-lg bg-card min-h-[120px]  max-w-3xl mx-auto">
             <ExportTools noteContent={noteContent} />
           </div>
         </TabsContent>
