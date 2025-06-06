@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import AshgroundHeader from '@/components/ashground-header';
 import PageEditor from '@/components/page-editor';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import HomeTools from '@/components/tool-sections/home-tools'; 
+import HomeTools from '@/components/tool-sections/home-tools';
 import DrawTools from '@/components/tool-sections/draw-tools';
 import ViewTools from '@/components/tool-sections/view-tools';
 import ExportTools from '@/components/tool-sections/export-tools';
@@ -19,7 +19,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<string>('home');
   const [pageBackground, setPageBackground] = useState<PageBackground>('plain');
   const [pageTheme, setPageTheme] = useState<PageTheme>('light');
-  
+
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -53,7 +53,7 @@ export default function Home() {
 
   if (!isMounted) {
     // Render nothing or a loading indicator SSR/hydration mismatch
-    return null; 
+    return null;
   }
 
   const tabItems = [
@@ -70,9 +70,9 @@ export default function Home() {
       <Tabs defaultValue="home" value={activeTab} onValueChange={setActiveTab} className="w-full max-w-4xl mt-3 md:mt-4">
         <TabsList className="mx-auto w-full max-w-sm bg-card rounded-xl shadow-lg p-1.5 mb-8 flex justify-around items-center">
           {tabItems.map(tab => (
-            <TabsTrigger 
-              key={tab.value} 
-              value={tab.value} 
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
               className="px-3 py-1.5 data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground hover:text-foreground/80 transition-colors rounded-md text-sm"
             >
               {tab.label}
@@ -109,32 +109,38 @@ export default function Home() {
           )}
         </div>
 
-        {/* TAB CONTENT AREA */}
+        {/* TAB CONTENT AREA - PageEditor is now the content for all tabs */}
         <TabsContent value="home" className="mt-0">
           <PageEditor
             noteContent={noteContent}
             onNoteChange={setNoteContent}
-            backgroundStyle={pageBackground} 
-            pageTheme={pageTheme} 
+            backgroundStyle={pageBackground}
+            pageTheme={pageTheme}
           />
         </TabsContent>
         <TabsContent value="draw" className="mt-0">
-          <div className="p-4 rounded-lg shadow-lg bg-card min-h-[120px]  max-w-3xl mx-auto">
-            <p className="text-center text-muted-foreground">Drawing Canvas Area (Placeholder)</p>
-            <p className="text-center text-sm mt-2">Use the 'Draw Tools' above to interact with a canvas (to be implemented).</p>
-          </div>
+          <PageEditor
+            noteContent={noteContent}
+            onNoteChange={setNoteContent}
+            backgroundStyle={pageBackground}
+            pageTheme={pageTheme}
+          />
         </TabsContent>
         <TabsContent value="view" className="mt-0">
-           <div className="p-4 rounded-lg shadow-lg bg-card min-h-[120px]  max-w-3xl mx-auto">
-            <p className="text-center text-muted-foreground">View Options Applied</p>
-            <p className="text-center text-sm mt-2">The 'View Tools' above control the appearance of the note editor in the 'Home' tab.</p>
-          </div>
+           <PageEditor
+            noteContent={noteContent}
+            onNoteChange={setNoteContent}
+            backgroundStyle={pageBackground}
+            pageTheme={pageTheme}
+          />
         </TabsContent>
         <TabsContent value="export" className="mt-0">
-          <div className="p-4 rounded-lg shadow-lg bg-card min-h-[120px]  max-w-3xl mx-auto">
-            <p className="text-center text-muted-foreground">Export Options Area</p>
-            <p className="text-center text-sm mt-2">The 'Export Tools' above allow you to download or copy the content from the note editor in the 'Home' tab.</p>
-          </div>
+          <PageEditor
+            noteContent={noteContent}
+            onNoteChange={setNoteContent}
+            backgroundStyle={pageBackground}
+            pageTheme={pageTheme}
+          />
         </TabsContent>
       </Tabs>
     </main>
