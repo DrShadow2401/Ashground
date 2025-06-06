@@ -83,7 +83,7 @@ export default function Home() {
         {/* DYNAMIC TOOLBAR SECTION */}
         <div className="max-w-3xl mx-auto mb-6">
           {activeTab === 'home' && (
-            <div className="bg-muted p-3 rounded-lg shadow-inner">
+            <div className="bg-card p-3 rounded-lg shadow-md"> {/* Changed from bg-muted and shadow-inner */}
               <HomeTools />
             </div>
           )}
