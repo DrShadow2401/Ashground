@@ -1,8 +1,9 @@
+
 import React from 'react';
 
 const AshgroundHeader: React.FC = () => {
   return (
-    <header className="text-center my-8 md:my-12">
+    <header className="text-center mt-8 md:mt-10 mb-6 md:mb-8">
       <h1 className="font-headline text-5xl md:text-7xl font-bold text-foreground">
         ASHGROUND
       </h1>
