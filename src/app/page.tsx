@@ -83,17 +83,17 @@ export default function Home() {
         {/* DYNAMIC TOOLBAR SECTION */}
         <div className="max-w-3xl mx-auto mb-6">
           {activeTab === 'home' && (
-            <div className="bg-card p-3 rounded-lg shadow-md"> {/* Changed from bg-muted and shadow-inner */}
+            <div className="bg-muted p-3 rounded-lg shadow-inner">
               <HomeTools />
             </div>
           )}
           {activeTab === 'draw' && (
-            <div className="bg-card p-3 rounded-lg shadow-md">
+            <div className="bg-muted p-3 rounded-lg shadow-inner">
               <DrawTools />
             </div>
           )}
           {activeTab === 'view' && (
-            <div className="bg-card p-3 rounded-lg shadow-md">
+            <div className="bg-muted p-3 rounded-lg shadow-inner">
               <ViewTools
                 selectedBackground={pageBackground}
                 onBackgroundChange={setPageBackground}
@@ -103,7 +103,7 @@ export default function Home() {
             </div>
           )}
           {activeTab === 'export' && (
-            <div className="bg-card p-3 rounded-lg shadow-md">
+            <div className="bg-muted p-3 rounded-lg shadow-inner">
               <ExportTools noteContent={noteContent} />
             </div>
           )}
