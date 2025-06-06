@@ -10,12 +10,13 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['Inter', 'sans-serif'],
-        headline: ['Inter', 'sans-serif'],
+        body: ['PT Sans', 'sans-serif'],
+        headline: ['Playfair Display', 'serif'],
         code: ['monospace'],
       },
       colors: {
         background: 'hsl(var(--background))',
+        'background-end': 'hsl(var(--background-end))',
         foreground: 'hsl(var(--foreground))',
         card: {
           DEFAULT: 'hsl(var(--card))',
@@ -48,6 +49,13 @@ export default {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
+        'line-color': 'hsl(var(--line-color))',
+        'paper-light-bg': 'hsl(var(--paper-light-bg))',
+        'paper-light-fg': 'hsl(var(--paper-light-fg))',
+        'paper-dark-bg': 'hsl(var(--paper-dark-bg))',
+        'paper-dark-fg': 'hsl(var(--paper-dark-fg))',
+        'paper-pastel-bg': 'hsl(var(--paper-pastel-bg))',
+        'paper-pastel-fg': 'hsl(var(--paper-pastel-fg))',
         chart: {
           '1': 'hsl(var(--chart-1))',
           '2': 'hsl(var(--chart-2))',
