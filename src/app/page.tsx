@@ -65,10 +65,10 @@ export default function Home() {
   ];
 
   return (
-    <main className="flex flex-col items-center min-h-screen py-6 md:py-10 px-4">
+    <main className="flex flex-col items-center min-h-screen py-6 px-4">
       <AshgroundHeader />
 
-      <Tabs defaultValue="home" value={activeTab} onValueChange={setActiveTab} className="w-full max-w-4xl mt-6 md:mt-8">
+      <Tabs defaultValue="home" value={activeTab} onValueChange={setActiveTab} className="w-full max-w-4xl mt-3 md:mt-4">
         <TabsList className="mx-auto w-full max-w-sm bg-card rounded-xl shadow-lg p-1.5 mb-8 flex justify-around items-center">
           {tabItems.map(tab => (
             <TabsTrigger 

@@ -3,7 +3,7 @@ import React from 'react';
 
 const AshgroundHeader: React.FC = () => {
   return (
-    <header className="text-center mt-8 md:mt-10 mb-6 md:mb-8">
+    <header className="text-center mt-6 md:mt-8 mb-3 md:mb-4">
       <h1 className="font-headline text-5xl md:text-7xl font-bold text-foreground">
         ASHGROUND
       </h1>
