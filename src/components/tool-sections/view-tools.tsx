@@ -1,8 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Separator } from '@/components/ui/separator';
 import { FileText, ListChecks, LayoutGrid, Sun, Moon, Palette } from 'lucide-react';
 
 type PageBackground = 'plain' | 'lined' | 'grid';
@@ -34,41 +33,38 @@ const ViewTools: React.FC<ViewToolsProps> = ({
   ];
 
   return (
-    <div className="space-y-4">
-      <div>
-        <Label className="text-sm font-medium mb-2 block text-center sm:text-left">Page Background</Label>
-        <RadioGroup value={selectedBackground} onValueChange={(value) => onBackgroundChange(value as PageBackground)} className="flex flex-wrap gap-2 justify-center sm:justify-start">
-          {backgroundOptions.map((option) => (
-            <Button
-              key={option.value}
-              variant={selectedBackground === option.value ? "secondary" : "ghost"}
-              onClick={() => onBackgroundChange(option.value)}
-              className="flex items-center"
-              aria-pressed={selectedBackground === option.value}
-            >
-              {option.icon}
-              {option.label}
-            </Button>
-          ))}
-        </RadioGroup>
-      </div>
-      <div>
-        <Label className="text-sm font-medium mb-2 block text-center sm:text-left">Page Theme</Label>
-         <RadioGroup value={selectedTheme} onValueChange={(value) => onThemeChange(value as PageTheme)} className="flex flex-wrap gap-2 justify-center sm:justify-start">
-          {themeOptions.map((option) => (
-             <Button
-              key={option.value}
-              variant={selectedTheme === option.value ? "secondary" : "ghost"}
-              onClick={() => onThemeChange(option.value)}
-              className="flex items-center"
-              aria-pressed={selectedTheme === option.value}
-            >
-              {option.icon}
-              {option.label}
-            </Button>
-          ))}
-        </RadioGroup>
-      </div>
+    <div className="flex flex-wrap gap-2 items-center justify-center sm:justify-start">
+      {backgroundOptions.map((option) => (
+        <Button
+          key={option.value}
+          variant={selectedBackground === option.value ? "secondary" : "ghost"}
+          onClick={() => onBackgroundChange(option.value)}
+          className="flex items-center hover:bg-accent/50"
+          aria-label={option.label}
+          title={option.label}
+          aria-pressed={selectedBackground === option.value}
+        >
+          {option.icon}
+          {option.label}
+        </Button>
+      ))}
+
+      <Separator orientation="vertical" className="h-6 mx-1 sm:mx-2" />
+
+      {themeOptions.map((option) => (
+         <Button
+          key={option.value}
+          variant={selectedTheme === option.value ? "secondary" : "ghost"}
+          onClick={() => onThemeChange(option.value)}
+          className="flex items-center hover:bg-accent/50"
+          aria-label={option.label}
+          title={option.label}
+          aria-pressed={selectedTheme === option.value}
+        >
+          {option.icon}
+          {option.label}
+        </Button>
+      ))}
     </div>
   );
 };
