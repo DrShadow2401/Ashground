@@ -33,7 +33,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
 
   const placeholderText = `Start writing your thoughts here...\nThis is your aesthetic, single-page note space — minimal, classy, no distractions.\n\n*Nothing is saved. Everything burns.*`;
 
-  const textAreaPaddingTop = "pt-[1.125rem]";
+  const textAreaPaddingTop = "pt-[21px]"; // Adjusted from pt-[1.125rem]
 
   return (
     <div
@@ -47,7 +47,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
       </h2>
       <div
         className={cn(
-          'flex-1 relative flex flex-col min-h-0', 
+          'flex-1 relative flex flex-col min-h-0',
           backgroundClassMap[backgroundStyle]
         )}
       >
@@ -56,7 +56,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
           onChange={(e) => onNoteChange(e.target.value)}
           placeholder={placeholderText}
           className={cn(
-            "w-full flex-1 bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-base leading-relaxed font-body resize-none",
+            "w-full flex-1 bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-base leading-relaxed font-body resize-none py-0",
             textAreaPaddingTop
           )}
         />
