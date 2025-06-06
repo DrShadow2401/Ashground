@@ -5,8 +5,7 @@ import React, { useState, useEffect } from 'react';
 import AshgroundHeader from '@/components/ashground-header';
 import PageEditor from '@/components/page-editor';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-// HomeTools is not used when PageEditor is directly in the Home tab content.
-// import HomeTools from '@/components/tool-sections/home-tools'; 
+import HomeTools from '@/components/tool-sections/home-tools'; 
 import DrawTools from '@/components/tool-sections/draw-tools';
 import ViewTools from '@/components/tool-sections/view-tools';
 import ExportTools from '@/components/tool-sections/export-tools';
@@ -81,8 +80,37 @@ export default function Home() {
           ))}
         </TabsList>
 
+        {/* DYNAMIC TOOLBAR SECTION */}
+        <div className="max-w-3xl mx-auto mb-6">
+          {activeTab === 'home' && (
+            <div className="bg-muted p-3 rounded-lg shadow-inner">
+              <HomeTools />
+            </div>
+          )}
+          {activeTab === 'draw' && (
+            <div className="bg-card p-3 rounded-lg shadow-md">
+              <DrawTools />
+            </div>
+          )}
+          {activeTab === 'view' && (
+            <div className="bg-card p-3 rounded-lg shadow-md">
+              <ViewTools
+                selectedBackground={pageBackground}
+                onBackgroundChange={setPageBackground}
+                selectedTheme={pageTheme}
+                onThemeChange={setPageTheme}
+              />
+            </div>
+          )}
+          {activeTab === 'export' && (
+            <div className="bg-card p-3 rounded-lg shadow-md">
+              <ExportTools noteContent={noteContent} />
+            </div>
+          )}
+        </div>
+
+        {/* TAB CONTENT AREA */}
         <TabsContent value="home" className="mt-0">
-          {/* PageEditor is now directly part of the "Home" tab content */}
           <PageEditor
             noteContent={noteContent}
             onNoteChange={setNoteContent}
@@ -92,22 +120,20 @@ export default function Home() {
         </TabsContent>
         <TabsContent value="draw" className="mt-0">
           <div className="p-4 rounded-lg shadow-lg bg-card min-h-[120px]  max-w-3xl mx-auto">
-            <DrawTools />
+            <p className="text-center text-muted-foreground">Drawing Canvas Area (Placeholder)</p>
+            <p className="text-center text-sm mt-2">Use the 'Draw Tools' above to interact with a canvas (to be implemented).</p>
           </div>
         </TabsContent>
         <TabsContent value="view" className="mt-0">
            <div className="p-4 rounded-lg shadow-lg bg-card min-h-[120px]  max-w-3xl mx-auto">
-            <ViewTools
-              selectedBackground={pageBackground}
-              onBackgroundChange={setPageBackground}
-              selectedTheme={pageTheme}
-              onThemeChange={setPageTheme}
-            />
+            <p className="text-center text-muted-foreground">View Options Applied</p>
+            <p className="text-center text-sm mt-2">The 'View Tools' above control the appearance of the note editor in the 'Home' tab.</p>
           </div>
         </TabsContent>
         <TabsContent value="export" className="mt-0">
           <div className="p-4 rounded-lg shadow-lg bg-card min-h-[120px]  max-w-3xl mx-auto">
-            <ExportTools noteContent={noteContent} />
+            <p className="text-center text-muted-foreground">Export Options Area</p>
+            <p className="text-center text-sm mt-2">The 'Export Tools' above allow you to download or copy the content from the note editor in the 'Home' tab.</p>
           </div>
         </TabsContent>
       </Tabs>

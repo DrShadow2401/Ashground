@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Copy } from 'lucide-react';
@@ -33,7 +34,7 @@ const ExportTools: React.FC<ExportToolsProps> = ({ noteContent }) => {
   };
 
   return (
-    <div className="flex flex-wrap gap-4 p-2 items-center">
+    <div className="flex flex-wrap gap-4 items-center justify-center sm:justify-start">
       <Button onClick={handleDownload} variant="outline" className="hover:bg-accent/50">
         <Download className="mr-2 h-4 w-4" />
         Download as .txt

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Bold, Italic, Underline, List, AlignLeft } from 'lucide-react';
@@ -12,7 +13,7 @@ const HomeTools: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-wrap gap-2 p-2 items-center">
+    <div className="flex flex-wrap gap-2 items-center justify-center">
       {tools.map((tool) => (
         <Button variant="ghost" size="icon" key={tool.label} aria-label={tool.label} title={tool.label} className="hover:bg-accent/50">
           {tool.icon}

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -33,10 +34,10 @@ const ViewTools: React.FC<ViewToolsProps> = ({
   ];
 
   return (
-    <div className="space-y-6 p-2">
+    <div className="space-y-4">
       <div>
-        <Label className="text-sm font-medium mb-2 block">Page Background</Label>
-        <RadioGroup value={selectedBackground} onValueChange={(value) => onBackgroundChange(value as PageBackground)} className="flex flex-wrap gap-2">
+        <Label className="text-sm font-medium mb-2 block text-center sm:text-left">Page Background</Label>
+        <RadioGroup value={selectedBackground} onValueChange={(value) => onBackgroundChange(value as PageBackground)} className="flex flex-wrap gap-2 justify-center sm:justify-start">
           {backgroundOptions.map((option) => (
             <Button
               key={option.value}
@@ -52,8 +53,8 @@ const ViewTools: React.FC<ViewToolsProps> = ({
         </RadioGroup>
       </div>
       <div>
-        <Label className="text-sm font-medium mb-2 block">Page Theme</Label>
-         <RadioGroup value={selectedTheme} onValueChange={(value) => onThemeChange(value as PageTheme)} className="flex flex-wrap gap-2">
+        <Label className="text-sm font-medium mb-2 block text-center sm:text-left">Page Theme</Label>
+         <RadioGroup value={selectedTheme} onValueChange={(value) => onThemeChange(value as PageTheme)} className="flex flex-wrap gap-2 justify-center sm:justify-start">
           {themeOptions.map((option) => (
              <Button
               key={option.value}
