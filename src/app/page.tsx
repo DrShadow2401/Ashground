@@ -30,17 +30,24 @@ export default function Home() {
 
     if (savedNote) setNoteContent(savedNote);
     if (savedBg) setPageBackground(savedBg);
+
+    const htmlClasses = document.documentElement.classList;
     if (savedTheme) {
-      setPageTheme(savedTheme);
-      // Apply initial app theme based on saved editor theme
+      setPageTheme(savedTheme); // Set state first
       if (savedTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
+        htmlClasses.remove('theme-pastel');
+        htmlClasses.add('dark');
+      } else if (savedTheme === 'pastel') {
+        htmlClasses.remove('dark');
+        htmlClasses.add('theme-pastel');
+      } else { // 'light'
+        htmlClasses.remove('dark');
+        htmlClasses.remove('theme-pastel');
       }
     } else {
       // Default to light app theme if no saved theme
-       document.documentElement.classList.remove('dark');
+       htmlClasses.remove('dark');
+       htmlClasses.remove('theme-pastel');
     }
   }, []);
 
@@ -59,10 +66,16 @@ export default function Home() {
   useEffect(() => {
     if(isMounted) {
       localStorage.setItem('ashground_theme', pageTheme);
+      const htmlClasses = document.documentElement.classList;
       if (pageTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
+        htmlClasses.remove('theme-pastel');
+        htmlClasses.add('dark');
+      } else if (pageTheme === 'pastel') {
+        htmlClasses.remove('dark');
+        htmlClasses.add('theme-pastel');
+      } else { // 'light'
+        htmlClasses.remove('dark');
+        htmlClasses.remove('theme-pastel');
       }
     }
   }, [pageTheme, isMounted]);
@@ -96,36 +109,22 @@ export default function Home() {
           ))}
         </TabsList>
 
-        {/* DYNAMIC TOOLBAR SECTION */}
         <div className="max-w-3xl mx-auto mb-6">
-          {activeTab === 'home' && (
-            <div className="bg-muted p-3 rounded-lg shadow-inner">
-              <HomeTools />
-            </div>
-          )}
-          {activeTab === 'draw' && (
-            <div className="bg-muted p-3 rounded-lg shadow-inner">
-              <DrawTools />
-            </div>
-          )}
-          {activeTab === 'view' && (
-            <div className="bg-muted p-3 rounded-lg shadow-inner">
+          <div className="bg-muted p-3 rounded-lg shadow-inner">
+            {activeTab === 'home' && <HomeTools />}
+            {activeTab === 'draw' && <DrawTools />}
+            {activeTab === 'view' && (
               <ViewTools
                 selectedBackground={pageBackground}
                 onBackgroundChange={setPageBackground}
                 selectedTheme={pageTheme}
                 onThemeChange={setPageTheme}
               />
-            </div>
-          )}
-          {activeTab === 'export' && (
-            <div className="bg-muted p-3 rounded-lg shadow-inner">
-              <ExportTools noteContent={noteContent} />
-            </div>
-          )}
+            )}
+            {activeTab === 'export' && <ExportTools noteContent={noteContent} />}
+          </div>
         </div>
 
-        {/* TAB CONTENT AREA - PageEditor is now the content for all tabs */}
         <TabsContent value="home" className="mt-0">
           <PageEditor
             noteContent={noteContent}

@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -87,6 +88,42 @@
     --paper-pastel-fg: 320 50% 90%;
 
     --line-color: 0 0% 40%;
+  }
+
+  .theme-pastel {
+    --background: 320 70% 97%; /* Very light pastel pink/purple for whole page */
+    --background-end: 320 70% 94%; /* Slightly darker for gradient */
+    --foreground: 320 30% 35%; /* Darker pastel for text */
+
+    --card: 0 0% 100%; /* White cards, editor, active tab */
+    --card-foreground: 320 30% 35%; /* Text on cards, matching app foreground */
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 320 30% 35%;
+
+    --primary: 280 50% 88%; /* Existing accent as pastel primary */
+    --primary-foreground: 280 25% 25%; /* Existing accent-foreground */
+
+    --secondary: 320 60% 95%; /* Lighter pastel for secondary elements */
+    --secondary-foreground: 320 30% 35%;
+
+    --muted: 320 50% 93%; /* For TabsList background in pastel theme */
+    --muted-foreground: 320 25% 50%; /* Muted text color in pastel */
+
+    --accent: 280 60% 85%; /* A slightly more vivid pastel accent for highlights */
+    --accent-foreground: 280 30% 20%;
+
+    --destructive: 0 84.2% 60.2%; /* Default destructive, can be pastel-ized if needed */
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 320 50% 90%; /* Pastel border */
+    --input: 320 50% 90%;
+    --ring: 280 50% 80%; /* Pastel ring */
+    
+    /* Editor's specific pastel paper background/foreground are defined with --paper-pastel-bg/fg */
+    /* and applied via .page-theme-pastel, so they will take precedence for the editor area. */
+    /* The line color should also adapt if the editor is pastel on a pastel background */
+    --line-color: 320 40% 85%;
   }
 }
 
