@@ -80,10 +80,10 @@
     --ring: 20 20% 45%;
 
     /* Page specific theme variables for dark mode */
-    --paper-light-bg: 240 5% 12%; /* Match card for light theme on dark mode editor */
+    --paper-light-bg: 240 5% 12%; 
     --paper-light-fg: 0 0% 95%;
-    --paper-dark-bg: 0 0% 100%; /* White editor for dark theme (inverted example) */
-    --paper-dark-fg: 20 15% 30%;
+    --paper-dark-bg: 240 5% 12%; /* Dark background for editor in dark mode */
+    --paper-dark-fg: 0 0% 95%;   /* Light foreground for editor in dark mode */
     --paper-pastel-bg: 320 30% 25%; 
     --paper-pastel-fg: 320 50% 90%;
 
@@ -167,3 +167,4 @@
     background-size: 20px 20px; /* Standard grid size, can be themed if needed */
   }
 }
+
