@@ -44,7 +44,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
   const [, setForceUpdateKey] = useState(0); 
 
   useEffect(() => {
-    const currentEditorInstance = editorRef.current; 
+    const currentEditorInstance = editor;
     if (currentEditorInstance) {
       const handleUpdate = () => {
         setForceUpdateKey(k => k + 1); 
@@ -60,11 +60,11 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
         currentEditorInstance.off('selectionUpdate', handleUpdate);
       };
     }
-  }, [editorRef, editor]); 
+  }, [editor]); 
 
 
   const handleLink = useCallback(() => {
-    const currentEditor = editorRef.current; 
+    const currentEditor = editorRef.current; // Use the latest ref
     if (!currentEditor) {
       console.warn("handleLink called when editor is not available");
       return;
@@ -80,16 +80,19 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
       return;
     }
     currentEditor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-  }, [editorRef]); 
+  }, [editorRef]); // Depend on editorRef to ensure it's fresh if HomeTools re-renders for other reasons
 
   const handleImageInsert = useCallback(() => {
-    const currentEditor = editorRef.current;
-    if (!currentEditor) return;
+    const currentEditor = editorRef.current; // Use the latest ref
+    if (!currentEditor) {
+        console.warn("handleImageInsert called when editor is not available");
+        return;
+    }
     const url = window.prompt('Enter image URL:');
     if (url) {
       currentEditor.chain().focus().setImage({ src: url }).run();
     }
-  }, [editorRef]);
+  }, [editorRef]); // Depend on editorRef
 
   if (!editor) {
     return (
@@ -135,7 +138,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
       { icon: <LinkIcon />, label: 'Insert Link', action: handleLink, isActive: () => isButtonActive('link') },
       { icon: <Minus />, label: 'Horizontal Rule', action: () => editor.chain().focus().setHorizontalRule().run(), isActive: () => false },
       { icon: <CheckSquare />, label: 'Checklist', action: () => editor.chain().focus().toggleTaskList().run(), isActive: () => isButtonActive('taskList') },
-      { icon: <Table2 />, label: 'Insert Table', action: () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(), isActive: () => isButtonActive('table') },
+      { icon: <Table2 />, label: 'Insert Table', action: () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(), isActive: () => editor.isActive('table') },
       { icon: <ImageUp />, label: 'Insert Image', action: handleImageInsert, isActive: () => isButtonActive('image') },
       { icon: <ChevronsUpDown />, label: 'Toggle Section (NA)', action: () => {}, isActive: () => false, disabled: true },
     ],
@@ -177,3 +180,5 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
 };
 
 export default HomeTools;
+
+    
