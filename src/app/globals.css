@@ -39,8 +39,8 @@
     /* Page specific theme variables */
     --paper-light-bg: 0 0% 100%; 
     --paper-light-fg: 20 15% 30%; 
-    --paper-dark-bg: 20 10% 15%; /* Darker paper for dark mode */
-    --paper-dark-fg: 0 0% 90%;  
+    --paper-dark-bg: 240 5% 12%; 
+    --paper-dark-fg: 0 0% 95%;  
     --paper-pastel-bg: 320 70% 96%; /* Lighter pastel paper */
     --paper-pastel-fg: 320 30% 35%; 
     
@@ -81,8 +81,8 @@
     /* Page specific theme variables for dark mode */
     --paper-light-bg: 240 5% 12%; 
     --paper-light-fg: 0 0% 95%;
-    --paper-dark-bg: 240 5% 12%; /* Note editor dark theme */
-    --paper-dark-fg: 0 0% 95%;   
+    /* --paper-dark-bg is already correct from :root if dark mode is active */
+    /* --paper-dark-fg is already correct from :root if dark mode is active */   
     --paper-pastel-bg: 320 30% 25%; 
     --paper-pastel-fg: 320 50% 90%;
 
@@ -123,8 +123,8 @@
     --paper-light-fg: 320 30% 35%;
     --paper-dark-bg: 320 30% 25%;
     --paper-dark-fg:  320 50% 90%;
-    --paper-pastel-bg: 320 70% 96%; /* Note editor pastel theme */
-    --paper-pastel-fg: 320 30% 35%;
+    /* --paper-pastel-bg is already correct from :root if theme-pastel is active */
+    /* --paper-pastel-fg is already correct from :root if theme-pastel is active */
 
     --line-color: 320 40% 85%;
   }
@@ -143,13 +143,13 @@
 
 @layer components {
   .tiptap-editor {
-    @apply flex-1 min-h-full; /* Ensure it takes space */
+    @apply flex-1; /* Takes available vertical space and can grow */
   }
 
   .ProseMirror {
-    @apply font-body leading-relaxed p-0 m-0 w-full h-full;
+    @apply font-body leading-relaxed p-0 m-0 w-full;
     padding-top: 21px; /* For first line alignment with ruled paper */
-    min-height: 100%; /* Ensure it fills its container */
+    /* min-height: 100%; REMOVED to allow natural growth from content */
     color: inherit; /* Inherit color from .page-theme-* classes */
     background-color: transparent; /* Ensure no default background */
     caret-color: currentColor; /* Make cursor color match text color */

@@ -10,6 +10,8 @@ type PageBackground = 'plain' | 'lined' | 'grid';
 type PageTheme = 'light' | 'dark' | 'pastel';
 
 export interface PageEditorProps {
+  noteTitle: string;
+  onNoteTitleChange: (title: string) => void;
   noteContent: string;
   onNoteChange: (content: string) => void;
   backgroundStyle: PageBackground;
@@ -18,6 +20,8 @@ export interface PageEditorProps {
 }
 
 const PageEditor: React.FC<PageEditorProps> = ({
+  noteTitle,
+  onNoteTitleChange,
   noteContent,
   onNoteChange,
   backgroundStyle,
@@ -44,7 +48,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
         heading: {
           levels: [1, 2, 3],
         },
-        gapcursor: false,
+        gapcursor: false, // Good for preventing unexpected gaps
       }),
       UnderlineExtension,
       PlaceholderExtension.configure({
@@ -54,6 +58,12 @@ const PageEditor: React.FC<PageEditorProps> = ({
     content: noteContent,
     onUpdate: ({ editor: tiptapEditor }) => {
       onNoteChange(tiptapEditor.getHTML());
+    },
+    editorProps: {
+      attributes: {
+        // Improves accessibility and allows for better styling control if needed
+        class: 'prose dark:prose-invert prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none w-full',
+      },
     },
   });
 
@@ -71,8 +81,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
   useEffect(() => {
     if (editor && editor.isEditable && editor.getHTML() !== noteContent) {
       const { from, to } = editor.state.selection;
-      editor.commands.setContent(noteContent, false); // false means don't emit update
-      // Only set selection if it's valid within the new content
+      editor.commands.setContent(noteContent, false); 
       if (from <= editor.state.doc.content.size && to <= editor.state.doc.content.size) {
         editor.commands.setTextSelection({ from, to });
       }
@@ -87,18 +96,22 @@ const PageEditor: React.FC<PageEditorProps> = ({
         themeClassMap[pageTheme]
       )}
     >
-      <h2 className="font-headline text-3xl md:text-4xl mb-6 pb-2 border-b border-[hsl(var(--line-color))]">
-        Untitled Note
-      </h2>
+      <input
+        type="text"
+        value={noteTitle}
+        onChange={(e) => onNoteTitleChange(e.target.value)}
+        className="font-headline text-3xl md:text-4xl mb-6 pb-2 border-b border-[hsl(var(--line-color))] bg-transparent focus:outline-none w-full placeholder-muted-foreground"
+        placeholder="Untitled Note"
+      />
       <div
         className={cn(
-          'flex-1 relative flex flex-col min-h-0',
+          'flex-1 relative flex flex-col', // min-h-0 removed to allow natural growth
           backgroundClassMap[backgroundStyle]
         )}
       >
         <EditorContent
           editor={editor}
-          className="flex-1 overflow-y-auto tiptap-editor"
+          className="flex-1 tiptap-editor" // overflow-y-auto removed
         />
       </div>
     </div>

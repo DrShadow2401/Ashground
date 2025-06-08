@@ -16,6 +16,7 @@ type PageBackground = 'plain' | 'lined' | 'grid';
 type PageTheme = 'light' | 'dark' | 'pastel';
 
 export default function Home() {
+  const [noteTitle, setNoteTitle] = useState<string>('Untitled Note');
   const [noteContent, setNoteContent] = useState<string>('');
   const [activeTab, setActiveTab] = useState<string>('home');
   const [pageBackground, setPageBackground] = useState<PageBackground>('plain');
@@ -27,10 +28,12 @@ export default function Home() {
 
   useEffect(() => {
     setIsMounted(true);
+    const savedTitle = localStorage.getItem('ashground_title');
     const savedNote = localStorage.getItem('ashground_note');
     const savedBg = localStorage.getItem('ashground_bg') as PageBackground | null;
     const savedTheme = localStorage.getItem('ashground_theme') as PageTheme | null;
 
+    if (savedTitle) setNoteTitle(savedTitle);
     if (savedNote) setNoteContent(savedNote);
     if (savedBg) setPageBackground(savedBg);
 
@@ -52,6 +55,12 @@ export default function Home() {
        htmlClasses.remove('theme-pastel');
     }
   }, []);
+
+  useEffect(() => {
+    if(isMounted) {
+      localStorage.setItem('ashground_title', noteTitle);
+    }
+  }, [noteTitle, isMounted]);
 
   useEffect(() => {
     if(isMounted) {
@@ -111,7 +120,6 @@ export default function Home() {
         </TabsList>
 
         <div className="max-w-3xl mx-auto mb-6">
-          {/* Removed items-center from the div below */}
           <div className="bg-muted p-3 rounded-lg shadow-inner min-h-[52px] flex justify-center">
             {activeTab === 'home' && <HomeTools editorRef={editorRef} />}
             {activeTab === 'draw' && <DrawTools />}
@@ -129,6 +137,8 @@ export default function Home() {
         
         <PageEditor
           editorRef={editorRef}
+          noteTitle={noteTitle}
+          onNoteTitleChange={setNoteTitle}
           noteContent={noteContent}
           onNoteChange={setNoteContent}
           backgroundStyle={pageBackground}
