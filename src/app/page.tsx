@@ -111,7 +111,8 @@ export default function Home() {
         </TabsList>
 
         <div className="max-w-3xl mx-auto mb-6">
-          <div className="bg-muted p-3 rounded-lg shadow-inner min-h-[52px] flex justify-center items-center"> {/* Ensure min height and flex centering for toolbar content */}
+          {/* Removed items-center from the div below */}
+          <div className="bg-muted p-3 rounded-lg shadow-inner min-h-[52px] flex justify-center">
             {activeTab === 'home' && <HomeTools editorRef={editorRef} />}
             {activeTab === 'draw' && <DrawTools />}
             {activeTab === 'view' && (
