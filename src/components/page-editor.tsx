@@ -10,6 +10,15 @@ import SubscriptExtension from '@tiptap/extension-subscript';
 import LinkExtension from '@tiptap/extension-link';
 import TextStyleExtension from '@tiptap/extension-text-style';
 import ColorExtension from '@tiptap/extension-color';
+import HighlightExtension from '@tiptap/extension-highlight';
+import ImageExtension from '@tiptap/extension-image';
+import TaskListExtension from '@tiptap/extension-task-list';
+import TaskItemExtension from '@tiptap/extension-task-item';
+import TableExtension from '@tiptap/extension-table';
+import TableRowExtension from '@tiptap/extension-table-row';
+import TableCellExtension from '@tiptap/extension-table-cell';
+import TableHeaderExtension from '@tiptap/extension-table-header';
+
 
 import { cn } from '@/lib/utils';
 
@@ -81,6 +90,18 @@ const PageEditor: React.FC<PageEditorProps> = ({
       }),
       TextStyleExtension,
       ColorExtension,
+      HighlightExtension.configure({ multicolor: true }),
+      ImageExtension,
+      TaskListExtension,
+      TaskItemExtension.configure({
+        nested: true,
+      }),
+      TableExtension.configure({
+        resizable: true,
+      }),
+      TableRowExtension,
+      TableHeaderExtension,
+      TableCellExtension,
     ],
     content: noteContent,
     onUpdate: ({ editor: tiptapEditor }) => {
@@ -138,7 +159,6 @@ const PageEditor: React.FC<PageEditorProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Ensure canvas dimensions match its container
     const parent = canvas.parentElement;
     if (parent) {
       canvas.width = parent.clientWidth;
@@ -165,7 +185,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
     };
 
     const startPaint = (event: MouseEvent | TouchEvent) => {
-      event.preventDefault(); // Prevent text selection or other default actions
+      event.preventDefault(); 
       if (currentDrawTool !== 'pen') return;
       const pos = getMousePosition(event);
       if (!pos) return;
@@ -222,7 +242,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
 
 
   const handlePaperClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (isDrawingMode) return; // Don't focus editor if drawing
+    if (isDrawingMode) return; 
 
     if (editor && !editor.isFocused) {
        if (event.target === event.currentTarget || !(event.target as HTMLElement).closest('.ProseMirror')) {
@@ -238,7 +258,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
   return (
     <div
       className={cn(
-        'w-full max-w-3xl mx-auto p-8 md:p-12 rounded-xl shadow-xl min-h-[60vh] flex flex-col transition-colors duration-300 relative', // Added relative for canvas positioning
+        'w-full max-w-3xl mx-auto p-8 md:p-12 rounded-xl shadow-xl min-h-[60vh] flex flex-col transition-colors duration-300 relative', 
         themeClassMap[pageTheme]
       )}
     >
@@ -261,14 +281,14 @@ const PageEditor: React.FC<PageEditorProps> = ({
           editor={editor}
           className={cn(
             "flex-1 tiptap-editor",
-            isDrawingMode ? 'pointer-events-none' : '' // Prevent interaction with Tiptap when drawing
+            isDrawingMode ? 'pointer-events-none' : '' 
           )}
         />
         <canvas
           ref={canvasRef}
           className={cn(
             "absolute top-0 left-0 w-full h-full",
-            isDrawingMode ? 'pointer-events-auto z-10' : 'pointer-events-none -z-10' // Control canvas interaction
+            isDrawingMode && currentDrawTool === 'pen' ? 'pointer-events-auto z-10' : 'pointer-events-none -z-10' 
           )}
         />
       </div>

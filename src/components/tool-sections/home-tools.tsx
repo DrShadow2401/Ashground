@@ -40,12 +40,11 @@ interface HomeToolsProps {
 }
 
 const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
-  const [, setForceUpdateKey] = useState(0); // Hook 1: useState
-  const editor = editorRef.current; // Get current editor instance for dependencies
+  const editor = editorRef.current; 
+  const [, setForceUpdateKey] = useState(0); 
 
-  // Hook 2: useEffect - setups listeners and forces update for button states
   useEffect(() => {
-    const currentEditorInstance = editorRef.current; // Use the ref's current value inside the effect
+    const currentEditorInstance = editorRef.current; 
     if (currentEditorInstance) {
       const handleUpdate = () => {
         setForceUpdateKey(k => k + 1); 
@@ -54,42 +53,44 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
       currentEditorInstance.on('transaction', handleUpdate);
       currentEditorInstance.on('selectionUpdate', handleUpdate);
       
-      handleUpdate(); // Initial update for button states
+      handleUpdate(); 
 
       return () => {
         currentEditorInstance.off('transaction', handleUpdate);
         currentEditorInstance.off('selectionUpdate', handleUpdate);
       };
     }
-  }, [editorRef, editor]); // Re-run when editor instance (editor) becomes available or editorRef itself changes.
-                           // Simplified to [editor] if editor = editorRef.current is stable for effect definition.
-                           // Using [editorRef, editor] is safer if editorRef could be a new ref object.
+  }, [editorRef, editor]); 
 
 
-  // Hook 3: useCallback for handleLink - defined unconditionally
   const handleLink = useCallback(() => {
-    const currentEditor = editorRef.current; // Always use the ref's current value inside callbacks
+    const currentEditor = editorRef.current; 
     if (!currentEditor) {
       console.warn("handleLink called when editor is not available");
       return;
     }
     const previousUrl = currentEditor.getAttributes('link').href;
-    // Prompt for URL, allow empty string to remove link
     const url = window.prompt('Enter URL (leave empty to remove link):', previousUrl || '');
 
-    if (url === null) { // User pressed cancel
+    if (url === null) { 
       return;
     }
-    if (url === '') { // User wants to remove the link
+    if (url === '') { 
       currentEditor.chain().focus().extendMarkRange('link').unsetLink().run();
       return;
     }
-    // Apply the link
     currentEditor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-  }, [editorRef]); // Dependency on editorRef (stable ref object)
+  }, [editorRef]); 
 
-  // Conditional rendering: If editor is not yet available, show loading.
-  // This is now AFTER all hook calls.
+  const handleImageInsert = useCallback(() => {
+    const currentEditor = editorRef.current;
+    if (!currentEditor) return;
+    const url = window.prompt('Enter image URL:');
+    if (url) {
+      currentEditor.chain().focus().setImage({ src: url }).run();
+    }
+  }, [editorRef]);
+
   if (!editor) {
     return (
       <div className="flex justify-center items-center h-full w-full">
@@ -98,13 +99,11 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     );
   }
 
-  // Helper function, not a hook, defined after editor is confirmed to exist.
   const isButtonActive = (type: string, options?: Record<string, any>): boolean => {
     return editor.isActive(type, options);
   };
 
   const toolGroups = [
-    // Basic Text Formatting
     [
       { icon: <Bold />, label: 'Bold', action: () => editor.chain().focus().toggleBold().run(), isActive: () => isButtonActive('bold') },
       { icon: <Italic />, label: 'Italic', action: () => editor.chain().focus().toggleItalic().run(), isActive: () => isButtonActive('italic') },
@@ -113,38 +112,33 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
       { icon: <Superscript />, label: 'Superscript', action: () => editor.chain().focus().toggleSuperscript().run(), isActive: () => isButtonActive('superscript') },
       { icon: <Subscript />, label: 'Subscript', action: () => editor.chain().focus().toggleSubscript().run(), isActive: () => isButtonActive('subscript') },
     ],
-    // Headings & Color
     [
       { icon: <Heading1 />, label: 'Heading 1', action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(), isActive: () => isButtonActive('heading', { level: 1 }) },
       { icon: <Heading2 />, label: 'Heading 2', action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), isActive: () => isButtonActive('heading', { level: 2 }) },
       { icon: <Heading3 />, label: 'Heading 3', action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(), isActive: () => isButtonActive('heading', { level: 3 }) },
       { icon: <Baseline />, label: 'Font Color (Red)', action: () => editor.chain().focus().setColor('#E03131').run(), isActive: () => editor.isActive('textStyle', { color: '#E03131' }) },
-      { icon: <Highlighter />, label: 'Highlight (NA)', action: () => {}, isActive: () => false, disabled: true },
+      { icon: <Highlighter />, label: 'Highlight (Yellow)', action: () => editor.chain().focus().toggleHighlight({ color: '#FFF3A3' }).run(), isActive: () => editor.isActive('highlight', { color: '#FFF3A3' }) },
     ],
-    // Alignment
     [
       { icon: <AlignLeft />, label: 'Align Left', action: () => editor.chain().focus().setTextAlign('left').run(), isActive: () => isButtonActive({ textAlign: 'left' }) },
       { icon: <AlignCenter />, label: 'Align Center', action: () => editor.chain().focus().setTextAlign('center').run(), isActive: () => isButtonActive({ textAlign: 'center' }) },
       { icon: <AlignRight />, label: 'Align Right', action: () => editor.chain().focus().setTextAlign('right').run(), isActive: () => isButtonActive({ textAlign: 'right' }) },
       { icon: <AlignJustify />, label: 'Align Justify', action: () => editor.chain().focus().setTextAlign('justify').run(), isActive: () => isButtonActive({ textAlign: 'justify' }) },
     ],
-    // Lists & Blocks
     [
       { icon: <List />, label: 'Bulleted List', action: () => editor.chain().focus().toggleBulletList().run(), isActive: () => isButtonActive('bulletList') },
       { icon: <ListOrdered />, label: 'Numbered List', action: () => editor.chain().focus().toggleOrderedList().run(), isActive: () => isButtonActive('orderedList') },
       { icon: <Quote />, label: 'Blockquote', action: () => editor.chain().focus().toggleBlockquote().run(), isActive: () => isButtonActive('blockquote') },
       { icon: <Code2 />, label: 'Code Block', action: () => editor.chain().focus().toggleCodeBlock().run(), isActive: () => isButtonActive('codeBlock') },
     ],
-    // Insertions & Links
     [
       { icon: <LinkIcon />, label: 'Insert Link', action: handleLink, isActive: () => isButtonActive('link') },
       { icon: <Minus />, label: 'Horizontal Rule', action: () => editor.chain().focus().setHorizontalRule().run(), isActive: () => false },
-      { icon: <CheckSquare />, label: 'Checklist (NA)', action: () => {}, isActive: () => false, disabled: true },
-      { icon: <Table2 />, label: 'Insert Table (NA)', action: () => {}, isActive: () => false, disabled: true },
-      { icon: <ImageUp />, label: 'Insert Image (NA)', action: () => {}, isActive: () => false, disabled: true },
+      { icon: <CheckSquare />, label: 'Checklist', action: () => editor.chain().focus().toggleTaskList().run(), isActive: () => isButtonActive('taskList') },
+      { icon: <Table2 />, label: 'Insert Table', action: () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(), isActive: () => isButtonActive('table') },
+      { icon: <ImageUp />, label: 'Insert Image', action: handleImageInsert, isActive: () => isButtonActive('image') },
       { icon: <ChevronsUpDown />, label: 'Toggle Section (NA)', action: () => {}, isActive: () => false, disabled: true },
     ],
-    // Formatting & History
     [
       { icon: <Eraser />, label: 'Clear Formatting', action: () => editor.chain().focus().unsetAllMarks().clearNodes().run(), isActive: () => false },
       { icon: <Undo2 />, label: 'Undo', action: () => editor.chain().focus().undo().run(), isActive: () => false, disabled: !editor.can().undo() },
@@ -168,7 +162,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
                 'hover:bg-accent/50',
                 tool.isActive() ? 'bg-accent text-accent-foreground' : ''
               )}
-              disabled={tool.disabled || (tool.label.includes('(NA)')) || !editor.isEditable} // Disable if editor not editable
+              disabled={tool.disabled || !editor.isEditable}
             >
               {tool.icon}
             </Button>
