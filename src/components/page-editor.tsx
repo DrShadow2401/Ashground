@@ -4,7 +4,6 @@ import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import UnderlineExtension from '@tiptap/extension-underline';
 import PlaceholderExtension from '@tiptap/extension-placeholder';
-import HeadingExtension from '@tiptap/extension-heading';
 import { cn } from '@/lib/utils';
 
 type PageBackground = 'plain' | 'lined' | 'grid';
@@ -45,21 +44,17 @@ const PageEditor: React.FC<PageEditorProps> = ({
         heading: {
           levels: [1, 2, 3],
         },
-        // Disable other StarterKit extensions if not needed or to replace with custom ones
-        gapcursor: false, // Example: If you don't need gapcursor
+        gapcursor: false,
       }),
       UnderlineExtension,
       PlaceholderExtension.configure({
         placeholder: placeholderText,
       }),
-      // Ensure Heading extension is configured correctly if not solely through StarterKit
-      HeadingExtension.configure({ levels: [1, 2, 3] }),
     ],
     content: noteContent,
-    onUpdate: ({ editor }) => {
-      onNoteChange(editor.getHTML());
+    onUpdate: ({ editor: tiptapEditor }) => {
+      onNoteChange(tiptapEditor.getHTML());
     },
-    // Removed editorProps to apply class directly to EditorContent wrapper
   });
 
   useEffect(() => {
@@ -74,12 +69,13 @@ const PageEditor: React.FC<PageEditorProps> = ({
   }, [editor, editorRef]);
 
   useEffect(() => {
-    if (editor && editor.getHTML() !== noteContent) {
-      // Safely update editor content if external noteContent changes
-      // This prevents cursor jumps if noteContent is updated from localStorage for example
+    if (editor && editor.isEditable && editor.getHTML() !== noteContent) {
       const { from, to } = editor.state.selection;
-      editor.commands.setContent(noteContent, false);
-      editor.commands.setTextSelection({ from, to });
+      editor.commands.setContent(noteContent, false); // false means don't emit update
+      // Only set selection if it's valid within the new content
+      if (from <= editor.state.doc.content.size && to <= editor.state.doc.content.size) {
+        editor.commands.setTextSelection({ from, to });
+      }
     }
   }, [noteContent, editor]);
 
@@ -96,13 +92,13 @@ const PageEditor: React.FC<PageEditorProps> = ({
       </h2>
       <div
         className={cn(
-          'flex-1 relative flex flex-col min-h-0', // Ensure this div can grow and scroll
+          'flex-1 relative flex flex-col min-h-0',
           backgroundClassMap[backgroundStyle]
         )}
       >
         <EditorContent
           editor={editor}
-          className="flex-1 overflow-y-auto tiptap-editor" // Added tiptap-editor class for specific styling
+          className="flex-1 overflow-y-auto tiptap-editor"
         />
       </div>
     </div>
@@ -110,4 +106,3 @@ const PageEditor: React.FC<PageEditorProps> = ({
 };
 
 export default PageEditor;
-

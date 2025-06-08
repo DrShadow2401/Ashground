@@ -16,7 +16,7 @@ type PageBackground = 'plain' | 'lined' | 'grid';
 type PageTheme = 'light' | 'dark' | 'pastel';
 
 export default function Home() {
-  const [noteContent, setNoteContent] = useState<string>(''); // Will store HTML content
+  const [noteContent, setNoteContent] = useState<string>('');
   const [activeTab, setActiveTab] = useState<string>('home');
   const [pageBackground, setPageBackground] = useState<PageBackground>('plain');
   const [pageTheme, setPageTheme] = useState<PageTheme>('light');
@@ -36,14 +36,14 @@ export default function Home() {
 
     const htmlClasses = document.documentElement.classList;
     if (savedTheme) {
-      setPageTheme(savedTheme); 
+      setPageTheme(savedTheme);
       if (savedTheme === 'dark') {
         htmlClasses.remove('theme-pastel');
         htmlClasses.add('dark');
       } else if (savedTheme === 'pastel') {
         htmlClasses.remove('dark');
         htmlClasses.add('theme-pastel');
-      } else { 
+      } else {
         htmlClasses.remove('dark');
         htmlClasses.remove('theme-pastel');
       }
@@ -111,8 +111,8 @@ export default function Home() {
         </TabsList>
 
         <div className="max-w-3xl mx-auto mb-6">
-          <div className="bg-muted p-3 rounded-lg shadow-inner min-h-[52px]"> {/* Ensure min height for toolbar */}
-            {activeTab === 'home' && <HomeTools editor={editorRef.current} />}
+          <div className="bg-muted p-3 rounded-lg shadow-inner min-h-[52px] flex justify-center items-center"> {/* Ensure min height and flex centering for toolbar content */}
+            {activeTab === 'home' && <HomeTools editorRef={editorRef} />}
             {activeTab === 'draw' && <DrawTools />}
             {activeTab === 'view' && (
               <ViewTools
@@ -126,9 +126,6 @@ export default function Home() {
           </div>
         </div>
         
-        {/* Render PageEditor once and control its content based on active tab if needed, 
-            but for now, it's the same editor instance for all.
-            The editorRef is passed to PageEditor. */}
         <PageEditor
           editorRef={editorRef}
           noteContent={noteContent}
@@ -140,4 +137,3 @@ export default function Home() {
     </main>
   );
 }
-

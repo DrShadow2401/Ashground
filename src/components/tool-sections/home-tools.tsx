@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import type { Editor } from '@tiptap/react';
@@ -8,34 +8,56 @@ import {
   Italic,
   Underline,
   List,
-  AlignLeft, // Retained for completeness, though Tiptap handles alignment differently
+  AlignLeft,
   Heading1,
   Heading2,
-  Heading3, // Added Heading2 and Heading3 icons
-  Baseline, // For Font Color (placeholder)
-  Highlighter, // For Highlighting (placeholder)
+  Heading3,
+  Baseline,
+  Highlighter,
   Strikethrough,
-  Subscript, // (placeholder)
-  Superscript, // (placeholder)
-  Code2, // For Code Block / Inline Code (Tiptap handles both)
-  Quote, // For Blockquote
-  Link as LinkIcon, // For Hyperlinks (placeholder)
+  Subscript,
+  Superscript,
+  Code2,
+  Quote,
+  Link as LinkIcon,
   ListOrdered,
-  CheckSquare, // For Checklists (placeholder)
-  Table2, // For Tables (placeholder)
-  Minus, // For Horizontal Rules
-  ChevronsUpDown, // For Collapsible Sections (placeholder)
-  ImageUp, // For Image Insertion (placeholder)
+  CheckSquare,
+  Table2,
+  Minus,
+  ChevronsUpDown,
+  ImageUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface HomeToolsProps {
-  editor: Editor | null;
+  editorRef: React.RefObject<Editor | null>;
 }
 
-const HomeTools: React.FC<HomeToolsProps> = ({ editor }) => {
+const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
+  const [, setForceUpdateKey] = useState(0);
+  const editor = editorRef.current;
+
+  useEffect(() => {
+    const currentEditor = editorRef.current;
+    if (currentEditor) {
+      const handleUpdate = () => {
+        setForceUpdateKey(k => k + 1);
+      };
+      
+      currentEditor.on('transaction', handleUpdate);
+      currentEditor.on('selectionUpdate', handleUpdate);
+      
+      handleUpdate(); // Initial update
+
+      return () => {
+        currentEditor.off('transaction', handleUpdate);
+        currentEditor.off('selectionUpdate', handleUpdate);
+      };
+    }
+  }, [editorRef, editor]); // Re-run if editor instance itself changes (e.g. from null to editor)
+
   if (!editor) {
-    return null; // Or a loading/disabled state
+    return <div className="flex justify-center items-center h-full w-full"><p className="text-muted-foreground text-sm">Editor loading...</p></div>;
   }
 
   const isButtonActive = (type: string, options?: Record<string, any>) => editor.isActive(type, options);
@@ -47,25 +69,25 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editor }) => {
         icon: <Bold />,
         label: 'Bold',
         action: () => editor.chain().focus().toggleBold().run(),
-        isActive: ()_ => isButtonActive('bold'),
+        isActive: () => isButtonActive('bold'),
       },
       {
         icon: <Italic />,
         label: 'Italic',
         action: () => editor.chain().focus().toggleItalic().run(),
-        isActive: ()_ => isButtonActive('italic'),
+        isActive: () => isButtonActive('italic'),
       },
       {
         icon: <Underline />,
         label: 'Underline',
         action: () => editor.chain().focus().toggleUnderline().run(),
-        isActive: ()_ => isButtonActive('underline'),
+        isActive: () => isButtonActive('underline'),
       },
       {
         icon: <Strikethrough />,
         label: 'Strikethrough',
         action: () => editor.chain().focus().toggleStrike().run(),
-        isActive: ()_ => isButtonActive('strike'),
+        isActive: () => isButtonActive('strike'),
       },
       { icon: <Highlighter />, label: 'Highlight (NA)', action: () => {}, isActive: () => false },
     ],
@@ -75,19 +97,19 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editor }) => {
         icon: <Heading1 />,
         label: 'Heading 1',
         action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
-        isActive: ()_ => isButtonActive('heading', { level: 1 }),
+        isActive: () => isButtonActive('heading', { level: 1 }),
       },
       {
         icon: <Heading2 />,
         label: 'Heading 2',
         action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
-        isActive: ()_ => isButtonActive('heading', { level: 2 }),
+        isActive: () => isButtonActive('heading', { level: 2 }),
       },
       {
         icon: <Heading3 />,
         label: 'Heading 3',
         action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(),
-        isActive: ()_ => isButtonActive('heading', { level: 3 }),
+        isActive: () => isButtonActive('heading', { level: 3 }),
       },
       { icon: <Baseline />, label: 'Font Color (NA)', action: () => {}, isActive: () => false },
     ],
@@ -102,13 +124,13 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editor }) => {
         icon: <Quote />,
         label: 'Blockquote',
         action: () => editor.chain().focus().toggleBlockquote().run(),
-        isActive: ()_ => isButtonActive('blockquote'),
+        isActive: () => isButtonActive('blockquote'),
       },
       {
         icon: <Code2 />,
         label: 'Code Block',
         action: () => editor.chain().focus().toggleCodeBlock().run(),
-        isActive: ()_ => isButtonActive('codeBlock'),
+        isActive: () => isButtonActive('codeBlock'),
       },
       { icon: <LinkIcon />, label: 'Insert Link (NA)', action: () => {}, isActive: () => false },
     ],
@@ -118,16 +140,16 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editor }) => {
         icon: <List />,
         label: 'Bulleted List',
         action: () => editor.chain().focus().toggleBulletList().run(),
-        isActive: ()_ => isButtonActive('bulletList'),
+        isActive: () => isButtonActive('bulletList'),
       },
       {
         icon: <ListOrdered />,
         label: 'Numbered List',
         action: () => editor.chain().focus().toggleOrderedList().run(),
-        isActive: ()_ => isButtonActive('orderedList'),
+        isActive: () => isButtonActive('orderedList'),
       },
       { icon: <CheckSquare />, label: 'Checklist (NA)', action: () => {}, isActive: () => false },
-      { icon: <AlignLeft />, label: 'Align Left (NA)', action: () => {}, isActive: () => false }, // Text alignment needs Tiptap extension
+      { icon: <AlignLeft />, label: 'Align Left (NA)', action: () => {}, isActive: () => false },
     ],
     // Insertions
     [
@@ -136,7 +158,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editor }) => {
         icon: <Minus />,
         label: 'Horizontal Rule',
         action: () => editor.chain().focus().setHorizontalRule().run(),
-        isActive: ()_ => false, // Horizontal rule doesn't have an "active" state in this context
+        isActive: () => false, 
       },
       { icon: <ChevronsUpDown />, label: 'Toggle Section (NA)', action: () => {}, isActive: () => false },
       { icon: <ImageUp />, label: 'Insert Image (NA)', action: () => {}, isActive: () => false },
@@ -159,7 +181,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editor }) => {
                 'hover:bg-accent/50',
                 tool.isActive() ? 'bg-accent text-accent-foreground' : ''
               )}
-              disabled={tool.label.includes('(NA)')} // Disable not implemented tools
+              disabled={tool.label.includes('(NA)')}
             >
               {tool.icon}
             </Button>
