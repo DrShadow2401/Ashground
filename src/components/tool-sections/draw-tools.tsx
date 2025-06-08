@@ -4,44 +4,57 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
   PenTool,
-  Brush,
-  Eraser,
-  Undo2,
-  SlidersHorizontal,
-  Circle,
-  Square,
-  Triangle,
-  Minus,
-  ArrowRight,
-  PaintBucket,
-  Palette,
-  Pipette,
-  ListFilter,
+  Brush, // Placeholder, PenTool is used for basic drawing
+  Eraser, // Placeholder
+  Undo2, // Placeholder
+  SlidersHorizontal, // Placeholder for Brush Size
+  Circle, // Placeholder
+  Square, // Placeholder
+  Triangle, // Placeholder
+  Minus, // Placeholder for Line
+  ArrowRight, // Placeholder for Arrow
+  PaintBucket, // Placeholder
+  Palette, // Placeholder
+  Pipette, // Placeholder
+  ListFilter, // Placeholder for Line Styles
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-const DrawTools: React.FC = () => {
+interface DrawToolsProps {
+  activeTool: string | null;
+  onToolChange: (tool: string | null) => void;
+  // Add props for color picker, brush size etc. later
+}
+
+const DrawTools: React.FC<DrawToolsProps> = ({ activeTool, onToolChange }) => {
+  
+  const handleToolClick = (toolName: string) => {
+    onToolChange(activeTool === toolName ? null : toolName);
+  };
+
+  // Initial groups, Pen tool is the only functional one for now
   const toolGroups = [
     [
-      { icon: <PenTool />, label: 'Pen' },
-      { icon: <Brush />, label: 'Brush' },
-      { icon: <Eraser />, label: 'Eraser' },
-      { icon: <Undo2 />, label: 'Undo' },
+      { name: 'pen', icon: <PenTool />, label: 'Pen' },
+      { name: 'brush', icon: <Brush />, label: 'Brush (NA)', disabled: true },
+      { name: 'eraser', icon: <Eraser />, label: 'Eraser (NA)', disabled: true },
+      { name: 'undo', icon: <Undo2 />, label: 'Undo (NA)', disabled: true },
     ],
     [
-      { icon: <Circle />, label: 'Draw Circle' },
-      { icon: <Square />, label: 'Draw Square' },
-      { icon: <Triangle />, label: 'Draw Triangle' },
-      { icon: <Minus />, label: 'Draw Line' },
-      { icon: <ArrowRight />, label: 'Draw Arrow' },
+      { name: 'circle', icon: <Circle />, label: 'Draw Circle (NA)', disabled: true },
+      { name: 'square', icon: <Square />, label: 'Draw Square (NA)', disabled: true },
+      { name: 'triangle', icon: <Triangle />, label: 'Draw Triangle (NA)', disabled: true },
+      { name: 'line', icon: <Minus />, label: 'Draw Line (NA)', disabled: true },
+      { name: 'arrow', icon: <ArrowRight />, label: 'Draw Arrow (NA)', disabled: true },
     ],
     [
-      { icon: <PaintBucket />, label: 'Fill Tool' },
-      { icon: <Palette />, label: 'Color Palette' },
-      { icon: <Pipette />, label: 'Eyedropper Tool' },
+      { name: 'fill', icon: <PaintBucket />, label: 'Fill Tool (NA)', disabled: true },
+      { name: 'palette', icon: <Palette />, label: 'Color Palette (NA)', disabled: true },
+      { name: 'eyedropper', icon: <Pipette />, label: 'Eyedropper Tool (NA)', disabled: true },
     ],
     [
-      { icon: <SlidersHorizontal />, label: 'Brush Size' },
-      { icon: <ListFilter />, label: 'Line Styles (Dotted, Dashed, Solid)' },
+      { name: 'brushSize', icon: <SlidersHorizontal />, label: 'Brush Size (NA)', disabled: true },
+      { name: 'lineStyles', icon: <ListFilter />, label: 'Line Styles (NA)', disabled: true },
     ],
   ];
 
@@ -54,9 +67,14 @@ const DrawTools: React.FC = () => {
               variant="ghost"
               size="icon"
               key={tool.label}
+              onClick={() => handleToolClick(tool.name)}
               aria-label={tool.label}
               title={tool.label}
-              className="hover:bg-accent/50"
+              className={cn(
+                'hover:bg-accent/50',
+                activeTool === tool.name ? 'bg-accent text-accent-foreground' : ''
+              )}
+              disabled={tool.disabled}
             >
               {tool.icon}
             </Button>

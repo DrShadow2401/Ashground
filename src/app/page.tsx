@@ -25,6 +25,11 @@ export default function Home() {
   
   const editorRef = useRef<Editor | null>(null);
 
+  // Drawing specific state
+  const [currentDrawTool, setCurrentDrawTool] = useState<string | null>(null);
+  const [drawColor, setDrawColor] = useState<string>('#000000'); // Default black
+  const [drawStrokeWidth, setDrawStrokeWidth] = useState<number>(2); // Default stroke width
+
 
   useEffect(() => {
     setIsMounted(true);
@@ -34,7 +39,9 @@ export default function Home() {
     const savedTheme = localStorage.getItem('ashground_theme') as PageTheme | null;
 
     if (savedTitle) setNoteTitle(savedTitle);
-    if (savedNote) setNoteContent(savedNote);
+    if (savedNote) setNoteContent(savedNote); // Tiptap will initialize with this HTML
+    else setNoteContent('<p></p>'); // Ensure editor has initial paragraph for placeholder
+    
     if (savedBg) setPageBackground(savedBg);
 
     const htmlClasses = document.documentElement.classList;
@@ -91,6 +98,13 @@ export default function Home() {
     }
   }, [pageTheme, isMounted]);
 
+  useEffect(() => {
+    // If not in draw tab, ensure no draw tool is active
+    if (activeTab !== 'draw') {
+      setCurrentDrawTool(null);
+    }
+  }, [activeTab]);
+
   if (!isMounted) {
     return null; 
   }
@@ -107,7 +121,7 @@ export default function Home() {
       <AshgroundHeader />
 
       <Tabs defaultValue="home" value={activeTab} onValueChange={setActiveTab} className="w-full max-w-4xl mt-3 md:mt-4">
-        <TabsList className="mx-auto w-full max-w-sm bg-card rounded-xl shadow-lg p-1.5 mb-8 flex justify-around items-center">
+        <TabsList className="mx-auto w-full max-w-sm bg-card rounded-xl shadow-lg p-1.5 mb-8 flex justify-around">
           {tabItems.map(tab => (
             <TabsTrigger
               key={tab.value}
@@ -122,7 +136,12 @@ export default function Home() {
         <div className="max-w-3xl mx-auto mb-6">
           <div className="bg-muted p-3 rounded-lg shadow-inner min-h-[52px] flex justify-center">
             {activeTab === 'home' && <HomeTools editorRef={editorRef} />}
-            {activeTab === 'draw' && <DrawTools />}
+            {activeTab === 'draw' && (
+              <DrawTools 
+                activeTool={currentDrawTool}
+                onToolChange={setCurrentDrawTool}
+              />
+            )}
             {activeTab === 'view' && (
               <ViewTools
                 selectedBackground={pageBackground}
@@ -143,6 +162,10 @@ export default function Home() {
           onNoteChange={setNoteContent}
           backgroundStyle={pageBackground}
           pageTheme={pageTheme}
+          isDrawingMode={activeTab === 'draw'}
+          currentDrawTool={currentDrawTool}
+          drawColor={drawColor}
+          drawStrokeWidth={drawStrokeWidth}
         />
       </Tabs>
     </main>

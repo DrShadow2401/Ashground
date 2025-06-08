@@ -79,10 +79,11 @@
     --ring: 20 20% 45%;
 
     /* Page specific theme variables for dark mode */
-    --paper-light-bg: 240 5% 12%; 
+    /* Ensure these correctly apply the dark theme to the note editor paper */
+    --paper-light-bg: 240 5% 12%; /* Fallback for light paper in dark mode */
     --paper-light-fg: 0 0% 95%;
-    /* --paper-dark-bg is already correct from :root if dark mode is active */
-    /* --paper-dark-fg is already correct from :root if dark mode is active */   
+    --paper-dark-bg: 240 5% 12%; /* Correct dark paper background */
+    --paper-dark-fg: 0 0% 95%;   /* Correct dark paper foreground */
     --paper-pastel-bg: 320 30% 25%; 
     --paper-pastel-fg: 320 50% 90%;
 
@@ -149,10 +150,10 @@
   .ProseMirror {
     @apply font-body leading-relaxed p-0 m-0 w-full;
     padding-top: 21px; /* For first line alignment with ruled paper */
-    /* min-height: 100%; REMOVED to allow natural growth from content */
     color: inherit; /* Inherit color from .page-theme-* classes */
     background-color: transparent; /* Ensure no default background */
     caret-color: currentColor; /* Make cursor color match text color */
+    min-height: 100%; /* Ensure it takes at least the full height of its container */
   }
 
   .ProseMirror:focus-visible {
@@ -174,6 +175,13 @@
     line-height: var(--text-line-height); /* Critical for lined paper */
   }
   
+  /* Tiptap alignment classes */
+  .ProseMirror .has-text-align-left { text-align: left; }
+  .ProseMirror .has-text-align-center { text-align: center; }
+  .ProseMirror .has-text-align-right { text-align: right; }
+  .ProseMirror .has-text-align-justify { text-align: justify; }
+
+
   .ProseMirror h1,
   .ProseMirror h2,
   .ProseMirror h3 {
@@ -219,6 +227,16 @@
     height: 0;
     font-style: italic;
   }
+
+  .ProseMirror sup {
+    @apply align-super text-xs;
+  }
+  .ProseMirror sub {
+    @apply align-sub text-xs;
+  }
+  .ProseMirror a {
+    @apply text-accent underline underline-offset-2 hover:text-accent/80;
+  }
 }
 
 
@@ -243,8 +261,7 @@
       hsl(var(--line-color)) var(--text-line-height)
     );
     background-size: 100% var(--text-line-height);
-    /* Adjust background position slightly if needed for Tiptap content */
-    background-position-y: 4px; /* Example adjustment, tune this value */
+    background-position-y: 4px; 
   }
   .page-bg-grid {
     background-image: 
@@ -253,4 +270,3 @@
     background-size: 20px 20px; 
   }
 }
-
