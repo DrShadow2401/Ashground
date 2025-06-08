@@ -48,7 +48,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
         heading: {
           levels: [1, 2, 3],
         },
-        gapcursor: false, // Good for preventing unexpected gaps
+        gapcursor: false,
       }),
       UnderlineExtension,
       PlaceholderExtension.configure({
@@ -61,8 +61,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
     },
     editorProps: {
       attributes: {
-        // Improves accessibility and allows for better styling control if needed
-        class: 'prose dark:prose-invert prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none w-full',
+        class: 'prose dark:prose-invert prose-sm sm:prose-base lg:prose-lg xl:prose-2xl focus:outline-none w-full',
       },
     },
   });
@@ -81,13 +80,34 @@ const PageEditor: React.FC<PageEditorProps> = ({
   useEffect(() => {
     if (editor && editor.isEditable && editor.getHTML() !== noteContent) {
       const { from, to } = editor.state.selection;
-      editor.commands.setContent(noteContent, false); 
-      if (from <= editor.state.doc.content.size && to <= editor.state.doc.content.size) {
-        editor.commands.setTextSelection({ from, to });
+      editor.commands.setContent(noteContent, false);
+      // Ensure selection is within bounds after setting content
+      const docSize = editor.state.doc.content.size;
+      const newFrom = Math.min(from, docSize);
+      const newTo = Math.min(to, docSize);
+      if (newFrom <= docSize && newTo <= docSize) {
+         editor.commands.setTextSelection({ from: newFrom, to: newTo });
       }
     }
   }, [noteContent, editor]);
 
+  const handlePaperClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    // Only focus if the click isn't directly on the editor's interactive content
+    // or if the editor isn't already focused. This helps avoid interfering
+    // with Tiptap's own click handling within actual text.
+    if (editor && !editor.isFocused) {
+       // Check if the click target is the paper div itself or a non-interactive child
+       if (event.target === event.currentTarget || !(event.target as HTMLElement).closest('.ProseMirror')) {
+        editor.chain().focus('end').run();
+      }
+    } else if (editor && editor.isFocused) {
+      // If editor is focused, but click is on the "empty" paper area (e.g., padding),
+      // also move cursor to end.
+      if (event.target === event.currentTarget) {
+         editor.chain().focus('end').run();
+      }
+    }
+  };
 
   return (
     <div
@@ -105,13 +125,14 @@ const PageEditor: React.FC<PageEditorProps> = ({
       />
       <div
         className={cn(
-          'flex-1 relative flex flex-col', // min-h-0 removed to allow natural growth
+          'flex-1 relative flex flex-col min-h-0', 
           backgroundClassMap[backgroundStyle]
         )}
+        onClick={handlePaperClick} // Add click handler here
       >
         <EditorContent
           editor={editor}
-          className="flex-1 tiptap-editor" // overflow-y-auto removed
+          className="flex-1 tiptap-editor" 
         />
       </div>
     </div>
