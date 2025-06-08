@@ -1,26 +1,29 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import type { Editor } from '@tiptap/react';
 import AshgroundHeader from '@/components/ashground-header';
 import PageEditor from '@/components/page-editor';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import HomeTools from '@/components/tool-sections/home-tools';
 import DrawTools from '@/components/tool-sections/draw-tools';
 import ViewTools from '@/components/tool-sections/view-tools';
 import ExportTools from '@/components/tool-sections/export-tools';
-import { cn } from '@/lib/utils';
+
 
 type PageBackground = 'plain' | 'lined' | 'grid';
 type PageTheme = 'light' | 'dark' | 'pastel';
 
 export default function Home() {
-  const [noteContent, setNoteContent] = useState<string>('');
+  const [noteContent, setNoteContent] = useState<string>(''); // Will store HTML content
   const [activeTab, setActiveTab] = useState<string>('home');
   const [pageBackground, setPageBackground] = useState<PageBackground>('plain');
   const [pageTheme, setPageTheme] = useState<PageTheme>('light');
-
   const [isMounted, setIsMounted] = useState(false);
+  
+  const editorRef = useRef<Editor | null>(null);
+
 
   useEffect(() => {
     setIsMounted(true);
@@ -33,19 +36,18 @@ export default function Home() {
 
     const htmlClasses = document.documentElement.classList;
     if (savedTheme) {
-      setPageTheme(savedTheme); // Set state first
+      setPageTheme(savedTheme); 
       if (savedTheme === 'dark') {
         htmlClasses.remove('theme-pastel');
         htmlClasses.add('dark');
       } else if (savedTheme === 'pastel') {
         htmlClasses.remove('dark');
         htmlClasses.add('theme-pastel');
-      } else { // 'light'
+      } else { 
         htmlClasses.remove('dark');
         htmlClasses.remove('theme-pastel');
       }
     } else {
-      // Default to light app theme if no saved theme
        htmlClasses.remove('dark');
        htmlClasses.remove('theme-pastel');
     }
@@ -73,7 +75,7 @@ export default function Home() {
       } else if (pageTheme === 'pastel') {
         htmlClasses.remove('dark');
         htmlClasses.add('theme-pastel');
-      } else { // 'light'
+      } else { 
         htmlClasses.remove('dark');
         htmlClasses.remove('theme-pastel');
       }
@@ -81,8 +83,7 @@ export default function Home() {
   }, [pageTheme, isMounted]);
 
   if (!isMounted) {
-    // Render nothing or a loading indicator SSR/hydration mismatch
-    return null;
+    return null; 
   }
 
   const tabItems = [
@@ -110,8 +111,8 @@ export default function Home() {
         </TabsList>
 
         <div className="max-w-3xl mx-auto mb-6">
-          <div className="bg-muted p-3 rounded-lg shadow-inner">
-            {activeTab === 'home' && <HomeTools />}
+          <div className="bg-muted p-3 rounded-lg shadow-inner min-h-[52px]"> {/* Ensure min height for toolbar */}
+            {activeTab === 'home' && <HomeTools editor={editorRef.current} />}
             {activeTab === 'draw' && <DrawTools />}
             {activeTab === 'view' && (
               <ViewTools
@@ -124,40 +125,19 @@ export default function Home() {
             {activeTab === 'export' && <ExportTools noteContent={noteContent} />}
           </div>
         </div>
-
-        <TabsContent value="home" className="mt-0">
-          <PageEditor
-            noteContent={noteContent}
-            onNoteChange={setNoteContent}
-            backgroundStyle={pageBackground}
-            pageTheme={pageTheme}
-          />
-        </TabsContent>
-        <TabsContent value="draw" className="mt-0">
-          <PageEditor
-            noteContent={noteContent}
-            onNoteChange={setNoteContent}
-            backgroundStyle={pageBackground}
-            pageTheme={pageTheme}
-          />
-        </TabsContent>
-        <TabsContent value="view" className="mt-0">
-           <PageEditor
-            noteContent={noteContent}
-            onNoteChange={setNoteContent}
-            backgroundStyle={pageBackground}
-            pageTheme={pageTheme}
-          />
-        </TabsContent>
-        <TabsContent value="export" className="mt-0">
-          <PageEditor
-            noteContent={noteContent}
-            onNoteChange={setNoteContent}
-            backgroundStyle={pageBackground}
-            pageTheme={pageTheme}
-          />
-        </TabsContent>
+        
+        {/* Render PageEditor once and control its content based on active tab if needed, 
+            but for now, it's the same editor instance for all.
+            The editorRef is passed to PageEditor. */}
+        <PageEditor
+          editorRef={editorRef}
+          noteContent={noteContent}
+          onNoteChange={setNoteContent}
+          backgroundStyle={pageBackground}
+          pageTheme={pageTheme}
+        />
       </Tabs>
     </main>
   );
 }
+
