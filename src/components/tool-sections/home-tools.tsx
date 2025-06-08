@@ -16,22 +16,22 @@ import {
   Quote,
   Code2,
   Link as LinkIcon,
-  Baseline, // For Font Color (conceptual)
+  Baseline, 
   Superscript,
   Subscript,
   AlignLeft,
   AlignCenter,
   AlignRight,
   AlignJustify,
-  Eraser, // For Clear Formatting
-  Undo2, // For Undo
-  Redo2, // For Redo
-  Minus, // Horizontal Rule (already there)
-  CheckSquare, // Placeholder for checklist, not implemented
-  Table2, // Placeholder for table, not implemented
-  ChevronsUpDown, // Placeholder for toggle, not implemented
-  ImageUp, // Placeholder for image, not implemented
-  Highlighter, // Placeholder for highlight, not implemented
+  Eraser, 
+  Undo2, 
+  Redo2, 
+  Minus, 
+  CheckSquare, 
+  Table2, 
+  ChevronsUpDown, 
+  ImageUp, 
+  Highlighter, 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -40,48 +40,68 @@ interface HomeToolsProps {
 }
 
 const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
-  const [, setForceUpdateKey] = useState(0);
-  const editor = editorRef.current;
+  const [, setForceUpdateKey] = useState(0); // Hook 1: useState
+  const editor = editorRef.current; // Get current editor instance for dependencies
 
+  // Hook 2: useEffect - setups listeners and forces update for button states
   useEffect(() => {
-    const currentEditor = editorRef.current;
-    if (currentEditor) {
+    const currentEditorInstance = editorRef.current; // Use the ref's current value inside the effect
+    if (currentEditorInstance) {
       const handleUpdate = () => {
-        setForceUpdateKey(k => k + 1);
+        setForceUpdateKey(k => k + 1); 
       };
       
-      currentEditor.on('transaction', handleUpdate);
-      currentEditor.on('selectionUpdate', handleUpdate);
+      currentEditorInstance.on('transaction', handleUpdate);
+      currentEditorInstance.on('selectionUpdate', handleUpdate);
       
-      handleUpdate(); 
+      handleUpdate(); // Initial update for button states
 
       return () => {
-        currentEditor.off('transaction', handleUpdate);
-        currentEditor.off('selectionUpdate', handleUpdate);
+        currentEditorInstance.off('transaction', handleUpdate);
+        currentEditorInstance.off('selectionUpdate', handleUpdate);
       };
     }
-  }, [editorRef, editor]);
+  }, [editorRef, editor]); // Re-run when editor instance (editor) becomes available or editorRef itself changes.
+                           // Simplified to [editor] if editor = editorRef.current is stable for effect definition.
+                           // Using [editorRef, editor] is safer if editorRef could be a new ref object.
 
+
+  // Hook 3: useCallback for handleLink - defined unconditionally
+  const handleLink = useCallback(() => {
+    const currentEditor = editorRef.current; // Always use the ref's current value inside callbacks
+    if (!currentEditor) {
+      console.warn("handleLink called when editor is not available");
+      return;
+    }
+    const previousUrl = currentEditor.getAttributes('link').href;
+    // Prompt for URL, allow empty string to remove link
+    const url = window.prompt('Enter URL (leave empty to remove link):', previousUrl || '');
+
+    if (url === null) { // User pressed cancel
+      return;
+    }
+    if (url === '') { // User wants to remove the link
+      currentEditor.chain().focus().extendMarkRange('link').unsetLink().run();
+      return;
+    }
+    // Apply the link
+    currentEditor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  }, [editorRef]); // Dependency on editorRef (stable ref object)
+
+  // Conditional rendering: If editor is not yet available, show loading.
+  // This is now AFTER all hook calls.
   if (!editor) {
-    return <div className="flex justify-center items-center h-full w-full"><p className="text-muted-foreground text-sm">Editor loading...</p></div>;
+    return (
+      <div className="flex justify-center items-center h-full w-full">
+        <p className="text-muted-foreground text-sm">Editor loading...</p>
+      </div>
+    );
   }
 
-  const isButtonActive = (type: string, options?: Record<string, any>) => editor.isActive(type, options);
-
-  const handleLink = useCallback(() => {
-    if (!editor) return;
-    const previousUrl = editor.getAttributes('link').href;
-    const url = window.prompt('URL', previousUrl);
-
-    if (url === null) {
-      return;
-    }
-    if (url === '') {
-      editor.chain().focus().extendMarkRange('link').unsetLink().run();
-      return;
-    }
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-  }, [editor]);
+  // Helper function, not a hook, defined after editor is confirmed to exist.
+  const isButtonActive = (type: string, options?: Record<string, any>): boolean => {
+    return editor.isActive(type, options);
+  };
 
   const toolGroups = [
     // Basic Text Formatting
@@ -148,7 +168,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
                 'hover:bg-accent/50',
                 tool.isActive() ? 'bg-accent text-accent-foreground' : ''
               )}
-              disabled={tool.disabled || (tool.label.includes('(NA)'))}
+              disabled={tool.disabled || (tool.label.includes('(NA)')) || !editor.isEditable} // Disable if editor not editable
             >
               {tool.icon}
             </Button>
