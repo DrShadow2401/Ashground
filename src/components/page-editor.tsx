@@ -71,7 +71,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
         heading: {
           levels: [1, 2, 3],
         },
-        gapcursor: false, 
+        gapcursor: false,
       }),
       UnderlineExtension,
       PlaceholderExtension.configure({
@@ -105,45 +105,47 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
   });
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isPainting, setIsPainting] = useState(false);
-  const [lastPosition, setLastPosition] = useState<{ x: number; y: number } | null>(null);
+  const isPaintingRef = useRef(false);
+  const lastPositionRef = useRef<{ x: number; y: number } | null>(null);
+  const canvasContextRef = useRef<CanvasRenderingContext2D | null>(null);
+  
+  const [canvasKey, setCanvasKey] = useState(0); // Used to force re-render/re-capture of canvas for resize
 
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (canvas) {
       const parent = canvas.parentElement;
       if (parent) {
-        const oldWidth = canvas.width;
-        const oldHeight = canvas.height;
-        let tempImageData = null;
-
-        if (oldWidth > 0 && oldHeight > 0) { // Only capture if canvas was already valid
-            tempImageData = canvas.getContext('2d')?.getImageData(0, 0, oldWidth, oldHeight);
+        // Capture the current drawing BEFORE resizing
+        let currentDrawingDataUrl: string | null = null;
+        if (canvas.width > 0 && canvas.height > 0) {
+            try {
+                currentDrawingDataUrl = canvas.toDataURL();
+            } catch (e) {
+                // console.error("Error capturing canvas data URL:", e);
+                currentDrawingDataUrl = null; // Fallback if canvas is tainted or too large
+            }
         }
-        
+
         const newWidth = parent.clientWidth;
         const newHeight = parent.clientHeight;
 
         if (canvas.width !== newWidth || canvas.height !== newHeight) {
-            canvas.width = newWidth;
-            canvas.height = newHeight;
+          canvas.width = newWidth;
+          canvas.height = newHeight;
+          const ctx = canvas.getContext('2d');
+          canvasContextRef.current = ctx; // Update context ref
 
-            if (tempImageData && newWidth > 0 && newHeight > 0) {
-                try {
-                    canvas.getContext('2d')?.putImageData(tempImageData, 0, 0);
-                } catch (e) {
-                    // console.error("Error restoring canvas data after resize:", e);
-                    const ctx = canvas.getContext('2d');
-                    if (ctx) {
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    }
-                }
-            } else if (newWidth > 0 && newHeight > 0) { 
-                const ctx = canvas.getContext('2d');
-                if (ctx) {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                }
+          if (ctx) {
+            ctx.clearRect(0, 0, newWidth, newHeight); // Clear new canvas first
+            if (currentDrawingDataUrl && newWidth > 0 && newHeight > 0) {
+              const img = new Image();
+              img.onload = () => {
+                ctx.drawImage(img, 0, 0);
+              };
+              img.src = currentDrawingDataUrl;
             }
+          }
         }
       }
     }
@@ -152,8 +154,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
 
   useEffect(() => {
     window.addEventListener('resize', resizeCanvas);
-    // Initial resize needs to happen after the layout is stable
-    const timeoutId = setTimeout(resizeCanvas, 0); 
+    const timeoutId = setTimeout(resizeCanvas, 0);
     return () => {
       window.removeEventListener('resize', resizeCanvas);
       clearTimeout(timeoutId);
@@ -164,12 +165,14 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
   useImperativeHandle(ref, () => ({
     clearCanvas: () => {
       const canvas = canvasRef.current;
-      const ctx = canvas?.getContext('2d');
+      const ctx = canvasContextRef.current; // Use stored context
       if (ctx && canvas) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Force re-capture for resize logic by changing key if necessary, or ensure resize uses cleared state
+        setCanvasKey(prevKey => prevKey + 1); 
       }
     }
-  }));
+  }), [canvasContextRef]);
 
   useEffect(() => {
     if (editor && editorTiptapRef) {
@@ -207,36 +210,23 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
     }
   }, [isDrawingMode, editor]);
 
+
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    if (isDrawingMode && (currentDrawTool === 'pen' || currentDrawTool === 'eraser')) {
-      resizeCanvas();
-    }
-
-    if (!isDrawingMode || !(currentDrawTool === 'pen' || currentDrawTool === 'eraser')) {
-      setIsPainting(false); 
+    if (!canvas || !isDrawingMode || !(currentDrawTool === 'pen' || currentDrawTool === 'eraser')) {
+      isPaintingRef.current = false; // Ensure painting stops if mode changes
       return;
     }
     
-    const ctx = canvas.getContext('2d');
+    // Ensure canvas is sized correctly when drawing mode activates
+    resizeCanvas(); 
+    // Store and re-use the context
+    if (!canvasContextRef.current) {
+        canvasContextRef.current = canvas.getContext('2d');
+    }
+    const ctx = canvasContextRef.current;
     if (!ctx) return;
 
-    let effectiveDrawColor = drawColor;
-    if (currentDrawTool === 'pen') {
-      if (pageTheme === 'dark' && drawColor.toLowerCase() === '#000000') {
-        effectiveDrawColor = '#FFFFFF'; // Draw in white on dark theme if default black is selected
-      }
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.strokeStyle = effectiveDrawColor;
-      ctx.lineWidth = drawStrokeWidth;
-    } else if (currentDrawTool === 'eraser') {
-      ctx.globalCompositeOperation = 'destination-out';
-      ctx.lineWidth = drawStrokeWidth; 
-    }
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
 
     const getMousePosition = (event: MouseEvent | TouchEvent): { x: number; y: number } | null => {
       const rect = canvas.getBoundingClientRect();
@@ -257,18 +247,23 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
     };
 
     const startPaint = (event: MouseEvent | TouchEvent) => {
+      if (!(event.target === canvas)) return; // Only paint if event is directly on canvas
       event.preventDefault();
+      
       const pos = getMousePosition(event);
-      if (!pos) return;
+      if (!pos || !ctx) return;
 
-      // Re-apply context settings specific to the tool and current properties
+      isPaintingRef.current = true;
+      lastPositionRef.current = pos;
+
+      // Apply tool-specific context settings
       if (currentDrawTool === 'pen') {
-        let currentEffectiveDrawColor = drawColor;
-        if (pageTheme === 'dark' && drawColor.toLowerCase() === '#000000') {
-            currentEffectiveDrawColor = '#FFFFFF';
+        let effectiveDrawColor = drawColor;
+        if (pageTheme === 'dark' && (drawColor.toLowerCase() === '#000000' || drawColor.toLowerCase() === '#000')) {
+          effectiveDrawColor = '#FFFFFF';
         }
         ctx.globalCompositeOperation = 'source-over';
-        ctx.strokeStyle = currentEffectiveDrawColor;
+        ctx.strokeStyle = effectiveDrawColor;
         ctx.lineWidth = drawStrokeWidth;
       } else if (currentDrawTool === 'eraser') {
         ctx.globalCompositeOperation = 'destination-out';
@@ -277,53 +272,65 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       
-      setIsPainting(true);
-      setLastPosition(pos);
-      
       ctx.beginPath();
       ctx.moveTo(pos.x, pos.y);
+
+      // Add window event listeners for robust mouse/touch tracking
+      window.addEventListener('mousemove', paint);
+      window.addEventListener('mouseup', endPaint);
+      window.addEventListener('touchmove', paint, { passive: false });
+      window.addEventListener('touchend', endPaint);
+      window.addEventListener('touchcancel', endPaint);
     };
 
     const paint = (event: MouseEvent | TouchEvent) => {
-      event.preventDefault();
-      if (!isPainting || !lastPosition) return; 
+      if (!isPaintingRef.current || !lastPositionRef.current || !ctx) return;
+      // For touch events, check if target is canvas to avoid drawing when scrolling page
+      if (event instanceof TouchEvent && !(event.target === canvas)) {
+         // return; // This might be too aggressive, could prevent drawing if touch starts on canvas and moves slightly off.
+      }
+      event.preventDefault(); // Prevent scrolling while drawing on touch devices
       
       const pos = getMousePosition(event);
       if (!pos) return;
 
       ctx.lineTo(pos.x, pos.y);
       ctx.stroke();
-      setLastPosition(pos);
+      lastPositionRef.current = pos;
     };
 
     const endPaint = () => {
-      if (!isPainting) return;
-      setIsPainting(false);
-      setLastPosition(null);
-      ctx.closePath(); 
+      if (!isPaintingRef.current) return;
+      isPaintingRef.current = false;
+      lastPositionRef.current = null;
+      if (ctx) {
+          ctx.closePath();
+      }
+      
+      // Remove window event listeners
+      window.removeEventListener('mousemove', paint);
+      window.removeEventListener('mouseup', endPaint);
+      window.removeEventListener('touchmove', paint);
+      window.removeEventListener('touchend', endPaint);
+      window.removeEventListener('touchcancel', endPaint);
     };
 
+    // Attach only mousedown/touchstart to the canvas itself
     canvas.addEventListener('mousedown', startPaint);
-    canvas.addEventListener('mousemove', paint);
-    canvas.addEventListener('mouseup', endPaint);
-    canvas.addEventListener('mouseleave', endPaint);
-
     canvas.addEventListener('touchstart', startPaint, { passive: false });
-    canvas.addEventListener('touchmove', paint, { passive: false });
-    canvas.addEventListener('touchend', endPaint);
-    canvas.addEventListener('touchcancel', endPaint);
 
     return () => {
       canvas.removeEventListener('mousedown', startPaint);
-      canvas.removeEventListener('mousemove', paint);
-      canvas.removeEventListener('mouseup', endPaint);
-      canvas.removeEventListener('mouseleave', endPaint);
       canvas.removeEventListener('touchstart', startPaint);
-      canvas.removeEventListener('touchmove', paint);
-      canvas.removeEventListener('touchend', endPaint);
-      canvas.removeEventListener('touchcancel', endPaint);
+      
+      // Clean up window listeners if component unmounts while painting
+      window.removeEventListener('mousemove', paint);
+      window.removeEventListener('mouseup', endPaint);
+      window.removeEventListener('touchmove', paint);
+      window.removeEventListener('touchend', endPaint);
+      window.removeEventListener('touchcancel', endPaint);
     };
-  }, [isDrawingMode, currentDrawTool, drawColor, drawStrokeWidth, pageTheme, resizeCanvas]); 
+  }, [isDrawingMode, currentDrawTool, drawColor, drawStrokeWidth, pageTheme, resizeCanvas]);
 
 
   const handlePaperClick = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -368,6 +375,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
           )}
         />
         <canvas
+          key={canvasKey} // Using key to help with re-initialization if needed
           ref={canvasRef}
           className={cn(
             "absolute top-0 left-0 w-full h-full", 
@@ -381,4 +389,4 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
 
 PageEditor.displayName = 'PageEditor';
 export default PageEditor;
-
+    
