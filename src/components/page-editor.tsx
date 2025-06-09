@@ -14,6 +14,7 @@ import ImageExtension from '@tiptap/extension-image';
 import TaskListExtension from '@tiptap/extension-task-list';
 import TaskItemExtension from '@tiptap/extension-task-item';
 
+
 import { cn } from '@/lib/utils';
 
 type PageBackground = 'plain' | 'lined' | 'grid';
@@ -26,7 +27,7 @@ export interface PageEditorProps {
   onNoteChange: (content: string) => void;
   backgroundStyle: PageBackground;
   pageTheme: PageTheme;
-  editorTiptapRef?: React.MutableRefObject<Editor | null>; // Renamed for clarity
+  editorTiptapRef?: React.MutableRefObject<Editor | null>;
   isDrawingMode: boolean;
   currentDrawTool: string | null;
   drawColor: string;
@@ -70,7 +71,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
         heading: {
           levels: [1, 2, 3],
         },
-        gapcursor: false,
+        gapcursor: false, // Recommended for better cursor behavior near nodes
       }),
       UnderlineExtension,
       PlaceholderExtension.configure({
@@ -112,12 +113,21 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
     if (canvas) {
       const parent = canvas.parentElement;
       if (parent) {
-        // Preserve drawing if any, then resize
         const tempImageData = canvas.getContext('2d')?.getImageData(0, 0, canvas.width, canvas.height);
         canvas.width = parent.clientWidth;
         canvas.height = parent.clientHeight;
-        if (tempImageData) {
-          canvas.getContext('2d')?.putImageData(tempImageData, 0, 0);
+        if (tempImageData && canvas.width > 0 && canvas.height > 0) {
+         try {
+            canvas.getContext('2d')?.putImageData(tempImageData, 0, 0);
+          } catch (e) {
+            // This can happen if the canvas was previously 0x0, then tempImageData is invalid
+            // console.error("Error restoring canvas data after resize:", e);
+            // In this case, just clear the canvas as data is lost
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.clearRect(0,0, canvas.width, canvas.height);
+            }
+          }
         }
       }
     }
@@ -125,9 +135,11 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
 
   useEffect(() => {
     window.addEventListener('resize', resizeCanvas);
-    resizeCanvas(); // Initial resize
+    // Initial resize needs to happen after the layout is stable
+    const timeoutId = setTimeout(resizeCanvas, 0); 
     return () => {
       window.removeEventListener('resize', resizeCanvas);
+      clearTimeout(timeoutId);
     };
   }, [resizeCanvas]);
 
@@ -163,9 +175,10 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
         const newTo = Math.min(to, docSize);
         if (newFrom <= docSize && newTo <= docSize) {
           editor.commands.setTextSelection({ from: newFrom, to: newTo });
+        } else {
+          editor.commands.setTextSelection(editor.state.doc.content.size);
         }
       } catch (e) {
-        // Catch potential errors during selection setting on content change
         editor.commands.setTextSelection(editor.state.doc.content.size);
       }
     }
@@ -179,14 +192,30 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !isDrawingMode || !(currentDrawTool === 'pen' || currentDrawTool === 'eraser')) {
-      setIsPainting(false);
+    if (!canvas) return;
+
+    if (!isDrawingMode || !(currentDrawTool === 'pen' || currentDrawTool === 'eraser')) {
+      setIsPainting(false); // Ensure painting state is reset
       return;
     }
-    resizeCanvas(); // Ensure canvas dimensions are up-to-date
+    
+    // Ensure canvas is sized correctly for the drawing session
+    resizeCanvas();
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    // Configure context for the current tool
+    if (currentDrawTool === 'pen') {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = drawColor;
+      ctx.lineWidth = drawStrokeWidth;
+    } else if (currentDrawTool === 'eraser') {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.lineWidth = drawStrokeWidth; // Eraser size uses strokeWidth
+    }
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
 
     const getMousePosition = (event: MouseEvent | TouchEvent): { x: number; y: number } | null => {
       const rect = canvas.getBoundingClientRect();
@@ -207,33 +236,33 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
     };
 
     const startPaint = (event: MouseEvent | TouchEvent) => {
-      event.preventDefault(); 
-      if (!(currentDrawTool === 'pen' || currentDrawTool === 'eraser')) return;
-      
+      event.preventDefault();
       const pos = getMousePosition(event);
       if (!pos) return;
-      
-      setIsPainting(true);
-      setLastPosition(pos);
-      
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y);
-      
+
+      // Re-apply context settings for safety, in case they were changed elsewhere
+      // or if startPaint is called without the main effect re-running (though unlikely with current deps)
       if (currentDrawTool === 'pen') {
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = drawColor;
         ctx.lineWidth = drawStrokeWidth;
       } else if (currentDrawTool === 'eraser') {
         ctx.globalCompositeOperation = 'destination-out';
-        ctx.lineWidth = drawStrokeWidth; // Eraser size
+        ctx.lineWidth = drawStrokeWidth;
       }
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
+      
+      setIsPainting(true);
+      setLastPosition(pos);
+      
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
     };
 
     const paint = (event: MouseEvent | TouchEvent) => {
-      event.preventDefault(); 
-      if (!isPainting || !(currentDrawTool === 'pen' || currentDrawTool === 'eraser') || !lastPosition) return;
+      event.preventDefault();
+      if (!isPainting || !lastPosition) return; // Check lastPosition as well
       
       const pos = getMousePosition(event);
       if (!pos) return;
@@ -247,7 +276,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       if (!isPainting) return;
       setIsPainting(false);
       setLastPosition(null);
-      ctx.closePath();
+      ctx.closePath(); // closePath might not be necessary for just lines, but doesn't harm
     };
 
     canvas.addEventListener('mousedown', startPaint);
@@ -270,7 +299,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       canvas.removeEventListener('touchend', endPaint);
       canvas.removeEventListener('touchcancel', endPaint);
     };
-  }, [isDrawingMode, currentDrawTool, isPainting, drawColor, drawStrokeWidth, lastPosition, resizeCanvas]);
+  }, [isDrawingMode, currentDrawTool, drawColor, drawStrokeWidth, resizeCanvas]); // Added resizeCanvas to deps
 
 
   const handlePaperClick = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -279,7 +308,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
     }
   
     if (editor) {
-       if (event.target === event.currentTarget ) {
+       if (event.target === event.currentTarget ) { // Only focus if the click is on the paper itself, not its children (like ProseMirror)
          editor.chain().focus('end').run();
        }
     }
@@ -302,7 +331,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       />
       <div
         className={cn(
-          'flex-1 relative flex flex-col min-h-0', // Ensure this container can define canvas size
+          'flex-1 relative flex flex-col min-h-0', 
           backgroundClassMap[backgroundStyle]
         )}
         onClick={handlePaperClick}
@@ -310,14 +339,14 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
         <EditorContent
           editor={editor}
           className={cn(
-            "flex-1 tiptap-editor",
-            isDrawingMode ? 'pointer-events-none opacity-70' : '' // Make editor non-interactive in draw mode
+            "flex-1 tiptap-editor", // tiptap-editor ensures it can grow
+            isDrawingMode ? 'pointer-events-none opacity-70' : '' 
           )}
         />
         <canvas
           ref={canvasRef}
           className={cn(
-            "absolute top-0 left-0 w-full h-full", // Canvas covers the parent div
+            "absolute top-0 left-0 w-full h-full", 
             isDrawingMode && (currentDrawTool === 'pen' || currentDrawTool === 'eraser') ? 'pointer-events-auto z-10' : 'pointer-events-none -z-10'
           )}
         />
@@ -328,3 +357,4 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
 
 PageEditor.displayName = 'PageEditor';
 export default PageEditor;
+
