@@ -14,11 +14,11 @@ import HighlightExtension from '@tiptap/extension-highlight';
 import ImageExtension from '@tiptap/extension-image';
 import TaskListExtension from '@tiptap/extension-task-list';
 import TaskItemExtension from '@tiptap/extension-task-item';
-import TableExtension from '@tiptap/extension-table';
-import TableRowExtension from '@tiptap/extension-table-row';
-import TableCellExtension from '@tiptap/extension-table-cell';
-import TableHeaderExtension from '@tiptap/extension-table-header';
-
+// Removed Table Extensions
+// import TableExtension from '@tiptap/extension-table';
+// import TableRowExtension from '@tiptap/extension-table-row';
+// import TableCellExtension from '@tiptap/extension-table-cell';
+// import TableHeaderExtension from '@tiptap/extension-table-header';
 
 import { cn } from '@/lib/utils';
 
@@ -96,12 +96,12 @@ const PageEditor: React.FC<PageEditorProps> = ({
       TaskItemExtension.configure({
         nested: true,
       }),
-      TableExtension.configure({
-        resizable: true,
-      }),
-      TableRowExtension,
-      TableHeaderExtension,
-      TableCellExtension,
+      // TableExtension.configure({ // Removed Table Extension
+      //   resizable: true,
+      // }),
+      // TableRowExtension,
+      // TableHeaderExtension,
+      // TableCellExtension,
     ],
     content: noteContent,
     onUpdate: ({ editor: tiptapEditor }) => {
@@ -142,7 +142,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
       }
     }
   }, [noteContent, editor]);
-  
+
   useEffect(() => {
     if (editor) {
       editor.setEditable(!isDrawingMode);
@@ -164,7 +164,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
       canvas.width = parent.clientWidth;
       canvas.height = parent.clientHeight;
     }
-    
+
 
     const getMousePosition = (event: MouseEvent | TouchEvent): { x: number; y: number } | null => {
       const rect = canvas.getBoundingClientRect();
@@ -185,7 +185,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
     };
 
     const startPaint = (event: MouseEvent | TouchEvent) => {
-      event.preventDefault(); 
+      event.preventDefault();
       if (currentDrawTool !== 'pen') return;
       const pos = getMousePosition(event);
       if (!pos) return;
@@ -221,7 +221,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
     canvas.addEventListener('mousemove', paint);
     canvas.addEventListener('mouseup', endPaint);
     canvas.addEventListener('mouseleave', endPaint);
-    
+
     canvas.addEventListener('touchstart', startPaint, { passive: false });
     canvas.addEventListener('touchmove', paint, { passive: false });
     canvas.addEventListener('touchend', endPaint);
@@ -242,7 +242,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
 
 
   const handlePaperClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (isDrawingMode) return; 
+    if (isDrawingMode) return;
 
     if (editor && !editor.isFocused) {
        if (event.target === event.currentTarget || !(event.target as HTMLElement).closest('.ProseMirror')) {
@@ -258,7 +258,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
   return (
     <div
       className={cn(
-        'w-full max-w-3xl mx-auto p-8 md:p-12 rounded-xl shadow-xl min-h-[60vh] flex flex-col transition-colors duration-300 relative', 
+        'w-full max-w-3xl mx-auto p-8 md:p-12 rounded-xl shadow-xl min-h-[60vh] flex flex-col transition-colors duration-300 relative',
         themeClassMap[pageTheme]
       )}
     >
@@ -272,7 +272,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
       />
       <div
         className={cn(
-          'flex-1 relative flex flex-col min-h-0', 
+          'flex-1 relative flex flex-col min-h-0',
           backgroundClassMap[backgroundStyle]
         )}
         onClick={handlePaperClick}
@@ -281,14 +281,14 @@ const PageEditor: React.FC<PageEditorProps> = ({
           editor={editor}
           className={cn(
             "flex-1 tiptap-editor",
-            isDrawingMode ? 'pointer-events-none' : '' 
+            isDrawingMode ? 'pointer-events-none' : ''
           )}
         />
         <canvas
           ref={canvasRef}
           className={cn(
             "absolute top-0 left-0 w-full h-full",
-            isDrawingMode && currentDrawTool === 'pen' ? 'pointer-events-auto z-10' : 'pointer-events-none -z-10' 
+            isDrawingMode && currentDrawTool === 'pen' ? 'pointer-events-auto z-10' : 'pointer-events-none -z-10'
           )}
         />
       </div>

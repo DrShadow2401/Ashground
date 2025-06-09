@@ -16,22 +16,22 @@ import {
   Quote,
   Code2,
   Link as LinkIcon,
-  Baseline, 
+  Baseline,
   Superscript,
   Subscript,
   AlignLeft,
   AlignCenter,
   AlignRight,
   AlignJustify,
-  Eraser, 
-  Undo2, 
-  Redo2, 
-  Minus, 
-  CheckSquare, 
-  Table2, 
-  ChevronsUpDown, 
-  ImageUp, 
-  Highlighter, 
+  Eraser,
+  Undo2,
+  Redo2,
+  Minus,
+  CheckSquare,
+  ImageUp,
+  Highlighter,
+  // Table2, // Removed Table2 icon
+  ChevronsUpDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -40,8 +40,24 @@ interface HomeToolsProps {
 }
 
 const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
-  const editor = editorRef.current; 
-  const [, setForceUpdateKey] = useState(0); 
+  const editor = editorRef.current;
+  const [, setForceUpdateKey] = useState(0);
+
+  useEffect(() => {
+    const currentEditorInstance = editorRef.current;
+    if (currentEditorInstance) {
+      const handleUpdate = () => {
+        setForceUpdateKey(k => k + 1);
+      };
+      currentEditorInstance.on('transaction', handleUpdate);
+      currentEditorInstance.on('selectionUpdate', handleUpdate);
+      handleUpdate();
+      return () => {
+        currentEditorInstance.off('transaction', handleUpdate);
+        currentEditorInstance.off('selectionUpdate', handleUpdate);
+      };
+    }
+  }, [editorRef, editor]);
 
   const handleLink = useCallback(() => {
     const currentEditor = editorRef.current;
@@ -52,10 +68,10 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     const previousUrl = currentEditor.getAttributes('link').href;
     const url = window.prompt('Enter URL (leave empty to remove link):', previousUrl || '');
 
-    if (url === null) { 
+    if (url === null) {
       return;
     }
-    if (url === '') { 
+    if (url === '') {
       currentEditor.chain().focus().extendMarkRange('link').unsetLink().run();
       return;
     }
@@ -73,25 +89,6 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
       currentEditor.chain().focus().setImage({ src: url }).run();
     }
   }, [editorRef]);
-
-  useEffect(() => {
-    const currentEditorInstance = editorRef.current; // Use ref.current directly in effect
-    if (currentEditorInstance) {
-      const handleUpdate = () => {
-        setForceUpdateKey(k => k + 1); 
-      };
-      
-      currentEditorInstance.on('transaction', handleUpdate);
-      currentEditorInstance.on('selectionUpdate', handleUpdate);
-      
-      handleUpdate(); 
-
-      return () => {
-        currentEditorInstance.off('transaction', handleUpdate);
-        currentEditorInstance.off('selectionUpdate', handleUpdate);
-      };
-    }
-  }, [editorRef, editor]); // Re-run if editorRef itself changes or the editor instance it points to changes.
 
 
   if (!editor) {
@@ -138,7 +135,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
       { icon: <LinkIcon />, label: 'Insert Link', action: handleLink, isActive: () => isButtonActive('link') },
       { icon: <Minus />, label: 'Horizontal Rule', action: () => editor.chain().focus().setHorizontalRule().run(), isActive: () => false },
       { icon: <CheckSquare />, label: 'Checklist', action: () => editor.chain().focus().toggleTaskList().run(), isActive: () => isButtonActive('taskList') },
-      { icon: <Table2 />, label: 'Insert Table', action: () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(), isActive: () => false },
+      // Removed Table Tool
       { icon: <ImageUp />, label: 'Insert Image', action: handleImageInsert, isActive: () => isButtonActive('image') },
       { icon: <ChevronsUpDown />, label: 'Toggle Section (NA)', action: () => {}, isActive: () => false, disabled: true },
     ],
@@ -180,5 +177,3 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
 };
 
 export default HomeTools;
-
-    
