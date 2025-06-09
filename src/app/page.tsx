@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { Editor } from '@tiptap/react';
 import AshgroundHeader from '@/components/ashground-header';
 import PageEditor from '@/components/page-editor';
@@ -22,6 +22,7 @@ export default function Home() {
   const [pageBackground, setPageBackground] = useState<PageBackground>('plain');
   const [pageTheme, setPageTheme] = useState<PageTheme>('light');
   const [isMounted, setIsMounted] = useState(false);
+  const [isEditorInitialized, setIsEditorInitialized] = useState(false);
   
   const editorRef = useRef<Editor | null>(null);
   const pageEditorRef = useRef<{ clearCanvas: () => void }>(null);
@@ -102,9 +103,13 @@ export default function Home() {
 
   useEffect(() => {
     if (activeTab !== 'draw') {
-      setCurrentDrawTool(null);
+      setCurrentDrawTool(null); // Deselect drawing tool if not on draw tab
     }
   }, [activeTab]);
+
+  const handleEditorReady = useCallback(() => {
+    setIsEditorInitialized(true);
+  }, []);
 
   if (!isMounted) {
     return null; 
@@ -141,8 +146,8 @@ export default function Home() {
         </TabsList>
 
         <div className="max-w-3xl mx-auto mb-6">
-          <div className="bg-muted p-3 rounded-lg shadow-inner min-h-[52px] flex justify-center">
-            {activeTab === 'home' && <HomeTools editorRef={editorRef} />}
+          <div className="bg-muted p-3 rounded-lg shadow-inner min-h-[52px] flex justify-center items-start">
+            {activeTab === 'home' && (isEditorInitialized ? <HomeTools editorRef={editorRef} /> : <p className="text-muted-foreground text-sm">Editor loading...</p>)}
             {activeTab === 'draw' && (
               <DrawTools 
                 activeTool={currentDrawTool}
@@ -168,7 +173,8 @@ export default function Home() {
         
         <PageEditor
           ref={pageEditorRef}
-          editorTiptapRef={editorRef} // Renamed prop for clarity
+          editorTiptapRef={editorRef}
+          onEditorReady={handleEditorReady}
           noteTitle={noteTitle}
           onNoteTitleChange={setNoteTitle}
           noteContent={noteContent}
@@ -184,3 +190,4 @@ export default function Home() {
     </main>
   );
 }
+

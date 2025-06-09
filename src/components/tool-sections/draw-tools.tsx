@@ -5,18 +5,24 @@ import { Separator } from '@/components/ui/separator';
 import {
   PenTool,
   Eraser,
-  Undo2, 
   Trash2, 
-  Palette,
+  Palette, // For color picker trigger
   PaintBucket, // Keeping for Fill, but disabled
-  Circle as CircleIcon, // Renamed to avoid conflict with React.Circle
-  Square as SquareIcon, // Renamed
-  Triangle as TriangleIcon, // Renamed
-  Minus as MinusIcon, // Renamed
-  ArrowRight as ArrowRightIcon, // Renamed
-  SlidersHorizontal, // Placeholder for Brush Size / Line Styles
+  Circle as CircleIcon, 
+  Square as SquareIcon, 
+  Triangle as TriangleIcon, 
+  Minus as MinusIcon, 
+  ArrowRight as ArrowRightIcon, 
+  Pipette, // Eyedropper (NA)
+  ListFilter, // Line Styles (NA)
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface DrawToolsProps {
   activeTool: string | null;
@@ -28,8 +34,8 @@ interface DrawToolsProps {
   onClearCanvas: () => void;
 }
 
-const drawColors = ['#000000', '#EF4444', '#3B82F6', '#22C55E', '#F97316', '#A855F7'];
-const strokeWidths = [2, 4, 8, 12];
+const presetDrawColors = ['#000000', '#EF4444', '#3B82F6', '#22C55E', '#F97316', '#A855F7', '#FFFFFF'];
+const presetStrokeWidths = [2, 4, 8, 12, 16];
 
 const DrawTools: React.FC<DrawToolsProps> = ({ 
   activeTool, 
@@ -48,21 +54,20 @@ const DrawTools: React.FC<DrawToolsProps> = ({
   const drawingToolButtons = [
     { name: 'pen', icon: <PenTool />, label: 'Pen' },
     { name: 'eraser', icon: <Eraser />, label: 'Eraser' },
-    // { name: 'undo', icon: <Undo2 />, label: 'Undo (NA)', disabled: true }, // Undo for drawing is complex
   ];
 
   const shapeToolButtons = [
-    { name: 'circle', icon: <CircleIcon />, label: 'Draw Circle (NA)', disabled: true },
-    { name: 'square', icon: <SquareIcon />, label: 'Draw Square (NA)', disabled: true },
-    { name: 'triangle', icon: <TriangleIcon />, label: 'Draw Triangle (NA)', disabled: true },
-    { name: 'line', icon: <MinusIcon />, label: 'Draw Line (NA)', disabled: true },
-    { name: 'arrow', icon: <ArrowRightIcon />, label: 'Draw Arrow (NA)', disabled: true },
+    { name: 'circle', icon: <CircleIcon />, label: 'Draw Circle' },
+    { name: 'square', icon: <SquareIcon />, label: 'Draw Square' },
+    { name: 'triangle', icon: <TriangleIcon />, label: 'Draw Triangle' },
+    { name: 'line', icon: <MinusIcon />, label: 'Draw Line' }, // Simple line
+    { name: 'arrow', icon: <ArrowRightIcon />, label: 'Draw Arrow' }, // Simple arrow
   ];
 
   const otherDrawingTools = [
      { name: 'fill', icon: <PaintBucket />, label: 'Fill Tool (NA)', disabled: true },
-    //  { name: 'eyedropper', icon: <Pipette />, label: 'Eyedropper Tool (NA)', disabled: true },
-    //  { name: 'lineStyles', icon: <ListFilter />, label: 'Line Styles (NA)', disabled: true },
+     { name: 'eyedropper', icon: <Pipette />, label: 'Eyedropper Tool (NA)', disabled: true },
+     { name: 'lineStyles', icon: <ListFilter />, label: 'Line Styles (NA)', disabled: true },
   ];
 
 
@@ -73,7 +78,7 @@ const DrawTools: React.FC<DrawToolsProps> = ({
         <Button
           variant="ghost"
           size="icon"
-          key={tool.label}
+          key={tool.name} // Use name for key as label might change
           onClick={() => handleToolClick(tool.name)}
           aria-label={tool.label}
           title={tool.label}
@@ -89,25 +94,28 @@ const DrawTools: React.FC<DrawToolsProps> = ({
       ))}
       <Separator orientation="vertical" className="h-6 mx-1" />
       
-      {/* Color Selection */}
-      {drawColors.map(color => (
-        <Button
-          key={color}
-          variant="outline"
-          size="icon"
-          title={`Color: ${color}`}
-          onClick={() => onDrawColorChange(color)}
-          className={cn(
-            'w-6 h-6 p-0 rounded-full border-2 hover:border-primary',
-            currentDrawColor === color ? 'border-primary ring-2 ring-ring ring-offset-2' : 'border-transparent'
-          )}
-          style={{ backgroundColor: color }}
-        />
-      ))}
+      {/* Color Selection Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" title="Select Draw Color" className="hover:bg-accent/50">
+            <Palette />
+             <div className="w-3 h-3 ml-1 rounded-sm border" style={{ backgroundColor: currentDrawColor }}/>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          {presetDrawColors.map(color => (
+            <DropdownMenuItem key={color} onClick={() => onDrawColorChange(color)} className={cn(currentDrawColor === color ? 'bg-accent/80' : '')}>
+              <div className="w-3 h-3 rounded-full border mr-2" style={{ backgroundColor: color }} />
+              {color}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      
       <Separator orientation="vertical" className="h-6 mx-1" />
 
       {/* Stroke Width Selection */}
-      {strokeWidths.map(width => (
+      {presetStrokeWidths.map(width => (
         <Button
           key={`stroke-${width}`}
           variant="ghost"
@@ -120,29 +128,32 @@ const DrawTools: React.FC<DrawToolsProps> = ({
           )}
         >
           <div className="flex items-center justify-center w-full h-full">
-            <div className={cn("rounded-full bg-foreground")} style={{width: `${width+2 > 10 ? 10 : width+2}px`, height: `${width+2 > 10 ? 10 : width+2}px`}}/>
+            <div className={cn("rounded-full bg-foreground")} style={{width: `${width+2 > 12 ? 12 : width+2}px`, height: `${width+2 > 12 ? 12 : width+2}px`}}/>
           </div>
         </Button>
       ))}
        <Separator orientation="vertical" className="h-6 mx-1" />
 
-
-      {/* Shape Tools (Disabled) */}
+      {/* Shape Tools */}
       {shapeToolButtons.map((tool) => (
         <Button
           variant="ghost"
           size="icon"
-          key={tool.label}
+          key={tool.name} // Use name for key
+          onClick={() => handleToolClick(tool.name)}
           aria-label={tool.label}
           title={tool.label}
           className={cn(
-            'hover:bg-accent/50 opacity-50 cursor-not-allowed'
+            'hover:bg-accent/50',
+            activeTool === tool.name ? 'bg-accent text-accent-foreground' : '',
+            (tool as any).disabled ? 'opacity-50 cursor-not-allowed' : ''
           )}
-          disabled
+          disabled={(tool as any).disabled}
         >
           {tool.icon}
         </Button>
       ))}
+       <Separator orientation="vertical" className="h-6 mx-1" />
       {/* Other Tools (Disabled) */}
       {otherDrawingTools.map((tool) => (
          <Button
