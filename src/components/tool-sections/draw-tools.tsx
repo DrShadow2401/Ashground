@@ -4,12 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
   PenTool,
-  Eraser,
+  // Eraser, // Removed
   Trash2,
   Palette,
   Pipette,
   ListFilter,
-  Minus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -65,7 +64,7 @@ const DrawTools: React.FC<DrawToolsProps> = ({
 
   const drawingToolButtons = [
     { name: 'pen', icon: <PenTool />, label: 'Pen' },
-    { name: 'eraser', icon: <Eraser />, label: 'Eraser' },
+    // { name: 'eraser', icon: <Eraser />, label: 'Eraser' }, // Removed
     { name: 'eyedropper', icon: <Pipette />, label: 'Eyedropper Tool' },
   ];
 

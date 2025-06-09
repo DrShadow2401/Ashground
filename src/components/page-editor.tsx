@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef, useCallback } from 'react';
 import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -124,19 +125,20 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (canvas && exportableAreaRef.current) {
-        const parent = exportableAreaRef.current; // Use the main editor area for consistent sizing
+        const parent = exportableAreaRef.current;
         const dpr = window.devicePixelRatio || 1;
         const newWidth = parent.clientWidth;
         const newHeight = parent.clientHeight;
 
         let drawingDataUrlToRestore: string | null = null;
         if (canvas.width > 0 && canvas.height > 0 && currentCanvasDataUrlRef.current !== "cleared") {
-            try {
-                drawingDataUrlToRestore = canvas.toDataURL();
-            } catch (e) {
-                console.error("Error capturing canvas data URL for resize:", e);
-            }
+          try {
+            drawingDataUrlToRestore = canvas.toDataURL();
+          } catch (e) {
+              console.error("Error capturing canvas data URL for resize:", e);
+          }
         }
+
 
         if (canvas.width !== newWidth * dpr || canvas.height !== newHeight * dpr) {
             canvas.width = newWidth * dpr;
@@ -148,22 +150,23 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
             if (ctx) {
                 ctx.scale(dpr, dpr);
                 canvasContextRef.current = ctx;
-                ctx.clearRect(0, 0, newWidth, newHeight); // Use logical width/height for clearing after scale
+                // Clear rect with logical width/height
+                ctx.clearRect(0, 0, newWidth, newHeight);
 
                 if (drawingDataUrlToRestore && drawingDataUrlToRestore !== "cleared") {
                     const img = new Image();
                     img.onload = () => {
-                        ctx.drawImage(img, 0, 0, newWidth, newHeight); // Draw image respecting logical dimensions
+                        ctx.drawImage(img, 0, 0, newWidth, newHeight);
                     };
-                    img.onerror = () => console.error("Error loading image data for canvas restore.");
+                    img.onerror = (e) => console.error("Error loading image data for canvas restore:", e);
                     img.src = drawingDataUrlToRestore;
                 }
             }
         }
         if (currentCanvasDataUrlRef.current === "cleared") {
-            currentCanvasDataUrlRef.current = null;
+          currentCanvasDataUrlRef.current = null; // Reset after clear
         } else if (drawingDataUrlToRestore && drawingDataUrlToRestore !== "cleared") {
-             currentCanvasDataUrlRef.current = drawingDataUrlToRestore;
+           currentCanvasDataUrlRef.current = drawingDataUrlToRestore;
         }
     }
   }, []);
@@ -171,7 +174,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
 
   useEffect(() => {
     window.addEventListener('resize', resizeCanvas);
-    const timeoutId = setTimeout(resizeCanvas, 50); // Slightly delay initial resize
+    const timeoutId = setTimeout(resizeCanvas, 50);
     return () => {
       window.removeEventListener('resize', resizeCanvas);
       clearTimeout(timeoutId);
@@ -229,10 +232,10 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    resizeCanvas(); // Ensure canvas is sized initially
+    resizeCanvas();
 
     if (!isDrawingMode || !currentDrawTool) {
-      isPaintingRef.current = false; // Ensure painting stops if mode changes
+      isPaintingRef.current = false;
       return;
     }
     
@@ -273,25 +276,10 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
         effectiveDrawColor = '#FFFFFF';
     }
 
-    ctx.lineWidth = drawStrokeWidth;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.strokeStyle = effectiveDrawColor;
-    ctx.fillStyle = effectiveDrawColor; // For eyedropper
-
-    if (currentLineStyle === 'dashed') {
-        ctx.setLineDash([10, 5]);
-    } else if (currentLineStyle === 'dotted') {
-        ctx.setLineDash([drawStrokeWidth, drawStrokeWidth * 2]);
-    } else {
-        ctx.setLineDash([]);
-    }
 
     const handlePaintMove = (event: MouseEvent | TouchEvent) => {
       if (!isPaintingRef.current || !lastPositionRef.current || !ctx ) return;
       if (!(event instanceof MouseEvent && event.buttons === 1) && !(event instanceof TouchEvent)) {
-        // If mouse button is not pressed during mousemove, stop painting
-        // This check is more for mouse, touchmove implies contact
         if (event instanceof MouseEvent) {
             handlePaintEnd();
             return;
@@ -302,15 +290,23 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       const pos = getEventPosition(event);
       if (!pos) return;
 
-      if (currentDrawTool === 'pen' || currentDrawTool === 'eraser') {
-        ctx.globalCompositeOperation = currentDrawTool === 'eraser' ? 'destination-out' : 'source-over';
-        // For eraser, setting strokeStyle to transparent black can sometimes help ensure it "erases" to transparency
-        // For 'destination-out', the strokeStyle color isn't strictly used for the removal, but its alpha matters.
-        // Using the effectiveDrawColor for the pen, and letting destination-out handle eraser.
-        ctx.strokeStyle = (currentDrawTool === 'eraser') ? 'rgba(0,0,0,1)' : effectiveDrawColor;
+      ctx.lineWidth = drawStrokeWidth;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = effectiveDrawColor;
+      ctx.globalCompositeOperation = 'source-over';
 
 
-        ctx.beginPath(); // Start a new path for each segment to ensure consistent line style
+      if (currentLineStyle === 'dashed') {
+          ctx.setLineDash([10, 5]);
+      } else if (currentLineStyle === 'dotted') {
+          ctx.setLineDash([drawStrokeWidth, drawStrokeWidth * 2]);
+      } else {
+          ctx.setLineDash([]);
+      }
+      
+      if (currentDrawTool === 'pen') {
+        ctx.beginPath();
         ctx.moveTo(lastPositionRef.current.x, lastPositionRef.current.y);
         ctx.lineTo(pos.x, pos.y);
         ctx.stroke();
@@ -319,7 +315,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
     };
 
     const handlePaintEnd = () => {
-      if (!isPaintingRef.current && currentDrawTool !== 'eyedropper') return; // Don't end if not painting (unless it's eyedropper finishing)
+      if (!isPaintingRef.current && currentDrawTool !== 'eyedropper') return;
       isPaintingRef.current = false;
       
       window.removeEventListener('mousemove', handlePaintMove);
@@ -331,7 +327,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       if (canvas && canvas.width > 0 && canvas.height > 0) {
         try { currentCanvasDataUrlRef.current = canvas.toDataURL(); } catch (e) { console.error("Error saving canvas state:", e); }
       }
-       ctx.setLineDash([]); // Reset line dash after drawing
+       ctx.setLineDash([]);
     };
     
     const handlePaintStart = (event: MouseEvent | TouchEvent) => {
@@ -341,15 +337,15 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       const pos = getEventPosition(event);
       if (!pos || !ctx) return;
       
-      resizeCanvas(); // Ensure canvas is correctly sized at the start of interaction
+      resizeCanvas(); 
       
-      // Re-apply drawing settings as context might be reset or changed
       ctx.lineWidth = drawStrokeWidth;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-      ctx.strokeStyle = effectiveDrawColor; // Recalculate based on current theme/color
+      ctx.strokeStyle = effectiveDrawColor;
       ctx.fillStyle = effectiveDrawColor;
-      
+      ctx.globalCompositeOperation = 'source-over';
+
       if (currentLineStyle === 'dashed') {
           ctx.setLineDash([10, 5]);
       } else if (currentLineStyle === 'dotted') {
@@ -358,19 +354,14 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
           ctx.setLineDash([]);
       }
 
-      if (currentDrawTool === 'pen' || currentDrawTool === 'eraser') {
+      if (currentDrawTool === 'pen') {
         isPaintingRef.current = true;
         lastPositionRef.current = pos;
-
-        // For 'pen', ensure source-over. For 'eraser', ensure destination-out.
-        ctx.globalCompositeOperation = currentDrawTool === 'eraser' ? 'destination-out' : 'source-over';
         
-        // Initial dot for pen/eraser
         ctx.beginPath();
         ctx.moveTo(pos.x, pos.y);
-        ctx.lineTo(pos.x, pos.y); // Draw a tiny line or dot
+        ctx.lineTo(pos.x, pos.y); 
         ctx.stroke();
-
 
         window.addEventListener('mousemove', handlePaintMove, { passive: false });
         window.addEventListener('mouseup', handlePaintEnd);
@@ -398,7 +389,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       window.removeEventListener('touchmove', handlePaintMove);
       window.removeEventListener('touchend', handlePaintEnd);
       window.removeEventListener('touchcancel', handlePaintEnd);
-      if (isPaintingRef.current) { // If unmounting while painting, capture state
+      if (isPaintingRef.current) { 
         if (canvas && canvas.width > 0 && canvas.height > 0) {
             try { currentCanvasDataUrlRef.current = canvas.toDataURL(); } catch (e) { /* ignore */ }
         }
