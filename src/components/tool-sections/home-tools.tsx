@@ -1,7 +1,14 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator as ColorDropdownSeparator
+} from "@/components/ui/dropdown-menu";
 import type { Editor } from '@tiptap/react';
 import {
   Bold,
@@ -15,21 +22,19 @@ import {
   ListOrdered,
   Quote,
   Code2,
-  Baseline, // For color
   Superscript,
   Subscript,
   AlignLeft,
   AlignCenter,
   AlignRight,
   AlignJustify,
-  Eraser,
   Undo2,
   Redo2,
-  Minus, // Horizontal Rule
-  CheckSquare, // Task List (Checkbox)
-  ImageUp, // Image
+  Minus,
+  CheckSquare,
+  ImageUp,
   Highlighter,
-  // Table2, // Table icon removed
+  Palette, // For color dropdown
   ChevronsUpDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -38,37 +43,63 @@ interface HomeToolsProps {
   editorRef: React.RefObject<Editor | null>;
 }
 
+const textColors = [
+  { name: 'Default', value: '' }, // Special value for unsetColor
+  { name: 'Black', value: '#000000' },
+  { name: 'Red', value: '#E03131' },
+  { name: 'Blue', value: '#2563EB' },
+  { name: 'Green', value: '#16A34A' },
+  { name: 'Orange', value: '#F97316' },
+  { name: 'Purple', value: '#7C3AED' },
+  { name: 'Gray', value: '#6B7280' },
+];
+
+const highlightColors = [
+    { name: 'Default', value: '' }, // Special value for unsetHighlight
+    { name: 'Yellow', value: '#FFF3A3' },
+    { name: 'Pink', value: '#FECDD3' },
+    { name: 'Green', value: '#A7F3D0' },
+    { name: 'Blue', value: '#BFDBFE' },
+];
+
+
 const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
   const editor = editorRef.current;
   const [, setForceUpdateKey] = useState(0);
+  const imageFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const currentEditorInstance = editorRef.current;
     if (currentEditorInstance) {
       const handleUpdate = () => {
-        setForceUpdateKey(k => k + 1); // Force re-render to update button states
+        setForceUpdateKey(k => k + 1);
       };
       currentEditorInstance.on('transaction', handleUpdate);
       currentEditorInstance.on('selectionUpdate', handleUpdate);
-      handleUpdate(); // Initial check
+      handleUpdate();
       return () => {
         currentEditorInstance.off('transaction', handleUpdate);
         currentEditorInstance.off('selectionUpdate', handleUpdate);
       };
     }
-  }, [editor]); // Re-run if the editor instance itself changes (e.g., on initial mount)
+  }, [editor]);
 
 
   const handleImageInsert = useCallback(() => {
+    imageFileInputRef.current?.click();
+  }, []);
+
+  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const currentEditor = editorRef.current;
-    if (!currentEditor) {
-      console.warn("handleImageInsert called when editor is not available");
-      return;
-    }
-    const url = window.prompt('Enter image URL:');
-    if (url) {
-      currentEditor.chain().focus().setImage({ src: url }).run();
-    }
+    if (!currentEditor || !event.target.files?.[0]) return;
+
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      currentEditor.chain().focus().setImage({ src: reader.result as string }).run();
+    };
+    reader.readAsDataURL(file);
+    event.target.value = ''; // Reset file input
   }, [editorRef]);
 
 
@@ -87,72 +118,143 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
 
   const toolGroups = [
     [
-      { icon: <Bold />, label: 'Bold', action: () => editor.chain().focus().toggleBold().run(), isActive: () => isButtonActive('bold') },
-      { icon: <Italic />, label: 'Italic', action: () => editor.chain().focus().toggleItalic().run(), isActive: () => isButtonActive('italic') },
-      { icon: <Underline />, label: 'Underline', action: () => editor.chain().focus().toggleUnderline().run(), isActive: () => isButtonActive('underline') },
-      { icon: <Strikethrough />, label: 'Strikethrough', action: () => editor.chain().focus().toggleStrike().run(), isActive: () => isButtonActive('strike') },
-      { icon: <Superscript />, label: 'Superscript', action: () => editor.chain().focus().toggleSuperscript().run(), isActive: () => isButtonActive('superscript') },
-      { icon: <Subscript />, label: 'Subscript', action: () => editor.chain().focus().toggleSubscript().run(), isActive: () => isButtonActive('subscript') },
+      { type: 'button', icon: <Bold />, label: 'Bold', action: () => editor.chain().focus().toggleBold().run(), isActive: () => isButtonActive('bold') },
+      { type: 'button', icon: <Italic />, label: 'Italic', action: () => editor.chain().focus().toggleItalic().run(), isActive: () => isButtonActive('italic') },
+      { type: 'button', icon: <Underline />, label: 'Underline', action: () => editor.chain().focus().toggleUnderline().run(), isActive: () => isButtonActive('underline') },
+      { type: 'button', icon: <Strikethrough />, label: 'Strikethrough', action: () => editor.chain().focus().toggleStrike().run(), isActive: () => isButtonActive('strike') },
+      { type: 'button', icon: <Superscript />, label: 'Superscript', action: () => editor.chain().focus().toggleSuperscript().run(), isActive: () => isButtonActive('superscript') },
+      { type: 'button', icon: <Subscript />, label: 'Subscript', action: () => editor.chain().focus().toggleSubscript().run(), isActive: () => isButtonActive('subscript') },
     ],
     [
-      { icon: <Heading1 />, label: 'Heading 1', action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(), isActive: () => isButtonActive('heading', { level: 1 }) },
-      { icon: <Heading2 />, label: 'Heading 2', action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), isActive: () => isButtonActive('heading', { level: 2 }) },
-      { icon: <Heading3 />, label: 'Heading 3', action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(), isActive: () => isButtonActive('heading', { level: 3 }) },
-      { icon: <Baseline />, label: 'Font Color (Red)', action: () => editor.chain().focus().setColor('#E03131').run(), isActive: () => editor.isActive('textStyle', { color: '#E03131' }) },
-      { icon: <Highlighter />, label: 'Highlight (Yellow)', action: () => editor.chain().focus().toggleHighlight({ color: '#FFF3A3' }).run(), isActive: () => editor.isActive('highlight', { color: '#FFF3A3' }) },
+      { type: 'button', icon: <Heading1 />, label: 'Heading 1', action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(), isActive: () => isButtonActive('heading', { level: 1 }) },
+      { type: 'button', icon: <Heading2 />, label: 'Heading 2', action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), isActive: () => isButtonActive('heading', { level: 2 }) },
+      { type: 'button', icon: <Heading3 />, label: 'Heading 3', action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(), isActive: () => isButtonActive('heading', { level: 3 }) },
+      {
+        type: 'dropdown',
+        icon: <Palette />,
+        label: 'Font Color',
+        items: textColors,
+        action: (colorValue: string) => {
+          if (colorValue === '') editor.chain().focus().unsetColor().run();
+          else editor.chain().focus().setColor(colorValue).run();
+        },
+        isActive: (colorValue?: string) => colorValue ? editor.isActive('textStyle', { color: colorValue }) : false, // Individual item check
+      },
+      {
+        type: 'dropdown',
+        icon: <Highlighter />,
+        label: 'Highlight Color',
+        items: highlightColors,
+        action: (colorValue: string) => {
+            if (colorValue === '') editor.chain().focus().unsetHighlight().run();
+            else editor.chain().focus().toggleHighlight({ color: colorValue }).run();
+        },
+        isActive: (colorValue?: string) => colorValue ? editor.isActive('highlight', { color: colorValue }) : false,
+      },
     ],
     [
-      { icon: <AlignLeft />, label: 'Align Left', action: () => editor.chain().focus().setTextAlign('left').run(), isActive: () => isButtonActive({ textAlign: 'left' }) },
-      { icon: <AlignCenter />, label: 'Align Center', action: () => editor.chain().focus().setTextAlign('center').run(), isActive: () => isButtonActive({ textAlign: 'center' }) },
-      { icon: <AlignRight />, label: 'Align Right', action: () => editor.chain().focus().setTextAlign('right').run(), isActive: () => isButtonActive({ textAlign: 'right' }) },
-      { icon: <AlignJustify />, label: 'Align Justify', action: () => editor.chain().focus().setTextAlign('justify').run(), isActive: () => isButtonActive({ textAlign: 'justify' }) },
+      { type: 'button', icon: <AlignLeft />, label: 'Align Left', action: () => editor.chain().focus().setTextAlign('left').run(), isActive: () => isButtonActive({ textAlign: 'left' }) },
+      { type: 'button', icon: <AlignCenter />, label: 'Align Center', action: () => editor.chain().focus().setTextAlign('center').run(), isActive: () => isButtonActive({ textAlign: 'center' }) },
+      { type: 'button', icon: <AlignRight />, label: 'Align Right', action: () => editor.chain().focus().setTextAlign('right').run(), isActive: () => isButtonActive({ textAlign: 'right' }) },
+      { type: 'button', icon: <AlignJustify />, label: 'Align Justify', action: () => editor.chain().focus().setTextAlign('justify').run(), isActive: () => isButtonActive({ textAlign: 'justify' }) },
     ],
     [
-      { icon: <List />, label: 'Bulleted List', action: () => editor.chain().focus().toggleBulletList().run(), isActive: () => isButtonActive('bulletList') },
-      { icon: <ListOrdered />, label: 'Numbered List', action: () => editor.chain().focus().toggleOrderedList().run(), isActive: () => isButtonActive('orderedList') },
-      { icon: <Quote />, label: 'Blockquote', action: () => editor.chain().focus().toggleBlockquote().run(), isActive: () => isButtonActive('blockquote') },
-      { icon: <Code2 />, label: 'Code Block', action: () => editor.chain().focus().toggleCodeBlock().run(), isActive: () => isButtonActive('codeBlock') },
+      { type: 'button', icon: <List />, label: 'Bulleted List', action: () => editor.chain().focus().toggleBulletList().run(), isActive: () => isButtonActive('bulletList') },
+      { type: 'button', icon: <ListOrdered />, label: 'Numbered List', action: () => editor.chain().focus().toggleOrderedList().run(), isActive: () => isButtonActive('orderedList') },
+      { type: 'button', icon: <Quote />, label: 'Blockquote', action: () => editor.chain().focus().toggleBlockquote().run(), isActive: () => isButtonActive('blockquote') },
+      { type: 'button', icon: <Code2 />, label: 'Code Block', action: () => editor.chain().focus().toggleCodeBlock().run(), isActive: () => isButtonActive('codeBlock') },
     ],
     [
-      { icon: <Minus />, label: 'Horizontal Rule', action: () => editor.chain().focus().setHorizontalRule().run(), isActive: () => false },
-      { icon: <CheckSquare />, label: 'Checklist', action: () => editor.chain().focus().toggleTaskList().run(), isActive: () => isButtonActive('taskList') },
-      { icon: <ImageUp />, label: 'Insert Image', action: handleImageInsert, isActive: () => isButtonActive('image') },
-      { icon: <ChevronsUpDown />, label: 'Toggle Section (NA)', action: () => {}, isActive: () => false, disabled: true },
+      { type: 'button', icon: <Minus />, label: 'Horizontal Rule', action: () => editor.chain().focus().setHorizontalRule().run(), isActive: () => false },
+      { type: 'button', icon: <CheckSquare />, label: 'Checklist', action: () => editor.chain().focus().toggleTaskList().run(), isActive: () => isButtonActive('taskList') },
+      { type: 'button', icon: <ImageUp />, label: 'Insert Image', action: handleImageInsert, isActive: () => isButtonActive('image') },
+      { type: 'button', icon: <ChevronsUpDown />, label: 'Toggle Section (NA)', action: () => {}, isActive: () => false, disabled: true },
     ],
     [
-      { icon: <Eraser />, label: 'Clear Formatting', action: () => editor.chain().focus().unsetAllMarks().clearNodes().run(), isActive: () => false },
-      { icon: <Undo2 />, label: 'Undo', action: () => editor.chain().focus().undo().run(), isActive: () => false, disabled: !editor.can().undo() },
-      { icon: <Redo2 />, label: 'Redo', action: () => editor.chain().focus().redo().run(), isActive: () => false, disabled: !editor.can().redo() },
+      { type: 'button', icon: <Undo2 />, label: 'Undo', action: () => editor.chain().focus().undo().run(), isActive: () => false, disabled: !editor.can().undo() },
+      { type: 'button', icon: <Redo2 />, label: 'Redo', action: () => editor.chain().focus().redo().run(), isActive: () => false, disabled: !editor.can().redo() },
     ],
   ];
 
   return (
-    <div className="flex flex-wrap gap-1 items-center justify-center">
-      {toolGroups.map((group, groupIndex) => (
-        <React.Fragment key={groupIndex}>
-          {group.map((tool) => (
-            <Button
-              variant="ghost"
-              size="icon"
-              key={tool.label}
-              onClick={tool.action}
-              aria-label={tool.label}
-              title={tool.label}
-              className={cn(
-                'hover:bg-accent/50',
-                tool.isActive() ? 'bg-accent text-accent-foreground' : ''
-              )}
-              disabled={tool.disabled || !editor.isEditable}
-            >
-              {tool.icon}
-            </Button>
-          ))}
-          {groupIndex < toolGroups.length - 1 && (
-            <Separator orientation="vertical" className="h-6 mx-1" />
-          )}
-        </React.Fragment>
-      ))}
-    </div>
+    <>
+      <input
+        type="file"
+        ref={imageFileInputRef}
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleFileSelect}
+      />
+      <div className="flex flex-wrap gap-1 items-center justify-center">
+        {toolGroups.map((group, groupIndex) => (
+          <React.Fragment key={groupIndex}>
+            {group.map((tool) => {
+              if (tool.type === 'button') {
+                return (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    key={tool.label}
+                    onClick={tool.action}
+                    aria-label={tool.label}
+                    title={tool.label}
+                    className={cn(
+                      'hover:bg-accent/50',
+                      tool.isActive() ? 'bg-accent text-accent-foreground' : ''
+                    )}
+                    disabled={(tool as any).disabled || !editor.isEditable}
+                  >
+                    {tool.icon}
+                  </Button>
+                );
+              }
+              if (tool.type === 'dropdown') {
+                return (
+                  <DropdownMenu key={tool.label}>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" aria-label={tool.label} title={tool.label}
+                        className={cn(
+                           'hover:bg-accent/50',
+                           // Basic check: is any color/highlight active other than default?
+                           (tool.label === 'Font Color' && editor.getAttributes('textStyle').color) || (tool.label === 'Highlight Color' && editor.getAttributes('highlight').color) ? 'bg-accent text-accent-foreground' : ''
+                        )}
+                      >
+                        {tool.icon}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      {tool.items.map((item) => (
+                        <DropdownMenuItem
+                          key={item.name}
+                          onClick={() => tool.action(item.value)}
+                          className={cn(
+                            tool.isActive(item.value) ? 'bg-accent/80' : ''
+                          )}
+                        >
+                          <div className="flex items-center gap-2">
+                            {tool.label === 'Font Color' && item.value && (
+                              <div className="w-3 h-3 rounded-full border" style={{ backgroundColor: item.value }} />
+                            )}
+                             {tool.label === 'Highlight Color' && item.value && (
+                              <div className="w-3 h-3 rounded-sm border" style={{ backgroundColor: item.value }} />
+                            )}
+                            {item.name}
+                          </div>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                );
+              }
+              return null;
+            })}
+            {groupIndex < toolGroups.length - 1 && (
+              <Separator orientation="vertical" className="h-6 mx-1" />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+    </>
   );
 };
 
