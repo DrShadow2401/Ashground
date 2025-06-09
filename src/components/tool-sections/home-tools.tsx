@@ -15,8 +15,7 @@ import {
   ListOrdered,
   Quote,
   Code2,
-  Link as LinkIcon,
-  Baseline,
+  Baseline, // For color
   Superscript,
   Subscript,
   AlignLeft,
@@ -26,11 +25,11 @@ import {
   Eraser,
   Undo2,
   Redo2,
-  Minus,
-  CheckSquare,
-  ImageUp,
+  Minus, // Horizontal Rule
+  CheckSquare, // Task List (Checkbox)
+  ImageUp, // Image
   Highlighter,
-  // Table2, // Removed Table2 icon
+  // Table2, // Table icon removed
   ChevronsUpDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -47,42 +46,24 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     const currentEditorInstance = editorRef.current;
     if (currentEditorInstance) {
       const handleUpdate = () => {
-        setForceUpdateKey(k => k + 1);
+        setForceUpdateKey(k => k + 1); // Force re-render to update button states
       };
       currentEditorInstance.on('transaction', handleUpdate);
       currentEditorInstance.on('selectionUpdate', handleUpdate);
-      handleUpdate();
+      handleUpdate(); // Initial check
       return () => {
         currentEditorInstance.off('transaction', handleUpdate);
         currentEditorInstance.off('selectionUpdate', handleUpdate);
       };
     }
-  }, [editorRef, editor]);
+  }, [editor]); // Re-run if the editor instance itself changes (e.g., on initial mount)
 
-  const handleLink = useCallback(() => {
-    const currentEditor = editorRef.current;
-    if (!currentEditor) {
-      console.warn("handleLink called when editor is not available");
-      return;
-    }
-    const previousUrl = currentEditor.getAttributes('link').href;
-    const url = window.prompt('Enter URL (leave empty to remove link):', previousUrl || '');
-
-    if (url === null) {
-      return;
-    }
-    if (url === '') {
-      currentEditor.chain().focus().extendMarkRange('link').unsetLink().run();
-      return;
-    }
-    currentEditor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-  }, [editorRef]);
 
   const handleImageInsert = useCallback(() => {
     const currentEditor = editorRef.current;
     if (!currentEditor) {
-        console.warn("handleImageInsert called when editor is not available");
-        return;
+      console.warn("handleImageInsert called when editor is not available");
+      return;
     }
     const url = window.prompt('Enter image URL:');
     if (url) {
@@ -100,6 +81,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
   }
 
   const isButtonActive = (type: string, options?: Record<string, any>): boolean => {
+    if (!editor) return false;
     return editor.isActive(type, options);
   };
 
@@ -132,10 +114,8 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
       { icon: <Code2 />, label: 'Code Block', action: () => editor.chain().focus().toggleCodeBlock().run(), isActive: () => isButtonActive('codeBlock') },
     ],
     [
-      { icon: <LinkIcon />, label: 'Insert Link', action: handleLink, isActive: () => isButtonActive('link') },
       { icon: <Minus />, label: 'Horizontal Rule', action: () => editor.chain().focus().setHorizontalRule().run(), isActive: () => false },
       { icon: <CheckSquare />, label: 'Checklist', action: () => editor.chain().focus().toggleTaskList().run(), isActive: () => isButtonActive('taskList') },
-      // Removed Table Tool
       { icon: <ImageUp />, label: 'Insert Image', action: handleImageInsert, isActive: () => isButtonActive('image') },
       { icon: <ChevronsUpDown />, label: 'Toggle Section (NA)', action: () => {}, isActive: () => false, disabled: true },
     ],

@@ -7,18 +7,14 @@ import PlaceholderExtension from '@tiptap/extension-placeholder';
 import TextAlignExtension from '@tiptap/extension-text-align';
 import SuperscriptExtension from '@tiptap/extension-superscript';
 import SubscriptExtension from '@tiptap/extension-subscript';
-import LinkExtension from '@tiptap/extension-link';
+// LinkExtension removed
 import TextStyleExtension from '@tiptap/extension-text-style';
 import ColorExtension from '@tiptap/extension-color';
 import HighlightExtension from '@tiptap/extension-highlight';
 import ImageExtension from '@tiptap/extension-image';
 import TaskListExtension from '@tiptap/extension-task-list';
 import TaskItemExtension from '@tiptap/extension-task-item';
-// Removed Table Extensions
-// import TableExtension from '@tiptap/extension-table';
-// import TableRowExtension from '@tiptap/extension-table-row';
-// import TableCellExtension from '@tiptap/extension-table-cell';
-// import TableHeaderExtension from '@tiptap/extension-table-header';
+
 
 import { cn } from '@/lib/utils';
 
@@ -72,7 +68,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
         heading: {
           levels: [1, 2, 3],
         },
-        gapcursor: false,
+        gapcursor: false, // Recommended to disable if not explicitly needed
       }),
       UnderlineExtension,
       PlaceholderExtension.configure({
@@ -83,25 +79,15 @@ const PageEditor: React.FC<PageEditorProps> = ({
       }),
       SuperscriptExtension,
       SubscriptExtension,
-      LinkExtension.configure({
-        openOnClick: true,
-        autolink: true,
-        defaultProtocol: 'https',
-      }),
-      TextStyleExtension,
-      ColorExtension,
+      // LinkExtension removed
+      TextStyleExtension, // For text color and other style attributes
+      ColorExtension, // Specifically for text color
       HighlightExtension.configure({ multicolor: true }),
-      ImageExtension,
-      TaskListExtension,
-      TaskItemExtension.configure({
+      ImageExtension, // For inserting images
+      TaskListExtension, // For task lists (checklists)
+      TaskItemExtension.configure({ // For individual task items
         nested: true,
       }),
-      // TableExtension.configure({ // Removed Table Extension
-      //   resizable: true,
-      // }),
-      // TableRowExtension,
-      // TableHeaderExtension,
-      // TableCellExtension,
     ],
     content: noteContent,
     onUpdate: ({ editor: tiptapEditor }) => {
@@ -134,10 +120,11 @@ const PageEditor: React.FC<PageEditorProps> = ({
     if (editor && editor.isEditable && editor.getHTML() !== noteContent) {
       const { from, to } = editor.state.selection;
       editor.commands.setContent(noteContent, false);
+      // Ensure selection is within new document bounds
       const docSize = editor.state.doc.content.size;
       const newFrom = Math.min(from, docSize);
       const newTo = Math.min(to, docSize);
-      if (newFrom <= docSize && newTo <= docSize) {
+       if (newFrom <= docSize && newTo <= docSize) { // Check bounds
          editor.commands.setTextSelection({ from: newFrom, to: newTo });
       }
     }
@@ -185,7 +172,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
     };
 
     const startPaint = (event: MouseEvent | TouchEvent) => {
-      event.preventDefault();
+      event.preventDefault(); // Prevent default actions like text selection
       if (currentDrawTool !== 'pen') return;
       const pos = getMousePosition(event);
       if (!pos) return;
@@ -200,7 +187,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
     };
 
     const paint = (event: MouseEvent | TouchEvent) => {
-      event.preventDefault();
+      event.preventDefault(); // Prevent default actions during drawing
       if (!isPainting || currentDrawTool !== 'pen' || !lastPosition) return;
       const pos = getMousePosition(event);
       if (!pos) return;
@@ -217,11 +204,13 @@ const PageEditor: React.FC<PageEditorProps> = ({
       ctx.closePath();
     };
 
+    // Mouse events
     canvas.addEventListener('mousedown', startPaint);
     canvas.addEventListener('mousemove', paint);
     canvas.addEventListener('mouseup', endPaint);
     canvas.addEventListener('mouseleave', endPaint);
 
+    // Touch events
     canvas.addEventListener('touchstart', startPaint, { passive: false });
     canvas.addEventListener('touchmove', paint, { passive: false });
     canvas.addEventListener('touchend', endPaint);
@@ -242,18 +231,21 @@ const PageEditor: React.FC<PageEditorProps> = ({
 
 
   const handlePaperClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (isDrawingMode) return;
-
-    if (editor && !editor.isFocused) {
-       if (event.target === event.currentTarget || !(event.target as HTMLElement).closest('.ProseMirror')) {
-        editor.chain().focus('end').run();
-      }
-    } else if (editor && editor.isFocused) {
-      if (event.target === event.currentTarget) {
+    // If in drawing mode, or if the click is directly on the ProseMirror editor, do nothing here.
+    if (isDrawingMode || (event.target as HTMLElement).closest('.ProseMirror')) {
+      return;
+    }
+  
+    // If the editor exists and the click was on the paper area (but not on the editor content itself),
+    // focus the editor at the end.
+    if (editor) {
+      // Check if the target of the click is the paper div itself or one of its direct non-ProseMirror children
+       if (event.target === event.currentTarget ) {
          editor.chain().focus('end').run();
-      }
+       }
     }
   };
+  
 
   return (
     <div
@@ -268,27 +260,28 @@ const PageEditor: React.FC<PageEditorProps> = ({
         onChange={(e) => onNoteTitleChange(e.target.value)}
         className="font-headline text-3xl md:text-4xl mb-6 pb-2 border-b border-[hsl(var(--line-color))] bg-transparent focus:outline-none w-full placeholder-muted-foreground"
         placeholder="Untitled Note"
-        disabled={isDrawingMode}
+        disabled={isDrawingMode} // Disable title editing in drawing mode
       />
       <div
         className={cn(
-          'flex-1 relative flex flex-col min-h-0',
+          'flex-1 relative flex flex-col min-h-0', // Ensure this div can grow and manage its children
           backgroundClassMap[backgroundStyle]
         )}
-        onClick={handlePaperClick}
+        onClick={handlePaperClick} // Click handler on the paper area
       >
         <EditorContent
           editor={editor}
           className={cn(
-            "flex-1 tiptap-editor",
-            isDrawingMode ? 'pointer-events-none' : ''
+            "flex-1 tiptap-editor", // tiptap-editor class for specific Tiptap styling
+            isDrawingMode ? 'pointer-events-none opacity-70' : '' // Make editor non-interactive and visually distinct in draw mode
           )}
         />
+        {/* Canvas for drawing, overlaid on top */}
         <canvas
           ref={canvasRef}
           className={cn(
             "absolute top-0 left-0 w-full h-full",
-            isDrawingMode && currentDrawTool === 'pen' ? 'pointer-events-auto z-10' : 'pointer-events-none -z-10'
+            isDrawingMode && currentDrawTool === 'pen' ? 'pointer-events-auto z-10' : 'pointer-events-none -z-10' // Canvas is only active for pen tool
           )}
         />
       </div>
