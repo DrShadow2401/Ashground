@@ -24,11 +24,13 @@ export default function Home() {
   const [isMounted, setIsMounted] = useState(false);
   
   const editorRef = useRef<Editor | null>(null);
+  const pageEditorRef = useRef<{ clearCanvas: () => void }>(null);
+
 
   // Drawing specific state
   const [currentDrawTool, setCurrentDrawTool] = useState<string | null>(null);
-  const [drawColor, setDrawColor] = useState<string>('#000000'); // Default black
-  const [drawStrokeWidth, setDrawStrokeWidth] = useState<number>(2); // Default stroke width
+  const [drawColor, setDrawColor] = useState<string>('#000000'); 
+  const [drawStrokeWidth, setDrawStrokeWidth] = useState<number>(2); 
 
 
   useEffect(() => {
@@ -39,8 +41,8 @@ export default function Home() {
     const savedTheme = localStorage.getItem('ashground_theme') as PageTheme | null;
 
     if (savedTitle) setNoteTitle(savedTitle);
-    if (savedNote) setNoteContent(savedNote); // Tiptap will initialize with this HTML
-    else setNoteContent('<p></p>'); // Ensure editor has initial paragraph for placeholder
+    if (savedNote) setNoteContent(savedNote); 
+    else setNoteContent('<p></p>'); 
     
     if (savedBg) setPageBackground(savedBg);
 
@@ -99,7 +101,6 @@ export default function Home() {
   }, [pageTheme, isMounted]);
 
   useEffect(() => {
-    // If not in draw tab, ensure no draw tool is active
     if (activeTab !== 'draw') {
       setCurrentDrawTool(null);
     }
@@ -108,6 +109,12 @@ export default function Home() {
   if (!isMounted) {
     return null; 
   }
+
+  const handleClearCanvas = () => {
+    if (pageEditorRef.current) {
+      pageEditorRef.current.clearCanvas();
+    }
+  };
 
   const tabItems = [
     { value: 'home', label: 'Home' },
@@ -140,6 +147,11 @@ export default function Home() {
               <DrawTools 
                 activeTool={currentDrawTool}
                 onToolChange={setCurrentDrawTool}
+                currentDrawColor={drawColor}
+                onDrawColorChange={setDrawColor}
+                currentStrokeWidth={drawStrokeWidth}
+                onStrokeWidthChange={setDrawStrokeWidth}
+                onClearCanvas={handleClearCanvas}
               />
             )}
             {activeTab === 'view' && (
@@ -155,7 +167,8 @@ export default function Home() {
         </div>
         
         <PageEditor
-          editorRef={editorRef}
+          ref={pageEditorRef}
+          editorTiptapRef={editorRef} // Renamed prop for clarity
           noteTitle={noteTitle}
           onNoteTitleChange={setNoteTitle}
           noteContent={noteContent}

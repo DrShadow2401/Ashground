@@ -4,86 +4,173 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
   PenTool,
-  Brush, // Placeholder, PenTool is used for basic drawing
-  Eraser, // Placeholder
-  Undo2, // Placeholder
-  SlidersHorizontal, // Placeholder for Brush Size
-  Circle, // Placeholder
-  Square, // Placeholder
-  Triangle, // Placeholder
-  Minus, // Placeholder for Line
-  ArrowRight, // Placeholder for Arrow
-  PaintBucket, // Placeholder
-  Palette, // Placeholder
-  Pipette, // Placeholder
-  ListFilter, // Placeholder for Line Styles
+  Eraser,
+  Undo2, 
+  Trash2, 
+  Palette,
+  PaintBucket, // Keeping for Fill, but disabled
+  Circle as CircleIcon, // Renamed to avoid conflict with React.Circle
+  Square as SquareIcon, // Renamed
+  Triangle as TriangleIcon, // Renamed
+  Minus as MinusIcon, // Renamed
+  ArrowRight as ArrowRightIcon, // Renamed
+  SlidersHorizontal, // Placeholder for Brush Size / Line Styles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface DrawToolsProps {
   activeTool: string | null;
   onToolChange: (tool: string | null) => void;
-  // Add props for color picker, brush size etc. later
+  currentDrawColor: string;
+  onDrawColorChange: (color: string) => void;
+  currentStrokeWidth: number;
+  onStrokeWidthChange: (width: number) => void;
+  onClearCanvas: () => void;
 }
 
-const DrawTools: React.FC<DrawToolsProps> = ({ activeTool, onToolChange }) => {
+const drawColors = ['#000000', '#EF4444', '#3B82F6', '#22C55E', '#F97316', '#A855F7'];
+const strokeWidths = [2, 4, 8, 12];
+
+const DrawTools: React.FC<DrawToolsProps> = ({ 
+  activeTool, 
+  onToolChange,
+  currentDrawColor,
+  onDrawColorChange,
+  currentStrokeWidth,
+  onStrokeWidthChange,
+  onClearCanvas
+}) => {
   
   const handleToolClick = (toolName: string) => {
     onToolChange(activeTool === toolName ? null : toolName);
   };
 
-  // Initial groups, Pen tool is the only functional one for now
-  const toolGroups = [
-    [
-      { name: 'pen', icon: <PenTool />, label: 'Pen' },
-      { name: 'brush', icon: <Brush />, label: 'Brush (NA)', disabled: true },
-      { name: 'eraser', icon: <Eraser />, label: 'Eraser (NA)', disabled: true },
-      { name: 'undo', icon: <Undo2 />, label: 'Undo (NA)', disabled: true },
-    ],
-    [
-      { name: 'circle', icon: <Circle />, label: 'Draw Circle (NA)', disabled: true },
-      { name: 'square', icon: <Square />, label: 'Draw Square (NA)', disabled: true },
-      { name: 'triangle', icon: <Triangle />, label: 'Draw Triangle (NA)', disabled: true },
-      { name: 'line', icon: <Minus />, label: 'Draw Line (NA)', disabled: true },
-      { name: 'arrow', icon: <ArrowRight />, label: 'Draw Arrow (NA)', disabled: true },
-    ],
-    [
-      { name: 'fill', icon: <PaintBucket />, label: 'Fill Tool (NA)', disabled: true },
-      { name: 'palette', icon: <Palette />, label: 'Color Palette (NA)', disabled: true },
-      { name: 'eyedropper', icon: <Pipette />, label: 'Eyedropper Tool (NA)', disabled: true },
-    ],
-    [
-      { name: 'brushSize', icon: <SlidersHorizontal />, label: 'Brush Size (NA)', disabled: true },
-      { name: 'lineStyles', icon: <ListFilter />, label: 'Line Styles (NA)', disabled: true },
-    ],
+  const drawingToolButtons = [
+    { name: 'pen', icon: <PenTool />, label: 'Pen' },
+    { name: 'eraser', icon: <Eraser />, label: 'Eraser' },
+    // { name: 'undo', icon: <Undo2 />, label: 'Undo (NA)', disabled: true }, // Undo for drawing is complex
   ];
+
+  const shapeToolButtons = [
+    { name: 'circle', icon: <CircleIcon />, label: 'Draw Circle (NA)', disabled: true },
+    { name: 'square', icon: <SquareIcon />, label: 'Draw Square (NA)', disabled: true },
+    { name: 'triangle', icon: <TriangleIcon />, label: 'Draw Triangle (NA)', disabled: true },
+    { name: 'line', icon: <MinusIcon />, label: 'Draw Line (NA)', disabled: true },
+    { name: 'arrow', icon: <ArrowRightIcon />, label: 'Draw Arrow (NA)', disabled: true },
+  ];
+
+  const otherDrawingTools = [
+     { name: 'fill', icon: <PaintBucket />, label: 'Fill Tool (NA)', disabled: true },
+    //  { name: 'eyedropper', icon: <Pipette />, label: 'Eyedropper Tool (NA)', disabled: true },
+    //  { name: 'lineStyles', icon: <ListFilter />, label: 'Line Styles (NA)', disabled: true },
+  ];
+
 
   return (
     <div className="flex flex-wrap gap-1 items-center justify-center">
-      {toolGroups.map((group, groupIndex) => (
-        <React.Fragment key={groupIndex}>
-          {group.map((tool) => (
-            <Button
-              variant="ghost"
-              size="icon"
-              key={tool.label}
-              onClick={() => handleToolClick(tool.name)}
-              aria-label={tool.label}
-              title={tool.label}
-              className={cn(
-                'hover:bg-accent/50',
-                activeTool === tool.name ? 'bg-accent text-accent-foreground' : ''
-              )}
-              disabled={tool.disabled}
-            >
-              {tool.icon}
-            </Button>
-          ))}
-          {groupIndex < toolGroups.length - 1 && (
-            <Separator orientation="vertical" className="h-6 mx-1" />
+      {/* Drawing Mode Tools */}
+      {drawingToolButtons.map((tool) => (
+        <Button
+          variant="ghost"
+          size="icon"
+          key={tool.label}
+          onClick={() => handleToolClick(tool.name)}
+          aria-label={tool.label}
+          title={tool.label}
+          className={cn(
+            'hover:bg-accent/50',
+            activeTool === tool.name ? 'bg-accent text-accent-foreground' : '',
+            (tool as any).disabled ? 'opacity-50 cursor-not-allowed' : ''
           )}
-        </React.Fragment>
+          disabled={(tool as any).disabled}
+        >
+          {tool.icon}
+        </Button>
       ))}
+      <Separator orientation="vertical" className="h-6 mx-1" />
+      
+      {/* Color Selection */}
+      {drawColors.map(color => (
+        <Button
+          key={color}
+          variant="outline"
+          size="icon"
+          title={`Color: ${color}`}
+          onClick={() => onDrawColorChange(color)}
+          className={cn(
+            'w-6 h-6 p-0 rounded-full border-2 hover:border-primary',
+            currentDrawColor === color ? 'border-primary ring-2 ring-ring ring-offset-2' : 'border-transparent'
+          )}
+          style={{ backgroundColor: color }}
+        />
+      ))}
+      <Separator orientation="vertical" className="h-6 mx-1" />
+
+      {/* Stroke Width Selection */}
+      {strokeWidths.map(width => (
+        <Button
+          key={`stroke-${width}`}
+          variant="ghost"
+          size="icon"
+          title={`Stroke width: ${width}px`}
+          onClick={() => onStrokeWidthChange(width)}
+          className={cn(
+            'hover:bg-accent/50',
+            currentStrokeWidth === width ? 'bg-accent text-accent-foreground' : ''
+          )}
+        >
+          <div className="flex items-center justify-center w-full h-full">
+            <div className={cn("rounded-full bg-foreground")} style={{width: `${width+2 > 10 ? 10 : width+2}px`, height: `${width+2 > 10 ? 10 : width+2}px`}}/>
+          </div>
+        </Button>
+      ))}
+       <Separator orientation="vertical" className="h-6 mx-1" />
+
+
+      {/* Shape Tools (Disabled) */}
+      {shapeToolButtons.map((tool) => (
+        <Button
+          variant="ghost"
+          size="icon"
+          key={tool.label}
+          aria-label={tool.label}
+          title={tool.label}
+          className={cn(
+            'hover:bg-accent/50 opacity-50 cursor-not-allowed'
+          )}
+          disabled
+        >
+          {tool.icon}
+        </Button>
+      ))}
+      {/* Other Tools (Disabled) */}
+      {otherDrawingTools.map((tool) => (
+         <Button
+          variant="ghost"
+          size="icon"
+          key={tool.label}
+          aria-label={tool.label}
+          title={tool.label}
+          className={cn(
+            'hover:bg-accent/50 opacity-50 cursor-not-allowed'
+          )}
+          disabled
+        >
+          {tool.icon}
+        </Button>
+      ))}
+      <Separator orientation="vertical" className="h-6 mx-1" />
+
+      {/* Clear Canvas */}
+      <Button
+        variant="outline"
+        size="icon"
+        title="Clear Drawing"
+        onClick={onClearCanvas}
+        className="hover:bg-destructive/20"
+      >
+        <Trash2 />
+      </Button>
     </div>
   );
 };

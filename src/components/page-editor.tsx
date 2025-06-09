@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef, useCallback } from 'react';
 import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import UnderlineExtension from '@tiptap/extension-underline';
@@ -13,7 +13,6 @@ import HighlightExtension from '@tiptap/extension-highlight';
 import ImageExtension from '@tiptap/extension-image';
 import TaskListExtension from '@tiptap/extension-task-list';
 import TaskItemExtension from '@tiptap/extension-task-item';
-// LinkExtension has been removed as per user request
 
 import { cn } from '@/lib/utils';
 
@@ -27,26 +26,30 @@ export interface PageEditorProps {
   onNoteChange: (content: string) => void;
   backgroundStyle: PageBackground;
   pageTheme: PageTheme;
-  editorRef?: React.MutableRefObject<Editor | null>;
+  editorTiptapRef?: React.MutableRefObject<Editor | null>; // Renamed for clarity
   isDrawingMode: boolean;
   currentDrawTool: string | null;
   drawColor: string;
   drawStrokeWidth: number;
 }
 
-const PageEditor: React.FC<PageEditorProps> = ({
+export interface PageEditorRef {
+  clearCanvas: () => void;
+}
+
+const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
   noteTitle,
   onNoteTitleChange,
   noteContent,
   onNoteChange,
   backgroundStyle,
   pageTheme,
-  editorRef,
+  editorTiptapRef,
   isDrawingMode,
   currentDrawTool,
   drawColor,
   drawStrokeWidth,
-}) => {
+}, ref) => {
   const themeClassMap: Record<PageTheme, string> = {
     light: 'page-theme-light',
     dark: 'page-theme-dark',
@@ -81,7 +84,9 @@ const PageEditor: React.FC<PageEditorProps> = ({
       TextStyleExtension,
       ColorExtension,
       HighlightExtension.configure({ multicolor: true }),
-      ImageExtension,
+      ImageExtension.configure({
+        allowBase64: true,
+      }),
       TaskListExtension,
       TaskItemExtension.configure({
         nested: true,
@@ -102,27 +107,66 @@ const PageEditor: React.FC<PageEditorProps> = ({
   const [isPainting, setIsPainting] = useState(false);
   const [lastPosition, setLastPosition] = useState<{ x: number; y: number } | null>(null);
 
+  const resizeCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const parent = canvas.parentElement;
+      if (parent) {
+        // Preserve drawing if any, then resize
+        const tempImageData = canvas.getContext('2d')?.getImageData(0, 0, canvas.width, canvas.height);
+        canvas.width = parent.clientWidth;
+        canvas.height = parent.clientHeight;
+        if (tempImageData) {
+          canvas.getContext('2d')?.putImageData(tempImageData, 0, 0);
+        }
+      }
+    }
+  }, []);
 
   useEffect(() => {
-    if (editor && editorRef) {
-      editorRef.current = editor;
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas(); // Initial resize
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+    };
+  }, [resizeCanvas]);
+
+
+  useImperativeHandle(ref, () => ({
+    clearCanvas: () => {
+      const canvas = canvasRef.current;
+      const ctx = canvas?.getContext('2d');
+      if (ctx && canvas) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+  }));
+
+  useEffect(() => {
+    if (editor && editorTiptapRef) {
+      editorTiptapRef.current = editor;
     }
     return () => {
-      if (editorRef) {
-        editorRef.current = null;
+      if (editorTiptapRef) {
+        editorTiptapRef.current = null;
       }
     };
-  }, [editor, editorRef]);
+  }, [editor, editorTiptapRef]);
 
   useEffect(() => {
     if (editor && editor.isEditable && editor.getHTML() !== noteContent) {
       const { from, to } = editor.state.selection;
       editor.commands.setContent(noteContent, false);
-      const docSize = editor.state.doc.content.size;
-      const newFrom = Math.min(from, docSize);
-      const newTo = Math.min(to, docSize);
-       if (newFrom <= docSize && newTo <= docSize) {
-         editor.commands.setTextSelection({ from: newFrom, to: newTo });
+      try {
+        const docSize = editor.state.doc.content.size;
+        const newFrom = Math.min(from, docSize);
+        const newTo = Math.min(to, docSize);
+        if (newFrom <= docSize && newTo <= docSize) {
+          editor.commands.setTextSelection({ from: newFrom, to: newTo });
+        }
+      } catch (e) {
+        // Catch potential errors during selection setting on content change
+        editor.commands.setTextSelection(editor.state.doc.content.size);
       }
     }
   }, [noteContent, editor]);
@@ -135,20 +179,14 @@ const PageEditor: React.FC<PageEditorProps> = ({
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !isDrawingMode || currentDrawTool !== 'pen') {
+    if (!canvas || !isDrawingMode || !(currentDrawTool === 'pen' || currentDrawTool === 'eraser')) {
       setIsPainting(false);
       return;
     }
+    resizeCanvas(); // Ensure canvas dimensions are up-to-date
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-
-    const parent = canvas.parentElement;
-    if (parent) {
-      canvas.width = parent.clientWidth;
-      canvas.height = parent.clientHeight;
-    }
-
 
     const getMousePosition = (event: MouseEvent | TouchEvent): { x: number; y: number } | null => {
       const rect = canvas.getBoundingClientRect();
@@ -170,22 +208,33 @@ const PageEditor: React.FC<PageEditorProps> = ({
 
     const startPaint = (event: MouseEvent | TouchEvent) => {
       event.preventDefault(); 
-      if (currentDrawTool !== 'pen') return;
+      if (!(currentDrawTool === 'pen' || currentDrawTool === 'eraser')) return;
+      
       const pos = getMousePosition(event);
       if (!pos) return;
+      
       setIsPainting(true);
       setLastPosition(pos);
+      
       ctx.beginPath();
       ctx.moveTo(pos.x, pos.y);
-      ctx.strokeStyle = drawColor;
-      ctx.lineWidth = drawStrokeWidth;
+      
+      if (currentDrawTool === 'pen') {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = drawColor;
+        ctx.lineWidth = drawStrokeWidth;
+      } else if (currentDrawTool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.lineWidth = drawStrokeWidth; // Eraser size
+      }
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
     };
 
     const paint = (event: MouseEvent | TouchEvent) => {
       event.preventDefault(); 
-      if (!isPainting || currentDrawTool !== 'pen' || !lastPosition) return;
+      if (!isPainting || !(currentDrawTool === 'pen' || currentDrawTool === 'eraser') || !lastPosition) return;
+      
       const pos = getMousePosition(event);
       if (!pos) return;
 
@@ -211,7 +260,6 @@ const PageEditor: React.FC<PageEditorProps> = ({
     canvas.addEventListener('touchend', endPaint);
     canvas.addEventListener('touchcancel', endPaint);
 
-
     return () => {
       canvas.removeEventListener('mousedown', startPaint);
       canvas.removeEventListener('mousemove', paint);
@@ -222,7 +270,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
       canvas.removeEventListener('touchend', endPaint);
       canvas.removeEventListener('touchcancel', endPaint);
     };
-  }, [isDrawingMode, currentDrawTool, isPainting, drawColor, drawStrokeWidth, lastPosition]);
+  }, [isDrawingMode, currentDrawTool, isPainting, drawColor, drawStrokeWidth, lastPosition, resizeCanvas]);
 
 
   const handlePaperClick = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -237,7 +285,6 @@ const PageEditor: React.FC<PageEditorProps> = ({
     }
   };
   
-
   return (
     <div
       className={cn(
@@ -255,7 +302,7 @@ const PageEditor: React.FC<PageEditorProps> = ({
       />
       <div
         className={cn(
-          'flex-1 relative flex flex-col min-h-0',
+          'flex-1 relative flex flex-col min-h-0', // Ensure this container can define canvas size
           backgroundClassMap[backgroundStyle]
         )}
         onClick={handlePaperClick}
@@ -264,19 +311,20 @@ const PageEditor: React.FC<PageEditorProps> = ({
           editor={editor}
           className={cn(
             "flex-1 tiptap-editor",
-            isDrawingMode ? 'pointer-events-none opacity-70' : ''
+            isDrawingMode ? 'pointer-events-none opacity-70' : '' // Make editor non-interactive in draw mode
           )}
         />
         <canvas
           ref={canvasRef}
           className={cn(
-            "absolute top-0 left-0 w-full h-full",
-            isDrawingMode && currentDrawTool === 'pen' ? 'pointer-events-auto z-10' : 'pointer-events-none -z-10'
+            "absolute top-0 left-0 w-full h-full", // Canvas covers the parent div
+            isDrawingMode && (currentDrawTool === 'pen' || currentDrawTool === 'eraser') ? 'pointer-events-auto z-10' : 'pointer-events-none -z-10'
           )}
         />
       </div>
     </div>
   );
-};
+});
 
+PageEditor.displayName = 'PageEditor';
 export default PageEditor;

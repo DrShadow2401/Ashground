@@ -7,7 +7,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator as ColorDropdownSeparator
 } from "@/components/ui/dropdown-menu";
 import type { Editor } from '@tiptap/react';
 import {
@@ -34,8 +33,8 @@ import {
   CheckSquare,
   ImageUp,
   Highlighter,
-  Palette, // For color dropdown
-  ChevronsUpDown,
+  Palette, 
+  ChevronsUpDown, // Placeholder for Toggle Section
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -44,7 +43,7 @@ interface HomeToolsProps {
 }
 
 const textColors = [
-  { name: 'Default', value: '' }, // Special value for unsetColor
+  { name: 'Default', value: '' },
   { name: 'Black', value: '#000000' },
   { name: 'Red', value: '#E03131' },
   { name: 'Blue', value: '#2563EB' },
@@ -55,7 +54,7 @@ const textColors = [
 ];
 
 const highlightColors = [
-    { name: 'Default', value: '' }, // Special value for unsetHighlight
+    { name: 'Default', value: '' }, 
     { name: 'Yellow', value: '#FFF3A3' },
     { name: 'Pink', value: '#FECDD3' },
     { name: 'Green', value: '#A7F3D0' },
@@ -76,13 +75,13 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
       };
       currentEditorInstance.on('transaction', handleUpdate);
       currentEditorInstance.on('selectionUpdate', handleUpdate);
-      handleUpdate();
+      handleUpdate(); 
       return () => {
         currentEditorInstance.off('transaction', handleUpdate);
         currentEditorInstance.off('selectionUpdate', handleUpdate);
       };
     }
-  }, [editor]);
+  }, [editor]); 
 
 
   const handleImageInsert = useCallback(() => {
@@ -99,7 +98,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
       currentEditor.chain().focus().setImage({ src: reader.result as string }).run();
     };
     reader.readAsDataURL(file);
-    event.target.value = ''; // Reset file input
+    event.target.value = ''; 
   }, [editorRef]);
 
 
@@ -138,7 +137,8 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
           if (colorValue === '') editor.chain().focus().unsetColor().run();
           else editor.chain().focus().setColor(colorValue).run();
         },
-        isActive: (colorValue?: string) => colorValue ? editor.isActive('textStyle', { color: colorValue }) : false, // Individual item check
+        isDropdownActive: () => !!editor.getAttributes('textStyle').color,
+        isItemActive: (colorValue?: string) => colorValue ? editor.isActive('textStyle', { color: colorValue }) : !editor.getAttributes('textStyle').color && colorValue === '',
       },
       {
         type: 'dropdown',
@@ -149,7 +149,8 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
             if (colorValue === '') editor.chain().focus().unsetHighlight().run();
             else editor.chain().focus().toggleHighlight({ color: colorValue }).run();
         },
-        isActive: (colorValue?: string) => colorValue ? editor.isActive('highlight', { color: colorValue }) : false,
+        isDropdownActive: () => !!editor.getAttributes('highlight').color,
+        isItemActive: (colorValue?: string) => colorValue ? editor.isActive('highlight', { color: colorValue }) : !editor.getAttributes('highlight').color && colorValue === '',
       },
     ],
     [
@@ -167,7 +168,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     [
       { type: 'button', icon: <Minus />, label: 'Horizontal Rule', action: () => editor.chain().focus().setHorizontalRule().run(), isActive: () => false },
       { type: 'button', icon: <CheckSquare />, label: 'Checklist', action: () => editor.chain().focus().toggleTaskList().run(), isActive: () => isButtonActive('taskList') },
-      { type: 'button', icon: <ImageUp />, label: 'Insert Image', action: handleImageInsert, isActive: () => isButtonActive('image') },
+      { type: 'button', icon: <ImageUp />, label: 'Insert Image', action: handleImageInsert, isActive: () => false }, // Image insert is an action, not a toggle state
       { type: 'button', icon: <ChevronsUpDown />, label: 'Toggle Section (NA)', action: () => {}, isActive: () => false, disabled: true },
     ],
     [
@@ -208,16 +209,20 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
                   </Button>
                 );
               }
-              if (tool.type === 'dropdown') {
+              if (tool.type === 'dropdown' && tool.items) {
                 return (
                   <DropdownMenu key={tool.label}>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" aria-label={tool.label} title={tool.label}
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        aria-label={tool.label} 
+                        title={tool.label}
                         className={cn(
                            'hover:bg-accent/50',
-                           // Basic check: is any color/highlight active other than default?
-                           (tool.label === 'Font Color' && editor.getAttributes('textStyle').color) || (tool.label === 'Highlight Color' && editor.getAttributes('highlight').color) ? 'bg-accent text-accent-foreground' : ''
+                           tool.isDropdownActive && tool.isDropdownActive() ? 'bg-accent text-accent-foreground' : ''
                         )}
+                        disabled={!editor.isEditable}
                       >
                         {tool.icon}
                       </Button>
@@ -228,15 +233,22 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
                           key={item.name}
                           onClick={() => tool.action(item.value)}
                           className={cn(
-                            tool.isActive(item.value) ? 'bg-accent/80' : ''
+                            tool.isItemActive && tool.isItemActive(item.value) ? 'bg-accent/80' : ''
                           )}
                         >
                           <div className="flex items-center gap-2">
-                            {tool.label === 'Font Color' && item.value && (
-                              <div className="w-3 h-3 rounded-full border" style={{ backgroundColor: item.value }} />
+                            {(tool.label === 'Font Color' || tool.label === 'Highlight Color') && item.value && (
+                              <div 
+                                className="w-3 h-3 rounded-full border" 
+                                style={{ backgroundColor: item.value, 
+                                         border: tool.label === 'Highlight Color' && item.value === '#FFF3A3' ? '1px solid #E0C567': '1px solid #ccc' // Special border for yellow highlight to be visible on light backgrounds
+                                        }} 
+                              />
                             )}
-                             {tool.label === 'Highlight Color' && item.value && (
-                              <div className="w-3 h-3 rounded-sm border" style={{ backgroundColor: item.value }} />
+                             {(tool.label === 'Font Color' || tool.label === 'Highlight Color') && !item.value && ( // For "Default" option
+                              <div className="w-3 h-3 rounded-full border flex items-center justify-center">
+                                <Minus className="w-2 h-2 text-muted-foreground" /> 
+                              </div>
                             )}
                             {item.name}
                           </div>
