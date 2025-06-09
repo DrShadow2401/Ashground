@@ -1,19 +1,15 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
   PenTool,
   Eraser,
-  Trash2, 
-  Palette, 
-  PaintBucket, 
-  Circle as CircleIcon, 
-  Square as SquareIcon, 
-  Triangle as TriangleIcon, 
-  Minus as MinusIcon, 
-  ArrowRight as ArrowRightIcon, 
-  Pipette, 
-  ListFilter, 
+  Trash2,
+  Palette,
+  Pipette,
+  ListFilter,
+  Minus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -47,8 +43,8 @@ const lineStyleOptions: { label: string; value: LineStyle }[] = [
 ];
 
 
-const DrawTools: React.FC<DrawToolsProps> = ({ 
-  activeTool, 
+const DrawTools: React.FC<DrawToolsProps> = ({
+  activeTool,
   onToolChange,
   currentDrawColor,
   onDrawColorChange,
@@ -58,11 +54,10 @@ const DrawTools: React.FC<DrawToolsProps> = ({
   onLineStyleChange,
   onClearCanvas
 }) => {
-  
+
   const handleToolClick = (toolName: string) => {
-    // For clear canvas, it's a one-time action, handled by onClearCanvas prop
     if (toolName === 'clear') {
-      onClearCanvas(); 
+      onClearCanvas();
       return;
     }
     onToolChange(activeTool === toolName ? null : toolName);
@@ -74,48 +69,31 @@ const DrawTools: React.FC<DrawToolsProps> = ({
     { name: 'eyedropper', icon: <Pipette />, label: 'Eyedropper Tool' },
   ];
 
-  const shapeToolButtons = [
-    { name: 'circle', icon: <CircleIcon />, label: 'Draw Circle' },
-    { name: 'square', icon: <SquareIcon />, label: 'Draw Square' },
-    { name: 'triangle', icon: <TriangleIcon />, label: 'Draw Triangle' },
-    { name: 'line', icon: <MinusIcon />, label: 'Draw Line' }, 
-    { name: 'arrow', icon: <ArrowRightIcon />, label: 'Draw Arrow' }, 
-  ];
-
-  const otherDrawingTools = [
-     { name: 'fill', icon: <PaintBucket />, label: 'Fill Tool (NA)', disabled: true },
-  ];
-
-
   return (
     <div className="flex flex-wrap gap-1 items-center justify-center">
-      {/* Drawing Mode Tools */}
       {drawingToolButtons.map((tool) => (
         <Button
           variant="ghost"
           size="icon"
-          key={tool.name} 
+          key={tool.name}
           onClick={() => handleToolClick(tool.name)}
           aria-label={tool.label}
           title={tool.label}
           className={cn(
             'hover:bg-accent/50',
             activeTool === tool.name ? 'bg-accent text-accent-foreground' : '',
-            (tool as any).disabled ? 'opacity-50 cursor-not-allowed' : ''
           )}
-          disabled={(tool as any).disabled}
         >
           {tool.icon}
         </Button>
       ))}
       <Separator orientation="vertical" className="h-6 mx-1" />
-      
-      {/* Color Selection Dropdown */}
+
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" title="Select Draw Color" className="hover:bg-accent/50">
             <Palette />
-             <div className="w-3 h-3 ml-1 rounded-sm border" style={{ backgroundColor: currentDrawColor }}/>
+            <div className="w-3 h-3 ml-1 rounded-sm border" style={{ backgroundColor: currentDrawColor }} />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
@@ -124,39 +102,37 @@ const DrawTools: React.FC<DrawToolsProps> = ({
           {presetDrawColors.map(color => (
             <DropdownMenuItem key={color} onClick={() => onDrawColorChange(color)} className={cn(currentDrawColor === color ? 'bg-accent/80' : '')}>
               <div className="w-4 h-4 rounded-full border mr-2" style={{ backgroundColor: color }} />
-              {color}
+              {color === '#FFFFFF' ? 'White' : color === '#000000' ? 'Black' : color}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
-      
+
       <Separator orientation="vertical" className="h-6 mx-1" />
 
-      {/* Stroke Width Selection Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" title="Select Stroke Width" className="hover:bg-accent/50">
-                 <div className="flex items-center justify-center w-full h-full">
-                    <div className={cn("rounded-full bg-foreground")} style={{width: `${Math.min(currentStrokeWidth + 2, 12)}px`, height: `${Math.min(currentStrokeWidth + 2, 12)}px`}}/>
-                </div>
-            </Button>
+          <Button variant="ghost" size="icon" title="Select Stroke Width" className="hover:bg-accent/50">
+            <div className="flex items-center justify-center w-full h-full">
+              <div className={cn("rounded-full bg-foreground")} style={{ width: `${Math.min(currentStrokeWidth + 2, 12)}px`, height: `${Math.min(currentStrokeWidth + 2, 12)}px` }} />
+            </div>
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
-            <DropdownMenuLabel>Stroke Width</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {presetStrokeWidths.map(width => (
+          <DropdownMenuLabel>Stroke Width</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {presetStrokeWidths.map(width => (
             <DropdownMenuItem key={`stroke-${width}`} onClick={() => onStrokeWidthChange(width)} className={cn(currentStrokeWidth === width ? 'bg-accent/80' : '')}>
-                 <div className="w-5 h-5 flex items-center justify-center mr-2">
-                    <div className={cn("rounded-full bg-foreground")} style={{width: `${Math.min(width + 2, 12)}px`, height: `${Math.min(width + 2, 12)}px`}}/>
-                </div>
-                {width}px
+              <div className="w-5 h-5 flex items-center justify-center mr-2">
+                <div className={cn("rounded-full bg-foreground")} style={{ width: `${Math.min(width + 2, 12)}px`, height: `${Math.min(width + 2, 12)}px` }} />
+              </div>
+              {width}px
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
-       <Separator orientation="vertical" className="h-6 mx-1" />
+      <Separator orientation="vertical" className="h-6 mx-1" />
 
-      {/* Line Style Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" title="Select Line Style" className="hover:bg-accent/50">
@@ -175,51 +151,11 @@ const DrawTools: React.FC<DrawToolsProps> = ({
       </DropdownMenu>
       <Separator orientation="vertical" className="h-6 mx-1" />
 
-
-      {/* Shape Tools */}
-      {shapeToolButtons.map((tool) => (
-        <Button
-          variant="ghost"
-          size="icon"
-          key={tool.name} 
-          onClick={() => handleToolClick(tool.name)}
-          aria-label={tool.label}
-          title={tool.label}
-          className={cn(
-            'hover:bg-accent/50',
-            activeTool === tool.name ? 'bg-accent text-accent-foreground' : '',
-            (tool as any).disabled ? 'opacity-50 cursor-not-allowed' : ''
-          )}
-          disabled={(tool as any).disabled}
-        >
-          {tool.icon}
-        </Button>
-      ))}
-       <Separator orientation="vertical" className="h-6 mx-1" />
-      {/* Other Tools (Disabled) */}
-      {otherDrawingTools.map((tool) => (
-         <Button
-          variant="ghost"
-          size="icon"
-          key={tool.label}
-          aria-label={tool.label}
-          title={tool.label}
-          className={cn(
-            'hover:bg-accent/50 opacity-50 cursor-not-allowed'
-          )}
-          disabled
-        >
-          {tool.icon}
-        </Button>
-      ))}
-      <Separator orientation="vertical" className="h-6 mx-1" />
-
-      {/* Clear Canvas */}
       <Button
         variant="outline"
         size="icon"
         title="Clear Drawing"
-        onClick={() => handleToolClick('clear')} // Use handleToolClick to leverage centralized logic if needed, or directly onClearCanvas
+        onClick={() => handleToolClick('clear')}
         className="hover:bg-destructive/20"
       >
         <Trash2 />

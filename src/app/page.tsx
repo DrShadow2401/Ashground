@@ -1,9 +1,10 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { Editor } from '@tiptap/react';
 import AshgroundHeader from '@/components/ashground-header';
-import PageEditor from '@/components/page-editor';
+import PageEditor, { type PageEditorRef } from '@/components/page-editor';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import HomeTools from '@/components/tool-sections/home-tools';
 import DrawTools from '@/components/tool-sections/draw-tools';
@@ -24,15 +25,14 @@ export default function Home() {
   const [pageTheme, setPageTheme] = useState<PageTheme>('light');
   const [isMounted, setIsMounted] = useState(false);
   const [isEditorInitialized, setIsEditorInitialized] = useState(false);
-  
+
   const editorRef = useRef<Editor | null>(null);
-  const pageEditorRef = useRef<{ clearCanvas: () => void }>(null);
+  const pageEditorComponentRef = useRef<PageEditorRef>(null);
 
 
-  // Drawing specific state
   const [currentDrawTool, setCurrentDrawTool] = useState<string | null>(null);
-  const [drawColor, setDrawColor] = useState<string>('#000000'); 
-  const [drawStrokeWidth, setDrawStrokeWidth] = useState<number>(2); 
+  const [drawColor, setDrawColor] = useState<string>('#000000');
+  const [drawStrokeWidth, setDrawStrokeWidth] = useState<number>(2);
   const [currentLineStyle, setCurrentLineStyle] = useState<LineStyle>('solid');
 
 
@@ -44,9 +44,9 @@ export default function Home() {
     const savedTheme = localStorage.getItem('ashground_theme') as PageTheme | null;
 
     if (savedTitle) setNoteTitle(savedTitle);
-    if (savedNote) setNoteContent(savedNote); 
-    else setNoteContent('<p></p>'); 
-    
+    if (savedNote) setNoteContent(savedNote);
+    else setNoteContent('<p></p>'); // Ensure it starts truly empty if no saved note
+
     if (savedBg) setPageBackground(savedBg);
 
     const htmlClasses = document.documentElement.classList;
@@ -96,7 +96,7 @@ export default function Home() {
       } else if (pageTheme === 'pastel') {
         htmlClasses.remove('dark');
         htmlClasses.add('theme-pastel');
-      } else { 
+      } else {
         htmlClasses.remove('dark');
         htmlClasses.remove('theme-pastel');
       }
@@ -104,9 +104,8 @@ export default function Home() {
   }, [pageTheme, isMounted]);
 
   useEffect(() => {
-    // Deselect drawing tool if not on draw tab, unless it's the eyedropper (which deselects itself)
     if (activeTab !== 'draw' && currentDrawTool !== 'eyedropper') {
-      setCurrentDrawTool(null); 
+      setCurrentDrawTool(null);
     }
   }, [activeTab, currentDrawTool]);
 
@@ -115,18 +114,25 @@ export default function Home() {
   }, []);
 
   if (!isMounted) {
-    return null; 
+    return null;
   }
 
   const handleClearCanvas = () => {
-    if (pageEditorRef.current) {
-      pageEditorRef.current.clearCanvas();
+    if (pageEditorComponentRef.current) {
+      pageEditorComponentRef.current.clearCanvas();
     }
-    setCurrentDrawTool(null); // Deselect the clear tool after use
+    setCurrentDrawTool(null);
   };
 
   const handleAfterColorPick = () => {
-    setCurrentDrawTool(null); // Deselect eyedropper after picking a color
+    setCurrentDrawTool(null);
+  };
+
+  const getExportableElementForPdf = () => {
+    if (pageEditorComponentRef.current) {
+      return pageEditorComponentRef.current.getExportableElement();
+    }
+    return null;
   };
 
   const tabItems = [
@@ -157,7 +163,7 @@ export default function Home() {
           <div className="bg-muted p-3 rounded-lg shadow-inner min-h-[52px] flex justify-center items-start">
             {activeTab === 'home' && (isEditorInitialized ? <HomeTools editorRef={editorRef} /> : <p className="text-muted-foreground text-sm">Editor loading...</p>)}
             {activeTab === 'draw' && (
-              <DrawTools 
+              <DrawTools
                 activeTool={currentDrawTool}
                 onToolChange={setCurrentDrawTool}
                 currentDrawColor={drawColor}
@@ -177,12 +183,12 @@ export default function Home() {
                 onThemeChange={setPageTheme}
               />
             )}
-            {activeTab === 'export' && <ExportTools noteContent={noteContent} />}
+            {activeTab === 'export' && <ExportTools noteTitle={noteTitle} getExportableElement={getExportableElementForPdf} />}
           </div>
         </div>
-        
+
         <PageEditor
-          ref={pageEditorRef}
+          ref={pageEditorComponentRef}
           editorTiptapRef={editorRef}
           onEditorReady={handleEditorReady}
           noteTitle={noteTitle}
@@ -196,8 +202,8 @@ export default function Home() {
           drawColor={drawColor}
           drawStrokeWidth={drawStrokeWidth}
           currentLineStyle={currentLineStyle}
-          onDrawColorChange={setDrawColor} // For eyedropper
-          onAfterColorPick={handleAfterColorPick} // For eyedropper to deselect itself
+          onDrawColorChange={setDrawColor}
+          onAfterColorPick={handleAfterColorPick}
         />
       </Tabs>
     </main>
