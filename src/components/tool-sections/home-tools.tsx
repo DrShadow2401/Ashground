@@ -7,6 +7,8 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import type { Editor } from '@tiptap/react';
 import {
@@ -33,7 +35,7 @@ import {
   CheckSquare,
   ImageUp,
   Highlighter,
-  Palette, 
+  Palette,
   ChevronsUpDown, // Placeholder for Toggle Section
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -43,7 +45,7 @@ interface HomeToolsProps {
 }
 
 const textColors = [
-  { name: 'Default', value: '' },
+  { name: 'Default', value: '', icon: <Minus className="w-3 h-3 text-muted-foreground" /> },
   { name: 'Black', value: '#000000' },
   { name: 'Red', value: '#E03131' },
   { name: 'Blue', value: '#2563EB' },
@@ -54,7 +56,7 @@ const textColors = [
 ];
 
 const highlightColors = [
-    { name: 'Default', value: '' }, 
+    { name: 'Default', value: '', icon: <Minus className="w-3 h-3 text-muted-foreground" /> },
     { name: 'Yellow', value: '#FFF3A3' },
     { name: 'Pink', value: '#FECDD3' },
     { name: 'Green', value: '#A7F3D0' },
@@ -64,24 +66,24 @@ const highlightColors = [
 
 const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
   const editor = editorRef.current;
-  const [, setForceUpdateKey] = useState(0);
+  const [, forceUpdate] = useState(0); // Renamed for clarity from setForceUpdateKey
   const imageFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const currentEditorInstance = editorRef.current;
+    const currentEditorInstance = editor;
     if (currentEditorInstance) {
       const handleUpdate = () => {
-        setForceUpdateKey(k => k + 1);
+        forceUpdate(k => k + 1);
       };
       currentEditorInstance.on('transaction', handleUpdate);
       currentEditorInstance.on('selectionUpdate', handleUpdate);
-      handleUpdate(); 
+      // Removed problematic immediate handleUpdate() call from here
       return () => {
         currentEditorInstance.off('transaction', handleUpdate);
         currentEditorInstance.off('selectionUpdate', handleUpdate);
       };
     }
-  }, [editor]); 
+  }, [editor]); // forceUpdate is stable, dependency is effectively `editor`
 
 
   const handleImageInsert = useCallback(() => {
@@ -98,7 +100,9 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
       currentEditor.chain().focus().setImage({ src: reader.result as string }).run();
     };
     reader.readAsDataURL(file);
-    event.target.value = ''; 
+    if (event.target) { // Reset file input to allow selecting the same file again
+        event.target.value = '';
+    }
   }, [editorRef]);
 
 
@@ -149,8 +153,11 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
             if (colorValue === '') editor.chain().focus().unsetHighlight().run();
             else editor.chain().focus().toggleHighlight({ color: colorValue }).run();
         },
-        isDropdownActive: () => !!editor.getAttributes('highlight').color,
-        isItemActive: (colorValue?: string) => colorValue ? editor.isActive('highlight', { color: colorValue }) : !editor.getAttributes('highlight').color && colorValue === '',
+        isDropdownActive: () => !!editor.getAttributes('highlight')?.color,
+        isItemActive: (colorValue?: string) => {
+          if (colorValue === '') return !editor.getAttributes('highlight')?.color && !editor.isActive('highlight');
+          return editor.isActive('highlight', { color: colorValue });
+        }
       },
     ],
     [
@@ -168,7 +175,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     [
       { type: 'button', icon: <Minus />, label: 'Horizontal Rule', action: () => editor.chain().focus().setHorizontalRule().run(), isActive: () => false },
       { type: 'button', icon: <CheckSquare />, label: 'Checklist', action: () => editor.chain().focus().toggleTaskList().run(), isActive: () => isButtonActive('taskList') },
-      { type: 'button', icon: <ImageUp />, label: 'Insert Image', action: handleImageInsert, isActive: () => false }, // Image insert is an action, not a toggle state
+      { type: 'button', icon: <ImageUp />, label: 'Insert Image', action: handleImageInsert, isActive: () => false },
       { type: 'button', icon: <ChevronsUpDown />, label: 'Toggle Section (NA)', action: () => {}, isActive: () => false, disabled: true },
     ],
     [
@@ -213,10 +220,10 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
                 return (
                   <DropdownMenu key={tool.label}>
                     <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        aria-label={tool.label} 
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={tool.label}
                         title={tool.label}
                         className={cn(
                            'hover:bg-accent/50',
@@ -228,6 +235,8 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
+                      <DropdownMenuLabel>{tool.label}</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
                       {tool.items.map((item) => (
                         <DropdownMenuItem
                           key={item.name}
@@ -237,18 +246,15 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
                           )}
                         >
                           <div className="flex items-center gap-2">
-                            {(tool.label === 'Font Color' || tool.label === 'Highlight Color') && item.value && (
-                              <div 
-                                className="w-3 h-3 rounded-full border" 
-                                style={{ backgroundColor: item.value, 
-                                         border: tool.label === 'Highlight Color' && item.value === '#FFF3A3' ? '1px solid #E0C567': '1px solid #ccc' // Special border for yellow highlight to be visible on light backgrounds
-                                        }} 
+                            {item.value ? (
+                              <div
+                                className="w-3 h-3 rounded-full border"
+                                style={{ backgroundColor: item.value,
+                                         border: tool.label === 'Highlight Color' && item.value === '#FFF3A3' ? '1px solid #E0C567': '1px solid hsl(var(--border))'
+                                        }}
                               />
-                            )}
-                             {(tool.label === 'Font Color' || tool.label === 'Highlight Color') && !item.value && ( // For "Default" option
-                              <div className="w-3 h-3 rounded-full border flex items-center justify-center">
-                                <Minus className="w-2 h-2 text-muted-foreground" /> 
-                              </div>
+                            ) : (
+                              item.icon // For "Default" option with Minus icon
                             )}
                             {item.name}
                           </div>
