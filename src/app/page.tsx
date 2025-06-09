@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -14,6 +13,8 @@ import ExportTools from '@/components/tool-sections/export-tools';
 
 type PageBackground = 'plain' | 'lined' | 'grid';
 type PageTheme = 'light' | 'dark' | 'pastel';
+export type LineStyle = 'solid' | 'dashed' | 'dotted';
+
 
 export default function Home() {
   const [noteTitle, setNoteTitle] = useState<string>('Untitled Note');
@@ -32,6 +33,7 @@ export default function Home() {
   const [currentDrawTool, setCurrentDrawTool] = useState<string | null>(null);
   const [drawColor, setDrawColor] = useState<string>('#000000'); 
   const [drawStrokeWidth, setDrawStrokeWidth] = useState<number>(2); 
+  const [currentLineStyle, setCurrentLineStyle] = useState<LineStyle>('solid');
 
 
   useEffect(() => {
@@ -102,10 +104,11 @@ export default function Home() {
   }, [pageTheme, isMounted]);
 
   useEffect(() => {
-    if (activeTab !== 'draw') {
-      setCurrentDrawTool(null); // Deselect drawing tool if not on draw tab
+    // Deselect drawing tool if not on draw tab, unless it's the eyedropper (which deselects itself)
+    if (activeTab !== 'draw' && currentDrawTool !== 'eyedropper') {
+      setCurrentDrawTool(null); 
     }
-  }, [activeTab]);
+  }, [activeTab, currentDrawTool]);
 
   const handleEditorReady = useCallback(() => {
     setIsEditorInitialized(true);
@@ -119,6 +122,11 @@ export default function Home() {
     if (pageEditorRef.current) {
       pageEditorRef.current.clearCanvas();
     }
+    setCurrentDrawTool(null); // Deselect the clear tool after use
+  };
+
+  const handleAfterColorPick = () => {
+    setCurrentDrawTool(null); // Deselect eyedropper after picking a color
   };
 
   const tabItems = [
@@ -156,6 +164,8 @@ export default function Home() {
                 onDrawColorChange={setDrawColor}
                 currentStrokeWidth={drawStrokeWidth}
                 onStrokeWidthChange={setDrawStrokeWidth}
+                currentLineStyle={currentLineStyle}
+                onLineStyleChange={setCurrentLineStyle}
                 onClearCanvas={handleClearCanvas}
               />
             )}
@@ -185,9 +195,11 @@ export default function Home() {
           currentDrawTool={currentDrawTool}
           drawColor={drawColor}
           drawStrokeWidth={drawStrokeWidth}
+          currentLineStyle={currentLineStyle}
+          onDrawColorChange={setDrawColor} // For eyedropper
+          onAfterColorPick={handleAfterColorPick} // For eyedropper to deselect itself
         />
       </Tabs>
     </main>
   );
 }
-

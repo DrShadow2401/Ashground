@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef, useCallback } from 'react';
 import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -14,7 +13,7 @@ import ImageExtension from '@tiptap/extension-image';
 import TaskListExtension from '@tiptap/extension-task-list';
 import TaskItemExtension from '@tiptap/extension-task-item';
 
-
+import type { LineStyle } from '@/app/page';
 import { cn } from '@/lib/utils';
 
 type PageBackground = 'plain' | 'lined' | 'grid';
@@ -32,19 +31,30 @@ export interface PageEditorProps {
   currentDrawTool: string | null;
   drawColor: string;
   drawStrokeWidth: number;
+  currentLineStyle: LineStyle;
   onEditorReady?: (editor: Editor) => void;
+  onDrawColorChange: (color: string) => void; // For eyedropper
+  onAfterColorPick: () => void; // For eyedropper
 }
 
 export interface PageEditorRef {
   clearCanvas: () => void;
 }
 
-const drawShape = (ctx: CanvasRenderingContext2D, pos: {x: number, y: number}, tool: string, strokeWidth: number, color: string) => {
-  const size = 20 + strokeWidth * 2; // Base size for shapes
+const drawShape = (ctx: CanvasRenderingContext2D, pos: {x: number, y: number}, tool: string, strokeWidth: number, color: string, lineStyle: LineStyle) => {
+  const size = 20 + strokeWidth * 2; 
   ctx.strokeStyle = color;
   ctx.lineWidth = strokeWidth;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
+
+  if (lineStyle === 'dashed') {
+    ctx.setLineDash([10, 5]);
+  } else if (lineStyle === 'dotted') {
+    ctx.setLineDash([strokeWidth, strokeWidth * 2]); // Adjust for better dot appearance
+  } else {
+    ctx.setLineDash([]);
+  }
   
   ctx.beginPath();
   switch (tool) {
@@ -60,11 +70,11 @@ const drawShape = (ctx: CanvasRenderingContext2D, pos: {x: number, y: number}, t
       ctx.lineTo(pos.x - size / 2, pos.y + size / 2);
       ctx.closePath();
       break;
-    case 'line': // A short horizontal line
-      ctx.moveTo(pos.x - size / 2, pos.y);
-      ctx.lineTo(pos.x + size / 2, pos.y);
+    case 'line': 
+      ctx.moveTo(pos.x - size / 1.5, pos.y);
+      ctx.lineTo(pos.x + size / 1.5, pos.y);
       break;
-    case 'arrow': // A simple right-pointing arrow
+    case 'arrow': 
       ctx.moveTo(pos.x - size / 1.5, pos.y);
       ctx.lineTo(pos.x + size / 1.5, pos.y);
       ctx.moveTo(pos.x + size / 1.5, pos.y);
@@ -74,6 +84,7 @@ const drawShape = (ctx: CanvasRenderingContext2D, pos: {x: number, y: number}, t
       break;
   }
   ctx.stroke();
+  ctx.setLineDash([]); // Reset line dash after drawing shape
 };
 
 
@@ -89,7 +100,10 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
   currentDrawTool,
   drawColor,
   drawStrokeWidth,
+  currentLineStyle,
   onEditorReady,
+  onDrawColorChange,
+  onAfterColorPick,
 }, ref) => {
   const themeClassMap: Record<PageTheme, string> = {
     light: 'page-theme-light',
@@ -148,23 +162,28 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
   const isPaintingRef = useRef(false);
   const lastPositionRef = useRef<{ x: number; y: number } | null>(null);
   const canvasContextRef = useRef<CanvasRenderingContext2D | null>(null);
-  const [canvasKey, setCanvasKey] = useState(Date.now()); // Force re-init for canvas on clear/resize issues.
+  const [canvasKey, setCanvasKey] = useState(Date.now()); 
+  const currentCanvasDataUrlRef = useRef<string | null>(null);
+
 
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (canvas) {
       const parent = canvas.parentElement;
       if (parent) {
-        let currentDrawingDataUrl: string | null = null;
-        if (canvas.width > 0 && canvas.height > 0) {
+        let drawingDataUrlToRestore = currentCanvasDataUrlRef.current;
+
+        // If canvas exists and has dimensions, capture its current state before resizing
+        // unless we intend to clear it (e.g., after clearCanvas call)
+        if (canvas.width > 0 && canvas.height > 0 && drawingDataUrlToRestore !== "cleared") {
           try {
-            currentDrawingDataUrl = canvas.toDataURL();
+            drawingDataUrlToRestore = canvas.toDataURL();
           } catch (e) {
-            console.error("Error capturing canvas data URL:", e);
-            currentDrawingDataUrl = null;
+            console.error("Error capturing canvas data URL for resize:", e);
+            drawingDataUrlToRestore = null; 
           }
         }
-
+        
         const newWidth = parent.clientWidth;
         const newHeight = parent.clientHeight;
 
@@ -176,7 +195,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
 
           if (ctx) {
             ctx.clearRect(0, 0, newWidth, newHeight);
-            if (currentDrawingDataUrl && newWidth > 0 && newHeight > 0) {
+            if (drawingDataUrlToRestore && drawingDataUrlToRestore !== "cleared" && newWidth > 0 && newHeight > 0) {
               const img = new Image();
               img.onload = () => {
                 ctx.drawImage(img, 0, 0);
@@ -184,10 +203,17 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
               img.onerror = () => {
                 console.error("Error loading image data for canvas restore.");
               }
-              img.src = currentDrawingDataUrl;
+              img.src = drawingDataUrlToRestore;
             }
           }
         }
+        // After resize, if it was 'cleared', reset ref so next resize doesn't use 'cleared'
+        if (currentCanvasDataUrlRef.current === "cleared") {
+            currentCanvasDataUrlRef.current = null;
+        } else if (drawingDataUrlToRestore && drawingDataUrlToRestore !== "cleared") {
+            currentCanvasDataUrlRef.current = drawingDataUrlToRestore;
+        }
+
       }
     }
   }, []);
@@ -195,7 +221,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
 
   useEffect(() => {
     window.addEventListener('resize', resizeCanvas);
-    const timeoutId = setTimeout(resizeCanvas, 0); // Ensure initial sizing
+    const timeoutId = setTimeout(resizeCanvas, 0); 
     return () => {
       window.removeEventListener('resize', resizeCanvas);
       clearTimeout(timeoutId);
@@ -208,17 +234,8 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       const ctx = canvasContextRef.current;
       if (ctx && canvas) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        // Create a new data URL of the blank canvas for resizeCanvas to pick up
-        if (canvas.width > 0 && canvas.height > 0) {
-           try {
-            const blankDataUrl = canvas.toDataURL(); // Capture blank state
-            // This isn't strictly necessary if resizeCanvas captures after clear,
-            // but can be a safeguard. Forcing a re-render of canvas via key is another option.
-            setCanvasKey(Date.now()); // Force re-init of canvas element if needed
-           } catch (e) {
-            console.error("Error generating blank data URL:", e);
-           }
-        }
+        currentCanvasDataUrlRef.current = "cleared"; // Signal that canvas was intentionally cleared
+        setCanvasKey(Date.now()); // Force re-init if needed for some edge cases
       }
     }
   }), []);
@@ -226,7 +243,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
   useEffect(() => {
     if (editor && editorTiptapRef) {
       editorTiptapRef.current = editor;
-      onEditorReady?.(editor);
+      if(onEditorReady) onEditorReady(editor);
     }
     return () => {
       if (editorTiptapRef) {
@@ -254,15 +271,16 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
     }
   }, [isDrawingMode, editor]);
 
+
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !isDrawingMode ) {
+    if (!canvas || !isDrawingMode || !currentDrawTool ) {
       isPaintingRef.current = false;
       return;
     }
-
-    resizeCanvas(); 
     
+    resizeCanvas(); // Ensure canvas is sized correctly when drawing mode activates/tool changes
+
     if (!canvasContextRef.current) {
         canvasContextRef.current = canvas.getContext('2d');
     }
@@ -288,7 +306,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
     };
     
     const paint = (event: MouseEvent | TouchEvent) => {
-      if (!isPaintingRef.current || !lastPositionRef.current || !ctx) return;
+      if (!isPaintingRef.current || !lastPositionRef.current || !ctx || currentDrawTool !== 'pen') return;
       event.preventDefault();
       
       const pos = getMousePosition(event);
@@ -300,9 +318,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
     };
 
     const endPaint = () => {
-      if (!isPaintingRef.current && !(['circle', 'square', 'triangle', 'line', 'arrow'].includes(currentDrawTool || ''))) {
-           // Only proceed if painting or if it was a shape tool that doesn't use isPaintingRef for drag
-      }
+      if (!isPaintingRef.current) return;
       isPaintingRef.current = false;
       if (ctx) ctx.closePath();
       
@@ -311,10 +327,14 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       window.removeEventListener('touchmove', paint);
       window.removeEventListener('touchend', endPaint);
       window.removeEventListener('touchcancel', endPaint);
+      // After drawing, capture the state
+      if (canvas.width > 0 && canvas.height > 0) {
+        try { currentCanvasDataUrlRef.current = canvas.toDataURL(); } catch (e) { /* ignore */ }
+      }
     };
     
     const startPaint = (event: MouseEvent | TouchEvent) => {
-      if (!(event.target === canvas)) return;
+      if (!(event.target === canvas) || !currentDrawTool) return;
       event.preventDefault();
       
       const pos = getMousePosition(event);
@@ -326,9 +346,20 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       }
       
       ctx.strokeStyle = effectiveDrawColor;
+      ctx.fillStyle = effectiveDrawColor; // For eyedropper (though it reads, not sets fill)
       ctx.lineWidth = drawStrokeWidth;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
+
+      if (currentLineStyle === 'dashed') {
+        ctx.setLineDash([10, 5]);
+      } else if (currentLineStyle === 'dotted') {
+        // Make dots scale with stroke width for better appearance
+        ctx.setLineDash([drawStrokeWidth, drawStrokeWidth * 2]);
+      } else {
+        ctx.setLineDash([]); // Solid line
+      }
+
 
       if (currentDrawTool === 'pen' || currentDrawTool === 'eraser') {
         isPaintingRef.current = true;
@@ -337,18 +368,28 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
         ctx.beginPath();
         ctx.moveTo(pos.x, pos.y);
 
-        window.addEventListener('mousemove', paint);
+        window.addEventListener('mousemove', paint, { passive: false });
         window.addEventListener('mouseup', endPaint);
         window.addEventListener('touchmove', paint, { passive: false });
         window.addEventListener('touchend', endPaint);
         window.addEventListener('touchcancel', endPaint);
-      } else if (['circle', 'square', 'triangle', 'line', 'arrow'].includes(currentDrawTool || '')) {
-        // Draw shape immediately on mousedown
-        ctx.globalCompositeOperation = 'source-over'; // Ensure shapes draw normally
-        drawShape(ctx, pos, currentDrawTool!, drawStrokeWidth, effectiveDrawColor);
-        isPaintingRef.current = false; // No dragging for these simple shapes
-        // No need to add window listeners if we are not dragging
+
+      } else if (currentDrawTool === 'eyedropper') {
+          const pixelData = ctx.getImageData(pos.x, pos.y, 1, 1).data;
+          const hexColor = `#${("000000" + ((pixelData[0] << 16) | (pixelData[1] << 8) | pixelData[2]).toString(16)).slice(-6)}`;
+          onDrawColorChange(hexColor);
+          onAfterColorPick(); // This should deselect the eyedropper tool
+      } else if (['circle', 'square', 'triangle', 'line', 'arrow'].includes(currentDrawTool)) {
+        ctx.globalCompositeOperation = 'source-over'; 
+        drawShape(ctx, pos, currentDrawTool, drawStrokeWidth, effectiveDrawColor, currentLineStyle);
+        isPaintingRef.current = false; 
+         if (canvas.width > 0 && canvas.height > 0) {
+            try { currentCanvasDataUrlRef.current = canvas.toDataURL(); } catch (e) { /* ignore */ }
+        }
       }
+       // Reset line dash for subsequent operations outside this specific drawing action if needed
+      // However, it's better to set it at the start of each drawing operation.
+      // ctx.setLineDash([]); 
     };
 
 
@@ -359,13 +400,15 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       canvas.removeEventListener('mousedown', startPaint);
       canvas.removeEventListener('touchstart', startPaint);
       
+      // Clean up window listeners if component unmounts while painting
       window.removeEventListener('mousemove', paint);
       window.removeEventListener('mouseup', endPaint);
       window.removeEventListener('touchmove', paint);
       window.removeEventListener('touchend', endPaint);
       window.removeEventListener('touchcancel', endPaint);
+      isPaintingRef.current = false; // Ensure painting stops if drawing mode is exited
     };
-  }, [isDrawingMode, currentDrawTool, drawColor, drawStrokeWidth, pageTheme, resizeCanvas]);
+  }, [isDrawingMode, currentDrawTool, drawColor, drawStrokeWidth, pageTheme, resizeCanvas, onDrawColorChange, onAfterColorPick, currentLineStyle]);
 
 
   const handlePaperClick = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -413,7 +456,6 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
             "absolute top-0 left-0 w-full h-full", 
             isDrawingMode && (currentDrawTool) ? 'pointer-events-auto z-10' : 'pointer-events-none -z-10'
           )}
-          // Style ensures canvas is sized by parent, JS sets width/height attributes
           style={{ touchAction: isDrawingMode && currentDrawTool ? 'none' : 'auto' }} 
         />
       </div>

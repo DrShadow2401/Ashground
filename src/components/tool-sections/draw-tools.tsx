@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -6,15 +5,15 @@ import {
   PenTool,
   Eraser,
   Trash2, 
-  Palette, // For color picker trigger
-  PaintBucket, // Keeping for Fill, but disabled
+  Palette, 
+  PaintBucket, 
   Circle as CircleIcon, 
   Square as SquareIcon, 
   Triangle as TriangleIcon, 
   Minus as MinusIcon, 
   ArrowRight as ArrowRightIcon, 
-  Pipette, // Eyedropper (NA)
-  ListFilter, // Line Styles (NA)
+  Pipette, 
+  ListFilter, 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -22,7 +21,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu"
+import type { LineStyle } from '@/app/page';
 
 interface DrawToolsProps {
   activeTool: string | null;
@@ -31,11 +33,19 @@ interface DrawToolsProps {
   onDrawColorChange: (color: string) => void;
   currentStrokeWidth: number;
   onStrokeWidthChange: (width: number) => void;
+  currentLineStyle: LineStyle;
+  onLineStyleChange: (style: LineStyle) => void;
   onClearCanvas: () => void;
 }
 
 const presetDrawColors = ['#000000', '#EF4444', '#3B82F6', '#22C55E', '#F97316', '#A855F7', '#FFFFFF'];
 const presetStrokeWidths = [2, 4, 8, 12, 16];
+const lineStyleOptions: { label: string; value: LineStyle }[] = [
+  { label: 'Solid', value: 'solid' },
+  { label: 'Dashed', value: 'dashed' },
+  { label: 'Dotted', value: 'dotted' },
+];
+
 
 const DrawTools: React.FC<DrawToolsProps> = ({ 
   activeTool, 
@@ -44,30 +54,36 @@ const DrawTools: React.FC<DrawToolsProps> = ({
   onDrawColorChange,
   currentStrokeWidth,
   onStrokeWidthChange,
+  currentLineStyle,
+  onLineStyleChange,
   onClearCanvas
 }) => {
   
   const handleToolClick = (toolName: string) => {
+    // For clear canvas, it's a one-time action, handled by onClearCanvas prop
+    if (toolName === 'clear') {
+      onClearCanvas(); 
+      return;
+    }
     onToolChange(activeTool === toolName ? null : toolName);
   };
 
   const drawingToolButtons = [
     { name: 'pen', icon: <PenTool />, label: 'Pen' },
     { name: 'eraser', icon: <Eraser />, label: 'Eraser' },
+    { name: 'eyedropper', icon: <Pipette />, label: 'Eyedropper Tool' },
   ];
 
   const shapeToolButtons = [
     { name: 'circle', icon: <CircleIcon />, label: 'Draw Circle' },
     { name: 'square', icon: <SquareIcon />, label: 'Draw Square' },
     { name: 'triangle', icon: <TriangleIcon />, label: 'Draw Triangle' },
-    { name: 'line', icon: <MinusIcon />, label: 'Draw Line' }, // Simple line
-    { name: 'arrow', icon: <ArrowRightIcon />, label: 'Draw Arrow' }, // Simple arrow
+    { name: 'line', icon: <MinusIcon />, label: 'Draw Line' }, 
+    { name: 'arrow', icon: <ArrowRightIcon />, label: 'Draw Arrow' }, 
   ];
 
   const otherDrawingTools = [
      { name: 'fill', icon: <PaintBucket />, label: 'Fill Tool (NA)', disabled: true },
-     { name: 'eyedropper', icon: <Pipette />, label: 'Eyedropper Tool (NA)', disabled: true },
-     { name: 'lineStyles', icon: <ListFilter />, label: 'Line Styles (NA)', disabled: true },
   ];
 
 
@@ -78,7 +94,7 @@ const DrawTools: React.FC<DrawToolsProps> = ({
         <Button
           variant="ghost"
           size="icon"
-          key={tool.name} // Use name for key as label might change
+          key={tool.name} 
           onClick={() => handleToolClick(tool.name)}
           aria-label={tool.label}
           title={tool.label}
@@ -103,9 +119,11 @@ const DrawTools: React.FC<DrawToolsProps> = ({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
+          <DropdownMenuLabel>Brush Color</DropdownMenuLabel>
+          <DropdownMenuSeparator />
           {presetDrawColors.map(color => (
             <DropdownMenuItem key={color} onClick={() => onDrawColorChange(color)} className={cn(currentDrawColor === color ? 'bg-accent/80' : '')}>
-              <div className="w-3 h-3 rounded-full border mr-2" style={{ backgroundColor: color }} />
+              <div className="w-4 h-4 rounded-full border mr-2" style={{ backgroundColor: color }} />
               {color}
             </DropdownMenuItem>
           ))}
@@ -114,32 +132,56 @@ const DrawTools: React.FC<DrawToolsProps> = ({
       
       <Separator orientation="vertical" className="h-6 mx-1" />
 
-      {/* Stroke Width Selection */}
-      {presetStrokeWidths.map(width => (
-        <Button
-          key={`stroke-${width}`}
-          variant="ghost"
-          size="icon"
-          title={`Stroke width: ${width}px`}
-          onClick={() => onStrokeWidthChange(width)}
-          className={cn(
-            'hover:bg-accent/50',
-            currentStrokeWidth === width ? 'bg-accent text-accent-foreground' : ''
-          )}
-        >
-          <div className="flex items-center justify-center w-full h-full">
-            <div className={cn("rounded-full bg-foreground")} style={{width: `${width+2 > 12 ? 12 : width+2}px`, height: `${width+2 > 12 ? 12 : width+2}px`}}/>
-          </div>
-        </Button>
-      ))}
+      {/* Stroke Width Selection Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" title="Select Stroke Width" className="hover:bg-accent/50">
+                 <div className="flex items-center justify-center w-full h-full">
+                    <div className={cn("rounded-full bg-foreground")} style={{width: `${Math.min(currentStrokeWidth + 2, 12)}px`, height: `${Math.min(currentStrokeWidth + 2, 12)}px`}}/>
+                </div>
+            </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+            <DropdownMenuLabel>Stroke Width</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {presetStrokeWidths.map(width => (
+            <DropdownMenuItem key={`stroke-${width}`} onClick={() => onStrokeWidthChange(width)} className={cn(currentStrokeWidth === width ? 'bg-accent/80' : '')}>
+                 <div className="w-5 h-5 flex items-center justify-center mr-2">
+                    <div className={cn("rounded-full bg-foreground")} style={{width: `${Math.min(width + 2, 12)}px`, height: `${Math.min(width + 2, 12)}px`}}/>
+                </div>
+                {width}px
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
        <Separator orientation="vertical" className="h-6 mx-1" />
+
+      {/* Line Style Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" title="Select Line Style" className="hover:bg-accent/50">
+            <ListFilter />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuLabel>Line Style</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {lineStyleOptions.map(style => (
+            <DropdownMenuItem key={style.value} onClick={() => onLineStyleChange(style.value)} className={cn(currentLineStyle === style.value ? 'bg-accent/80' : '')}>
+              {style.label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <Separator orientation="vertical" className="h-6 mx-1" />
+
 
       {/* Shape Tools */}
       {shapeToolButtons.map((tool) => (
         <Button
           variant="ghost"
           size="icon"
-          key={tool.name} // Use name for key
+          key={tool.name} 
           onClick={() => handleToolClick(tool.name)}
           aria-label={tool.label}
           title={tool.label}
@@ -177,7 +219,7 @@ const DrawTools: React.FC<DrawToolsProps> = ({
         variant="outline"
         size="icon"
         title="Clear Drawing"
-        onClick={onClearCanvas}
+        onClick={() => handleToolClick('clear')} // Use handleToolClick to leverage centralized logic if needed, or directly onClearCanvas
         className="hover:bg-destructive/20"
       >
         <Trash2 />
