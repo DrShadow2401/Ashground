@@ -345,15 +345,15 @@
   @keyframes burnReveal {
     0% {
       clip-path: circle(0% at 100% 0);
-      /* background-color: rgba(255, 100, 0, 0.3); */ /* Optional: Add a fiery glow initially */
+      background-color: rgba(0, 0, 0, 0.7); /* Start with the dark overlay color */
     }
     80% {
-      /* background-color: rgba(0, 0, 0, 0.7); */ /* Transition to ashy overlay */
+      clip-path: circle(200% at 100% 0); /* Expand to cover most of the screen */
+      background-color: rgba(0, 0, 0, 0.7); /* Maintain dark overlay color */
     }
     100% {
       clip-path: circle(250% at 100% 0); /* Ensure it covers the whole screen */
-      /* background-color: rgba(0, 0, 0, 0); */ /* Fully transparent at the end */
-      opacity: 0;
+      background-color: rgba(0, 0, 0, 0); /* Fade to fully transparent */
     }
   }
 
@@ -376,4 +376,3 @@
     /* Styles defined in component, animation assigned here */
   }
 }
-

@@ -22,7 +22,7 @@ import HomeTools from '@/components/tool-sections/home-tools';
 import DrawTools from '@/components/tool-sections/draw-tools';
 import ViewTools from '@/components/tool-sections/view-tools';
 import ExportTools from '@/components/tool-sections/export-tools';
-import BurningEffect from '@/components/burning-effect'; // New component
+import BurningEffect from '@/components/burning-effect';
 import { useToast } from "@/hooks/use-toast";
 import { Flame } from 'lucide-react';
 
@@ -158,7 +158,18 @@ export default function Home() {
     setIsBurningAnimationActive(true);
     if (burnAudioRef.current) {
       burnAudioRef.current.currentTime = 0; // Rewind to start
-      burnAudioRef.current.play().catch(error => console.error("Error playing audio:", error));
+      burnAudioRef.current.play().catch(error => {
+        console.error("Error playing audio:", error);
+        // Optionally, inform the user if the placeholder is still in use or the file is missing
+        if (burnAudioRef.current?.src.includes('placeholder-burn-sound.mp3')) {
+          toast({
+            title: "Audio Hint",
+            description: "Replace placeholder-burn-sound.mp3 in public/sounds/ with your own sound file for the burn effect.",
+            variant: "default",
+            duration: 5000,
+          });
+        }
+      });
     }
 
     setTimeout(() => {
@@ -193,9 +204,12 @@ export default function Home() {
       <AshgroundHeader />
 
       {/* 
-        TODO: Add your burning paper sound file (e.g., burning-paper.mp3) 
-        to the `public/sounds/` directory. Then update the src below.
-        For example: src="/sounds/burning-paper.mp3"
+        IMPORTANT AUDIO NOTE:
+        The "element has no supported sources" error means the audio file is missing or incorrect.
+        1. Create a directory: `public/sounds/`
+        2. Place your burning paper sound file (e.g., burning-paper.mp3) in `public/sounds/`.
+        3. Update the `src` attribute below to point to your file.
+           Example: `src="/sounds/burning-paper.mp3"`
       */}
       <audio ref={burnAudioRef} src="/sounds/placeholder-burn-sound.mp3" preload="auto" />
 

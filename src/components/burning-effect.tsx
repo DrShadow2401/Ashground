@@ -37,7 +37,7 @@ const BurningEffect: React.FC<BurningEffectProps> = ({ duration }) => {
 
   return (
     <div
-      className="burn-overlay fixed inset-0 z-[1000] pointer-events-none bg-black/70"
+      className="burn-overlay fixed inset-0 z-[1000] pointer-events-none" // Removed static background, animation will handle it
       style={{ animation: `burnReveal ${duration / 1000}s ease-out forwards` }}
     >
       {ashParticles.map((ash) => (
