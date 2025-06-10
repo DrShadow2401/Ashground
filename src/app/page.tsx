@@ -6,10 +6,24 @@ import type { Editor } from '@tiptap/react';
 import AshgroundHeader from '@/components/ashground-header';
 import PageEditor, { type PageEditorRef } from '@/components/page-editor';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import HomeTools from '@/components/tool-sections/home-tools';
 import DrawTools from '@/components/tool-sections/draw-tools';
 import ViewTools from '@/components/tool-sections/view-tools';
 import ExportTools from '@/components/tool-sections/export-tools';
+import { Flame } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 
 
 type PageBackground = 'plain' | 'lined' | 'grid';
@@ -28,6 +42,7 @@ export default function Home() {
 
   const editorRef = useRef<Editor | null>(null);
   const pageEditorComponentRef = useRef<PageEditorRef>(null);
+  const { toast } = useToast();
 
 
   const [currentDrawTool, setCurrentDrawTool] = useState<string | null>(null);
@@ -45,7 +60,7 @@ export default function Home() {
 
     if (savedTitle) setNoteTitle(savedTitle);
     if (savedNote) setNoteContent(savedNote);
-    else setNoteContent('<p></p>'); // Ensure it starts truly empty if no saved note
+    else setNoteContent('<p></p>'); 
 
     if (savedBg) setPageBackground(savedBg);
 
@@ -75,7 +90,7 @@ export default function Home() {
   }, [noteTitle, isMounted]);
 
   useEffect(() => {
-    if(isMounted) {
+    if(isMounted && noteContent) { // Only save if content is not undefined
       localStorage.setItem('ashground_note', noteContent);
     }
   }, [noteContent, isMounted]);
@@ -135,6 +150,23 @@ export default function Home() {
     return null;
   };
 
+  const handleBurnEverything = () => {
+    setNoteTitle('Untitled Note');
+    setNoteContent('<p></p>'); // Reset editor to empty paragraph
+    if (editorRef.current) {
+      editorRef.current.commands.setContent('<p></p>', true); // Force update Tiptap
+    }
+    if (pageEditorComponentRef.current) {
+      pageEditorComponentRef.current.clearCanvas();
+    }
+    localStorage.removeItem('ashground_title');
+    localStorage.removeItem('ashground_note');
+    toast({
+      title: "Ashes to Ashes",
+      description: "Your note has been cleared.",
+    });
+  };
+
   const tabItems = [
     { value: 'home', label: 'Home' },
     { value: 'draw', label: 'Draw' },
@@ -146,19 +178,55 @@ export default function Home() {
     <main className="flex flex-col items-center min-h-screen py-6 px-4">
       <AshgroundHeader />
 
-      <Tabs defaultValue="home" value={activeTab} onValueChange={setActiveTab} className="w-full max-w-4xl mt-3 md:mt-4">
-        <TabsList className="mx-auto w-full max-w-sm bg-card rounded-xl shadow-lg p-1.5 mb-8 flex justify-around">
-          {tabItems.map(tab => (
-            <TabsTrigger
-              key={tab.value}
-              value={tab.value}
-              className="px-3 py-1.5 data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground hover:text-foreground/80 transition-colors rounded-md text-sm"
-            >
-              {tab.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      <div className="flex items-center justify-center w-full max-w-4xl mx-auto mb-8">
+        <Tabs defaultValue="home" value={activeTab} onValueChange={setActiveTab} className="flex-grow max-w-md">
+          <TabsList className="mx-auto w-full bg-card rounded-xl shadow-lg p-1.5 flex justify-around">
+            {tabItems.map(tab => (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="px-3 py-1.5 data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground hover:text-foreground/80 transition-colors rounded-md text-sm"
+              >
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
 
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="ml-4 p-2.5 rounded-full border-2 border-amber-500/60 hover:bg-amber-500/10 text-amber-600 hover:text-amber-700 dark:border-amber-400/60 dark:text-amber-500 dark:hover:text-amber-400 focus-visible:ring-amber-500"
+              title="Burn Everything"
+            >
+              <Flame className="w-5 h-5" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Burn Everything?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will clear your current note title, content, and any drawings.
+                This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleBurnEverything}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Burn
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+
+
+      <Tabs value={activeTab} className="w-full max-w-4xl"> {/* Second Tabs wrapper for content panels */}
         <div className="max-w-3xl mx-auto mb-6">
           <div className="bg-muted p-3 rounded-lg shadow-inner min-h-[52px] flex justify-center items-start">
             {activeTab === 'home' && (isEditorInitialized ? <HomeTools editorRef={editorRef} /> : <p className="text-muted-foreground text-sm">Editor loading...</p>)}
