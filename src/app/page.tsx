@@ -5,6 +5,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { Editor } from '@tiptap/react';
 import AshgroundHeader from '@/components/ashground-header';
 import PageEditor, { type PageEditorRef } from '@/components/page-editor';
+import NoteBurningEffect from '@/components/note-burning-effect'; // New component
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,13 +17,11 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog"; // AlertDialogTrigger removed as it was an error
 import HomeTools from '@/components/tool-sections/home-tools';
 import DrawTools from '@/components/tool-sections/draw-tools';
 import ViewTools from '@/components/tool-sections/view-tools';
 import ExportTools from '@/components/tool-sections/export-tools';
-import BurningEffect from '@/components/burning-effect';
 import { useToast } from "@/hooks/use-toast";
 import { Flame } from 'lucide-react';
 
@@ -42,10 +41,11 @@ export default function Home() {
   const [isMounted, setIsMounted] = useState(false);
   const [isEditorInitialized, setIsEditorInitialized] = useState(false);
   const [isBurningAnimationActive, setIsBurningAnimationActive] = useState(false);
+  const [animationTargetRect, setAnimationTargetRect] = useState<DOMRect | null>(null);
+
 
   const editorRef = useRef<Editor | null>(null);
   const pageEditorComponentRef = useRef<PageEditorRef>(null);
-  const burnAudioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
 
 
@@ -64,7 +64,7 @@ export default function Home() {
 
     if (savedTitle) setNoteTitle(savedTitle);
     if (savedNote) setNoteContent(savedNote);
-    else setNoteContent('<p></p>'); 
+    else setNoteContent('<p></p>');
 
     if (savedBg) setPageBackground(savedBg);
 
@@ -94,7 +94,7 @@ export default function Home() {
   }, [noteTitle, isMounted]);
 
   useEffect(() => {
-    if(isMounted && noteContent !== undefined) { 
+    if(isMounted && noteContent !== undefined) {
       localStorage.setItem('ashground_note', noteContent);
     }
   }, [noteContent, isMounted]);
@@ -140,7 +140,7 @@ export default function Home() {
     if (pageEditorComponentRef.current) {
       pageEditorComponentRef.current.clearCanvas();
     }
-    setCurrentDrawTool(null); 
+    setCurrentDrawTool(null);
   };
 
   const handleAfterColorPick = () => {
@@ -155,51 +155,43 @@ export default function Home() {
   };
 
   const handleBurnEverything = () => {
-    setIsBurningAnimationActive(true);
-    if (burnAudioRef.current) {
-      burnAudioRef.current.currentTime = 0; // Rewind to start
-      burnAudioRef.current.play().catch(error => {
-        console.error("Error playing audio:", error);
-        const audioSrc = burnAudioRef.current?.src;
-        // Check if it's the placeholder first, as that's a common user setup issue.
-        if (audioSrc && audioSrc.includes('placeholder-burn-sound.mp3')) {
-          toast({
-            title: "Audio Playback Issue: Placeholder Sound",
-            description: "The burning sound uses a placeholder. To hear the effect: 1. Create a 'public/sounds/' directory. 2. Add your sound file (e.g., burn.mp3). 3. Update the <audio> tag's src in src/app/page.tsx (around line 180) to '/sounds/your-file-name.mp3'.",
-            variant: "destructive",
-            duration: 20000, // Longer duration for detailed instructions
-          });
-        } else if (audioSrc) { // If it's not the placeholder, but still failed
-           toast({
-              title: "Audio Playback Error",
-              description: `Could not play audio from ${audioSrc}. Ensure the file exists at this path (relative to the 'public' folder) and is a supported audio format (like MP3, WAV, OGG).`,
-              variant: "destructive",
-              duration: 15000,
-           });
-        } else { // If src is somehow undefined
-           toast({
-              title: "Audio Error",
-              description: "Could not play burning sound. The audio source is not defined. Check the <audio> tag in src/app/page.tsx.",
-              variant: "destructive",
-              duration: 15000,
-           });
-        }
-      });
-    }
-
-    setTimeout(() => {
+    const exportableElement = pageEditorComponentRef.current?.getExportableElement();
+    if (exportableElement) {
+      setAnimationTargetRect(exportableElement.getBoundingClientRect());
+      setIsBurningAnimationActive(true);
+    } else {
+      // Fallback: if element not found, clear immediately without animation
       setNoteTitle('Untitled Note');
-      setNoteContent('<p></p>'); 
+      setNoteContent('<p></p>');
       if (editorRef.current) {
-        editorRef.current.commands.setContent('<p></p>', true); 
+        editorRef.current.commands.setContent('<p></p>', true);
       }
       if (pageEditorComponentRef.current) {
         pageEditorComponentRef.current.clearCanvas();
       }
       localStorage.removeItem('ashground_title');
       localStorage.removeItem('ashground_note');
-      
+      toast({
+        title: "Ashes to Ashes",
+        description: "Your note has been cleared (animation skipped).",
+      });
+      return;
+    }
+
+    setTimeout(() => {
+      setNoteTitle('Untitled Note');
+      setNoteContent('<p></p>');
+      if (editorRef.current) {
+        editorRef.current.commands.setContent('<p></p>', true);
+      }
+      if (pageEditorComponentRef.current) {
+        pageEditorComponentRef.current.clearCanvas();
+      }
+      localStorage.removeItem('ashground_title');
+      localStorage.removeItem('ashground_note');
+
       setIsBurningAnimationActive(false);
+      setAnimationTargetRect(null); // Reset target rect
       toast({
         title: "Ashes to Ashes",
         description: "Your note has been cleared.",
@@ -218,19 +210,13 @@ export default function Home() {
     <main className="flex flex-col items-center min-h-screen py-6 px-4">
       <AshgroundHeader />
 
-      {/* 
-        AUDIO FOR "BURN EVERYTHING":
-        1. Ensure you have an audio file (e.g., `burn.mp3`, `fire.wav`) for the burning paper sound.
-        2. Create a directory in your project: `public/sounds/` (if it doesn't already exist).
-        3. Place your chosen sound file into this `public/sounds/` directory.
-        4. CRITICAL: Update the `src` attribute of the <audio> tag below to point to YOUR specific file.
-           Example: If your file is `burn-sound.mp3`, change src to `"/sounds/burn-sound.mp3"`.
-           The current `placeholder-burn-sound.mp3` is just a placeholder and will likely result in an error
-           or silence if not replaced.
-      */}
-      <audio ref={burnAudioRef} src="/sounds/placeholder-burn-sound.mp3" preload="auto" />
-
-      {isBurningAnimationActive && <BurningEffect duration={ANIMATION_DURATION} />}
+      {isBurningAnimationActive && animationTargetRect && (
+        <NoteBurningEffect
+          isActive={isBurningAnimationActive}
+          targetRect={animationTargetRect}
+          duration={ANIMATION_DURATION}
+        />
+      )}
 
       <div className="flex items-center justify-center w-full max-w-4xl mx-auto mb-8">
         <Tabs defaultValue="home" value={activeTab} onValueChange={setActiveTab} className="flex-grow max-w-md">
@@ -248,24 +234,24 @@ export default function Home() {
         </Tabs>
 
         <AlertDialog>
-          <AlertDialogTrigger asChild>
+          <AlertDialog.Trigger asChild>
             <Button
               size="icon"
               variant="outline"
               className="ml-4 rounded-full h-10 w-10
                          border-2 border-amber-500 dark:border-amber-400
-                         bg-muted/30 dark:bg-muted/20 
-                         text-amber-500 dark:text-amber-400 
+                         bg-muted/30 dark:bg-muted/20
+                         text-amber-500 dark:text-amber-400
                          shadow-md hover:shadow-lg
-                         hover:bg-amber-500/10 dark:hover:bg-amber-400/10 
-                         hover:text-amber-600 dark:hover:text-amber-300 
+                         hover:bg-amber-500/10 dark:hover:bg-amber-400/10
+                         hover:text-amber-600 dark:hover:text-amber-300
                          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 dark:focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
                          transition-all duration-150 ease-in-out flex items-center justify-center"
               title="Burn Everything"
             >
               <Flame className="w-5 h-5" />
             </Button>
-          </AlertDialogTrigger>
+          </AlertDialog.Trigger>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Burn Everything?</AlertDialogTitle>
@@ -288,7 +274,7 @@ export default function Home() {
       </div>
 
 
-      <Tabs value={activeTab} className="w-full max-w-4xl"> 
+      <Tabs value={activeTab} className="w-full max-w-4xl">
         <div className="max-w-3xl mx-auto mb-6">
           <div className="bg-muted p-3 rounded-lg shadow-inner min-h-[52px] flex justify-center items-start">
             {activeTab === 'home' && (isEditorInitialized ? <HomeTools editorRef={editorRef} /> : <p className="text-muted-foreground text-sm">Editor loading...</p>)}
@@ -332,11 +318,10 @@ export default function Home() {
           drawColor={drawColor}
           drawStrokeWidth={drawStrokeWidth}
           currentLineStyle={currentLineStyle}
-          onDrawColorChange={setDrawColor} 
+          onDrawColorChange={setDrawColor}
           onAfterColorPick={handleAfterColorPick}
         />
       </Tabs>
     </main>
   );
 }
-
