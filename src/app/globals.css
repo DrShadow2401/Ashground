@@ -5,52 +5,50 @@
 
 @layer base {
   :root {
-    --background: 45 30% 96%; /* #F9F7F5 - Very light warm grey */
-    --background-end: 45 30% 93%; /* Slightly darker for gradient */
-    --foreground: 20 15% 30%; /* #524D4A - Dark brownish grey */
+    --background: 45 30% 96%;
+    --background-end: 45 30% 93%;
+    --foreground: 20 15% 30%;
 
-    --card: 0 0% 100%; /* #FFFFFF - White for cards, editor, active tab */
+    --card: 0 0% 100%;
     --card-foreground: 20 15% 30%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 20 15% 30%;
 
-    --primary: 20 20% 70%; /* #C2BBB6 - Subtle warm grey accent */
-    --primary-foreground: 20 15% 20%; /* Darker text for on primary */
+    --primary: 20 20% 70%;
+    --primary-foreground: 20 15% 20%;
 
-    --secondary: 45 25% 94%; /* #F3F1EF - Lighter variant for secondary elements */
+    --secondary: 45 25% 94%;
     --secondary-foreground: 20 15% 30%;
 
-    --muted: 45 20% 92%; /* #EDEBE8 - For TabsList background */
-    --muted-foreground: 20 15% 45%; /* Muted text color */
+    --muted: 45 20% 92%;
+    --muted-foreground: 20 15% 45%;
 
-    --accent: 280 50% 92%; /* #E6D9EB - Light desaturated violet */
+    --accent: 280 50% 92%;
     --accent-foreground: 280 25% 30%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 45 20% 85%; /* #E3E0DD - Subtle border */
+    --border: 45 20% 85%;
     --input: 45 20% 85%;
-    --ring: 20 20% 65%; /* Slightly darker accent for rings */
+    --ring: 20 20% 65%;
 
     --radius: 0.5rem;
 
-    /* Page specific theme variables */
     --paper-light-bg: 0 0% 100%;
     --paper-light-fg: 20 15% 30%;
     --paper-dark-bg: 240 5% 12%;
     --paper-dark-fg: 0 0% 95%;
-    --paper-pastel-bg: 320 70% 96%; /* Lighter pastel paper */
+    --paper-pastel-bg: 320 70% 96%;
     --paper-pastel-fg: 320 30% 35%;
 
     --text-line-height: 1.625rem;
     --line-color: var(--border);
 
-    /* Note Burn Animation Variables */
-    --note-char-color: 20 15% 15%; /* Very dark brownish grey for char */
-    --note-ash-color: 45 10% 85%; /* Light grey for ash */
-    --note-glow-color: 30 100% 50%; /* Orange/Yellow for glow */
+    --note-char-color: 20 15% 15%;
+    --note-ash-color: 45 10% 85%;
+    --note-glow-color: 30 100% 50%;
   }
 
   .dark {
@@ -92,7 +90,6 @@
 
     --line-color: 0 0% 40%;
 
-    /* Note Burn Animation Variables - Dark Theme */
     --note-char-color: 0 0% 5%;
     --note-ash-color: 240 5% 30%;
     --note-glow-color: 35 100% 55%;
@@ -135,7 +132,6 @@
 
     --line-color: 320 40% 85%;
 
-    /* Note Burn Animation Variables - Pastel Theme */
     --note-char-color: 320 30% 20%;
     --note-ash-color: 320 50% 80%;
     --note-glow-color: 25 100% 60%;
@@ -251,10 +247,9 @@
 
   .ProseMirror mark {
     @apply rounded-sm px-0.5;
-    background-color: #FFF3A3; /* Default highlight color, can be overridden by Tiptap extension config */
+    background-color: #FFF3A3;
   }
 
-  /* Task List Styles */
   .ProseMirror ul[data-type="taskList"] {
     list-style: none;
     padding: 0;
@@ -283,9 +278,9 @@
     border: 1px solid hsl(var(--input));
     appearance: none;
     -webkit-appearance: none;
-    position: relative; /* Needed for absolute positioning of ::before */
-    display: inline-block; /* Ensure it takes up space */
-    vertical-align: middle; /* Align with text */
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
   }
   .ProseMirror ul[data-type="taskList"] li input[type="checkbox"]:checked {
     background-color: hsl(var(--primary));
@@ -302,14 +297,13 @@
     align-items: center;
     justify-content: center;
     color: hsl(var(--primary-foreground));
-    font-size: 0.75rem; /* Adjust size of checkmark */
+    font-size: 0.75rem;
   }
   .ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div > p {
     text-decoration: line-through;
     color: hsl(var(--muted-foreground));
   }
 
-  /* Image Styles */
   .ProseMirror img {
     max-width: 100%;
     height: auto;
@@ -355,18 +349,16 @@
   }
 }
 
-/* Note Burn Animation */
 @layer utilities {
   .note-burn-overlay {
-    overflow: hidden; /* Crucial for clip-path */
-    transform-origin: center center; /* Or top right if preferred */
-    border-radius: var(--radius); /* Match page editor's border radius */
+    overflow: hidden;
+    transform-origin: center center;
   }
 
   .note-smoke-particle {
-    background-color: hsla(0, 0%, 50%, 0.4); /* Semi-transparent grey for smoke */
+    background-color: hsla(var(--note-ash-color), 0.45);
     border-radius: 50%;
-    filter: blur(5px); /* Soften smoke particles */
+    filter: blur(8px);
     pointer-events: none;
   }
 
@@ -376,15 +368,17 @@
       background-color: hsl(var(--card));
       opacity: 1;
     }
-    25% { /* Start charring */
+    10% {
+      clip-path: inset(0% 0% 0% 0%);
       background-color: hsl(var(--note-char-color));
+      opacity: 1;
     }
-    75% { /* Mostly burnt, ash color, smaller clip-path */
-      clip-path: inset(35% 35% 35% 35%);
+    85% {
+      clip-path: inset(40% 40% 40% 40%);
       background-color: hsl(var(--note-ash-color));
       opacity: 1;
     }
-    100% { /* Dissolved and faded */
+    100% {
       clip-path: inset(50% 50% 50% 50%);
       background-color: hsl(var(--note-ash-color));
       opacity: 0;
@@ -395,31 +389,35 @@
     0% {
       box-shadow: 0 0 0px 0px hsla(var(--note-glow-color), 0);
     }
-    20% { /* Glow appears as edges char */
-      box-shadow: 0 0 30px 10px hsla(var(--note-glow-color), 0.7),
-                  inset 0 0 15px 5px hsla(var(--note-glow-color), 0.5);
+    10% {
+      box-shadow: 0 0 25px 10px hsla(var(--note-glow-color), 0.7);
     }
-    80% { /* Glow fades as it turns to ash */
-      box-shadow: 0 0 15px 5px hsla(var(--note-glow-color), 0.3),
-                  inset 0 0 5px 2px hsla(var(--note-glow-color), 0.2);
+    80% {
+      box-shadow: 0 0 40px 18px hsla(var(--note-glow-color), 0.8);
+    }
+    95% {
+      box-shadow: 0 0 15px 5px hsla(var(--note-glow-color), 0.3);
+      opacity: 0.5;
     }
     100% {
       box-shadow: 0 0 0px 0px hsla(var(--note-glow-color), 0);
-      opacity: 0; /* Ensure glow also fully disappears */
+      opacity: 0;
     }
   }
 
   @keyframes note-smoke-animation {
     0% {
-      transform: translateY(0px) scale(0.6);
+      transform: translateY(10px) translateX(-50%) scale(0.4);
       opacity: 0;
     }
-    20% { /* Smoke becomes visible as charring starts */
-      opacity: 0.7;
+    20% {
+      opacity: 0.6;
     }
     100% {
-      transform: translateY(-80px) scale(1.8); /* Rise further and expand */
+      transform: translateY(-150px) translateX(-50%) scale(2.5);
       opacity: 0;
     }
   }
 }
+
+    

@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { Editor } from '@tiptap/react';
 import AshgroundHeader from '@/components/ashground-header';
 import PageEditor, { type PageEditorRef } from '@/components/page-editor';
-import NoteBurningEffect from '@/components/note-burning-effect'; // Updated import
+import NoteBurningEffect from '@/components/note-burning-effect';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import {
@@ -43,6 +43,7 @@ export default function Home() {
   const [isEditorInitialized, setIsEditorInitialized] = useState(false);
   const [isBurningAnimationActive, setIsBurningAnimationActive] = useState(false);
   const [animationTargetRect, setAnimationTargetRect] = useState<DOMRect | null>(null);
+  const [animationSourceElement, setAnimationSourceElement] = useState<HTMLElement | null>(null);
 
 
   const editorRef = useRef<Editor | null>(null);
@@ -159,9 +160,9 @@ export default function Home() {
     const exportableElement = pageEditorComponentRef.current?.getExportableElement();
     if (exportableElement) {
       setAnimationTargetRect(exportableElement.getBoundingClientRect());
+      setAnimationSourceElement(exportableElement);
       setIsBurningAnimationActive(true);
     } else {
-      // Fallback if target element for animation can't be found
       setNoteTitle('Untitled Note');
       setNoteContent('<p></p>');
       if (editorRef.current) {
@@ -192,7 +193,8 @@ export default function Home() {
       localStorage.removeItem('ashground_note');
 
       setIsBurningAnimationActive(false);
-      setAnimationTargetRect(null); // Reset target rect
+      setAnimationTargetRect(null);
+      setAnimationSourceElement(null);
       toast({
         title: "Ashes to Ashes",
         description: "Your note has been cleared.",
@@ -211,11 +213,12 @@ export default function Home() {
     <main className="flex flex-col items-center min-h-screen py-6 px-4">
       <AshgroundHeader />
 
-      {isBurningAnimationActive && animationTargetRect && (
+      {isBurningAnimationActive && animationTargetRect && animationSourceElement && (
         <NoteBurningEffect
           isActive={isBurningAnimationActive}
           targetRect={animationTargetRect}
           duration={ANIMATION_DURATION}
+          sourceElement={animationSourceElement}
         />
       )}
 
