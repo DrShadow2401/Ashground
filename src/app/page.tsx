@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { Editor } from '@tiptap/react';
 import AshgroundHeader from '@/components/ashground-header';
 import PageEditor, { type PageEditorRef } from '@/components/page-editor';
-import NoteBurningEffect from '@/components/note-burning-effect';
+import NoteBurningEffect from '@/components/note-burning-effect'; // Updated import
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,7 +17,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger, // Added AlertDialogTrigger to imports
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import HomeTools from '@/components/tool-sections/home-tools';
 import DrawTools from '@/components/tool-sections/draw-tools';
@@ -161,6 +161,7 @@ export default function Home() {
       setAnimationTargetRect(exportableElement.getBoundingClientRect());
       setIsBurningAnimationActive(true);
     } else {
+      // Fallback if target element for animation can't be found
       setNoteTitle('Untitled Note');
       setNoteContent('<p></p>');
       if (editorRef.current) {
@@ -173,7 +174,7 @@ export default function Home() {
       localStorage.removeItem('ashground_note');
       toast({
         title: "Ashes to Ashes",
-        description: "Your note has been cleared (animation skipped).",
+        description: "Your note has been cleared (animation skipped as target element was not found).",
       });
       return;
     }
@@ -191,7 +192,7 @@ export default function Home() {
       localStorage.removeItem('ashground_note');
 
       setIsBurningAnimationActive(false);
-      setAnimationTargetRect(null);
+      setAnimationTargetRect(null); // Reset target rect
       toast({
         title: "Ashes to Ashes",
         description: "Your note has been cleared.",
@@ -234,7 +235,7 @@ export default function Home() {
         </Tabs>
 
         <AlertDialog>
-          <AlertDialogTrigger asChild> {/* Changed from AlertDialog.Trigger */}
+          <AlertDialogTrigger asChild>
             <Button
               size="icon"
               variant="outline"
