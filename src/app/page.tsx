@@ -22,6 +22,7 @@ import HomeTools from '@/components/tool-sections/home-tools';
 import DrawTools from '@/components/tool-sections/draw-tools';
 import ViewTools from '@/components/tool-sections/view-tools';
 import ExportTools from '@/components/tool-sections/export-tools';
+import BurningEffect from '@/components/burning-effect'; // New component
 import { useToast } from "@/hooks/use-toast";
 import { Flame } from 'lucide-react';
 
@@ -30,6 +31,7 @@ type PageBackground = 'plain' | 'lined' | 'grid';
 type PageTheme = 'light' | 'dark' | 'pastel';
 export type LineStyle = 'solid' | 'dashed' | 'dotted';
 
+const ANIMATION_DURATION = 3000; // 3 seconds for the burn animation
 
 export default function Home() {
   const [noteTitle, setNoteTitle] = useState<string>('Untitled Note');
@@ -39,9 +41,11 @@ export default function Home() {
   const [pageTheme, setPageTheme] = useState<PageTheme>('light');
   const [isMounted, setIsMounted] = useState(false);
   const [isEditorInitialized, setIsEditorInitialized] = useState(false);
+  const [isBurningAnimationActive, setIsBurningAnimationActive] = useState(false);
 
   const editorRef = useRef<Editor | null>(null);
   const pageEditorComponentRef = useRef<PageEditorRef>(null);
+  const burnAudioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
 
 
@@ -151,20 +155,30 @@ export default function Home() {
   };
 
   const handleBurnEverything = () => {
-    setNoteTitle('Untitled Note');
-    setNoteContent('<p></p>'); 
-    if (editorRef.current) {
-      editorRef.current.commands.setContent('<p></p>', true); 
+    setIsBurningAnimationActive(true);
+    if (burnAudioRef.current) {
+      burnAudioRef.current.currentTime = 0; // Rewind to start
+      burnAudioRef.current.play().catch(error => console.error("Error playing audio:", error));
     }
-    if (pageEditorComponentRef.current) {
-      pageEditorComponentRef.current.clearCanvas();
-    }
-    localStorage.removeItem('ashground_title');
-    localStorage.removeItem('ashground_note');
-    toast({
-      title: "Ashes to Ashes",
-      description: "Your note has been cleared.",
-    });
+
+    setTimeout(() => {
+      setNoteTitle('Untitled Note');
+      setNoteContent('<p></p>'); 
+      if (editorRef.current) {
+        editorRef.current.commands.setContent('<p></p>', true); 
+      }
+      if (pageEditorComponentRef.current) {
+        pageEditorComponentRef.current.clearCanvas();
+      }
+      localStorage.removeItem('ashground_title');
+      localStorage.removeItem('ashground_note');
+      
+      setIsBurningAnimationActive(false);
+      toast({
+        title: "Ashes to Ashes",
+        description: "Your note has been cleared.",
+      });
+    }, ANIMATION_DURATION);
   };
 
   const tabItems = [
@@ -177,6 +191,15 @@ export default function Home() {
   return (
     <main className="flex flex-col items-center min-h-screen py-6 px-4">
       <AshgroundHeader />
+
+      {/* 
+        TODO: Add your burning paper sound file (e.g., burning-paper.mp3) 
+        to the `public/sounds/` directory. Then update the src below.
+        For example: src="/sounds/burning-paper.mp3"
+      */}
+      <audio ref={burnAudioRef} src="/sounds/placeholder-burn-sound.mp3" preload="auto" />
+
+      {isBurningAnimationActive && <BurningEffect duration={ANIMATION_DURATION} />}
 
       <div className="flex items-center justify-center w-full max-w-4xl mx-auto mb-8">
         <Tabs defaultValue="home" value={activeTab} onValueChange={setActiveTab} className="flex-grow max-w-md">
@@ -197,15 +220,16 @@ export default function Home() {
           <AlertDialogTrigger asChild>
             <Button
               size="icon"
-              className="ml-4 rounded-full
+              variant="outline"
+              className="ml-4 rounded-full h-10 w-10
+                         border-2 border-amber-500 dark:border-amber-400
                          bg-muted/30 dark:bg-muted/20 
                          text-amber-500 dark:text-amber-400 
                          shadow-md hover:shadow-lg
-                         ring-1 ring-inset ring-amber-500/50 dark:ring-amber-400/50
                          hover:bg-amber-500/10 dark:hover:bg-amber-400/10 
                          hover:text-amber-600 dark:hover:text-amber-300 
                          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 dark:focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
-                         transition-all duration-150 ease-in-out flex items-center justify-center" 
+                         transition-all duration-150 ease-in-out flex items-center justify-center"
               title="Burn Everything"
             >
               <Flame className="w-5 h-5" />
