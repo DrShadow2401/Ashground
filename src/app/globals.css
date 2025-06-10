@@ -345,11 +345,11 @@
   @keyframes burnReveal {
     0% {
       clip-path: circle(0% at 100% 0);
-      background-color: rgba(0, 0, 0, 0.7); /* Start with the dark overlay color */
+      background-color: rgba(0, 0, 0, 0.8); /* Slightly more opaque start */
     }
-    80% {
-      clip-path: circle(200% at 100% 0); /* Expand to cover most of the screen */
-      background-color: rgba(0, 0, 0, 0.7); /* Maintain dark overlay color */
+    50% { /* Start fading earlier */
+      clip-path: circle(150% at 100% 0);
+      background-color: rgba(0, 0, 0, 0.4); /* Start fading */
     }
     100% {
       clip-path: circle(250% at 100% 0); /* Ensure it covers the whole screen */

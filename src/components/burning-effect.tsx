@@ -37,13 +37,13 @@ const BurningEffect: React.FC<BurningEffectProps> = ({ duration }) => {
 
   return (
     <div
-      className="burn-overlay fixed inset-0 z-[1000] pointer-events-none" // Removed static background, animation will handle it
+      className="burn-overlay fixed inset-0 z-[1000] pointer-events-none"
       style={{ animation: `burnReveal ${duration / 1000}s ease-out forwards` }}
     >
       {ashParticles.map((ash) => (
         <div
           key={ash.id}
-          className="ash-particle absolute top-[-10px] rounded-full bg-gray-700 opacity-70"
+          className="ash-particle absolute top-[-10px] rounded-full bg-stone-800 opacity-60"
           style={{
             ...ash.style,
             animationName: 'fallAndFade',

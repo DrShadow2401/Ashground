@@ -16,7 +16,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import HomeTools from '@/components/tool-sections/home-tools';
 import DrawTools from '@/components/tool-sections/draw-tools';
@@ -160,14 +159,28 @@ export default function Home() {
       burnAudioRef.current.currentTime = 0; // Rewind to start
       burnAudioRef.current.play().catch(error => {
         console.error("Error playing audio:", error);
-        // Optionally, inform the user if the placeholder is still in use or the file is missing
-        if (burnAudioRef.current?.src.includes('placeholder-burn-sound.mp3')) {
+        const audioSrc = burnAudioRef.current?.src;
+        if (audioSrc && audioSrc.includes('placeholder-burn-sound.mp3')) {
           toast({
-            title: "Audio Hint",
-            description: "Replace placeholder-burn-sound.mp3 in public/sounds/ with your own sound file for the burn effect.",
-            variant: "default",
-            duration: 5000,
+            title: "Audio Playback Issue",
+            description: "The burning sound requires a real audio file. Please create a 'public/sounds/' directory, add your sound file (e.g., burn.mp3), and update the <audio> tag's src in src/app/page.tsx to '/sounds/your-file-name.mp3'.",
+            variant: "destructive",
+            duration: 15000, 
           });
+        } else if (audioSrc) {
+           toast({
+              title: "Audio Playback Error",
+              description: `Could not play audio from ${audioSrc}. Ensure the file exists at this path in your 'public' folder and is a supported audio format.`,
+              variant: "destructive",
+              duration: 10000,
+           });
+        } else {
+           toast({
+              title: "Audio Error",
+              description: "Could not play burning sound. Audio source is not defined.",
+              variant: "destructive",
+              duration: 10000,
+           });
         }
       });
     }
@@ -204,12 +217,13 @@ export default function Home() {
       <AshgroundHeader />
 
       {/* 
-        IMPORTANT AUDIO NOTE:
-        The "element has no supported sources" error means the audio file is missing or incorrect.
-        1. Create a directory: `public/sounds/`
-        2. Place your burning paper sound file (e.g., burning-paper.mp3) in `public/sounds/`.
-        3. Update the `src` attribute below to point to your file.
-           Example: `src="/sounds/burning-paper.mp3"`
+        IMPORTANT AUDIO NOTE for the "Burn Everything" feature:
+        The "element has no supported sources" error means the audio file specified below is missing or incorrect.
+        1. Create a directory in your project: `public/sounds/` (if it doesn't exist).
+        2. Place your desired burning paper sound file (e.g., `burning-paper.mp3`, `fire.wav`) into this `public/sounds/` directory.
+        3. CRITICAL: Update the `src` attribute of the <audio> tag below to point to YOUR specific file.
+           Example: If your file is `burn.mp3`, change src to `"/sounds/burn.mp3"`.
+           The current `placeholder-burn-sound.mp3` will likely not work and is just a placeholder.
       */}
       <audio ref={burnAudioRef} src="/sounds/placeholder-burn-sound.mp3" preload="auto" />
 
