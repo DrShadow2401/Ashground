@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { Editor } from '@tiptap/react';
 import AshgroundHeader from '@/components/ashground-header';
 import PageEditor, { type PageEditorRef } from '@/components/page-editor';
-import NoteBurningEffect from '@/components/note-burning-effect'; // New component
+import NoteBurningEffect from '@/components/note-burning-effect';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,7 +17,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"; // AlertDialogTrigger removed as it was an error
+  AlertDialogTrigger, // Added AlertDialogTrigger to imports
+} from "@/components/ui/alert-dialog";
 import HomeTools from '@/components/tool-sections/home-tools';
 import DrawTools from '@/components/tool-sections/draw-tools';
 import ViewTools from '@/components/tool-sections/view-tools';
@@ -160,7 +161,6 @@ export default function Home() {
       setAnimationTargetRect(exportableElement.getBoundingClientRect());
       setIsBurningAnimationActive(true);
     } else {
-      // Fallback: if element not found, clear immediately without animation
       setNoteTitle('Untitled Note');
       setNoteContent('<p></p>');
       if (editorRef.current) {
@@ -191,7 +191,7 @@ export default function Home() {
       localStorage.removeItem('ashground_note');
 
       setIsBurningAnimationActive(false);
-      setAnimationTargetRect(null); // Reset target rect
+      setAnimationTargetRect(null);
       toast({
         title: "Ashes to Ashes",
         description: "Your note has been cleared.",
@@ -234,7 +234,7 @@ export default function Home() {
         </Tabs>
 
         <AlertDialog>
-          <AlertDialog.Trigger asChild>
+          <AlertDialogTrigger asChild> {/* Changed from AlertDialog.Trigger */}
             <Button
               size="icon"
               variant="outline"
@@ -251,7 +251,7 @@ export default function Home() {
             >
               <Flame className="w-5 h-5" />
             </Button>
-          </AlertDialog.Trigger>
+          </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Burn Everything?</AlertDialogTitle>
