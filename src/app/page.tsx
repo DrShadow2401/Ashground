@@ -16,6 +16,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import HomeTools from '@/components/tool-sections/home-tools';
 import DrawTools from '@/components/tool-sections/draw-tools';
@@ -160,26 +161,27 @@ export default function Home() {
       burnAudioRef.current.play().catch(error => {
         console.error("Error playing audio:", error);
         const audioSrc = burnAudioRef.current?.src;
+        // Check if it's the placeholder first, as that's a common user setup issue.
         if (audioSrc && audioSrc.includes('placeholder-burn-sound.mp3')) {
           toast({
-            title: "Audio Playback Issue",
-            description: "The burning sound requires a real audio file. Please create a 'public/sounds/' directory, add your sound file (e.g., burn.mp3), and update the <audio> tag's src in src/app/page.tsx to '/sounds/your-file-name.mp3'.",
+            title: "Audio Playback Issue: Placeholder Sound",
+            description: "The burning sound uses a placeholder. To hear the effect: 1. Create a 'public/sounds/' directory. 2. Add your sound file (e.g., burn.mp3). 3. Update the <audio> tag's src in src/app/page.tsx (around line 180) to '/sounds/your-file-name.mp3'.",
             variant: "destructive",
-            duration: 15000, 
+            duration: 20000, // Longer duration for detailed instructions
           });
-        } else if (audioSrc) {
+        } else if (audioSrc) { // If it's not the placeholder, but still failed
            toast({
               title: "Audio Playback Error",
-              description: `Could not play audio from ${audioSrc}. Ensure the file exists at this path in your 'public' folder and is a supported audio format.`,
+              description: `Could not play audio from ${audioSrc}. Ensure the file exists at this path (relative to the 'public' folder) and is a supported audio format (like MP3, WAV, OGG).`,
               variant: "destructive",
-              duration: 10000,
+              duration: 15000,
            });
-        } else {
+        } else { // If src is somehow undefined
            toast({
               title: "Audio Error",
-              description: "Could not play burning sound. Audio source is not defined.",
+              description: "Could not play burning sound. The audio source is not defined. Check the <audio> tag in src/app/page.tsx.",
               variant: "destructive",
-              duration: 10000,
+              duration: 15000,
            });
         }
       });
@@ -217,13 +219,14 @@ export default function Home() {
       <AshgroundHeader />
 
       {/* 
-        IMPORTANT AUDIO NOTE for the "Burn Everything" feature:
-        The "element has no supported sources" error means the audio file specified below is missing or incorrect.
-        1. Create a directory in your project: `public/sounds/` (if it doesn't exist).
-        2. Place your desired burning paper sound file (e.g., `burning-paper.mp3`, `fire.wav`) into this `public/sounds/` directory.
-        3. CRITICAL: Update the `src` attribute of the <audio> tag below to point to YOUR specific file.
-           Example: If your file is `burn.mp3`, change src to `"/sounds/burn.mp3"`.
-           The current `placeholder-burn-sound.mp3` will likely not work and is just a placeholder.
+        AUDIO FOR "BURN EVERYTHING":
+        1. Ensure you have an audio file (e.g., `burn.mp3`, `fire.wav`) for the burning paper sound.
+        2. Create a directory in your project: `public/sounds/` (if it doesn't already exist).
+        3. Place your chosen sound file into this `public/sounds/` directory.
+        4. CRITICAL: Update the `src` attribute of the <audio> tag below to point to YOUR specific file.
+           Example: If your file is `burn-sound.mp3`, change src to `"/sounds/burn-sound.mp3"`.
+           The current `placeholder-burn-sound.mp3` is just a placeholder and will likely result in an error
+           or silence if not replaced.
       */}
       <audio ref={burnAudioRef} src="/sounds/placeholder-burn-sound.mp3" preload="auto" />
 
@@ -336,3 +339,4 @@ export default function Home() {
     </main>
   );
 }
+
