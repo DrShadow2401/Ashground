@@ -90,7 +90,7 @@ export default function Home() {
   }, [noteTitle, isMounted]);
 
   useEffect(() => {
-    if(isMounted && noteContent) { // Only save if content is not undefined
+    if(isMounted && noteContent !== undefined) { 
       localStorage.setItem('ashground_note', noteContent);
     }
   }, [noteContent, isMounted]);
@@ -136,7 +136,7 @@ export default function Home() {
     if (pageEditorComponentRef.current) {
       pageEditorComponentRef.current.clearCanvas();
     }
-    setCurrentDrawTool(null);
+    setCurrentDrawTool(null); 
   };
 
   const handleAfterColorPick = () => {
@@ -152,9 +152,9 @@ export default function Home() {
 
   const handleBurnEverything = () => {
     setNoteTitle('Untitled Note');
-    setNoteContent('<p></p>'); // Reset editor to empty paragraph
+    setNoteContent('<p></p>'); 
     if (editorRef.current) {
-      editorRef.current.commands.setContent('<p></p>', true); // Force update Tiptap
+      editorRef.current.commands.setContent('<p></p>', true); 
     }
     if (pageEditorComponentRef.current) {
       pageEditorComponentRef.current.clearCanvas();
@@ -198,7 +198,7 @@ export default function Home() {
             <Button
               variant="outline"
               size="icon"
-              className="ml-4 p-2.5 rounded-full border-2 border-amber-500/60 hover:bg-amber-500/10 text-amber-600 hover:text-amber-700 dark:border-amber-400/60 dark:text-amber-500 dark:hover:text-amber-400 focus-visible:ring-amber-500"
+              className="ml-4 p-2.5 rounded-full border-2 border-amber-500 hover:bg-amber-500/10 text-amber-500 hover:text-amber-600 dark:border-amber-400 dark:text-amber-400 dark:hover:text-amber-300 focus-visible:ring-amber-500"
               title="Burn Everything"
             >
               <Flame className="w-5 h-5" />
@@ -226,7 +226,7 @@ export default function Home() {
       </div>
 
 
-      <Tabs value={activeTab} className="w-full max-w-4xl"> {/* Second Tabs wrapper for content panels */}
+      <Tabs value={activeTab} className="w-full max-w-4xl"> 
         <div className="max-w-3xl mx-auto mb-6">
           <div className="bg-muted p-3 rounded-lg shadow-inner min-h-[52px] flex justify-center items-start">
             {activeTab === 'home' && (isEditorInitialized ? <HomeTools editorRef={editorRef} /> : <p className="text-muted-foreground text-sm">Editor loading...</p>)}
@@ -270,10 +270,11 @@ export default function Home() {
           drawColor={drawColor}
           drawStrokeWidth={drawStrokeWidth}
           currentLineStyle={currentLineStyle}
-          onDrawColorChange={setDrawColor}
+          onDrawColorChange={setDrawColor} 
           onAfterColorPick={handleAfterColorPick}
         />
       </Tabs>
     </main>
   );
 }
+
