@@ -35,7 +35,7 @@ export interface PageEditorProps {
   currentLineStyle: LineStyle;
   onEditorReady?: (editor: Editor) => void;
   onDrawColorChange: (color: string) => void;
-  onAfterColorPick: () => void;
+  // onAfterColorPick: () => void; // Removed as it was only for eyedropper
 }
 
 export interface PageEditorRef {
@@ -58,7 +58,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
   currentLineStyle,
   onEditorReady,
   onDrawColorChange,
-  onAfterColorPick,
+  // onAfterColorPick, // Removed
 }, ref) => {
   const themeClassMap: Record<PageTheme, string> = {
     light: 'page-theme-light',
@@ -315,7 +315,8 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
     };
 
     const handlePaintEnd = () => {
-      if (!isPaintingRef.current && currentDrawTool !== 'eyedropper') return;
+      // Removed check for currentDrawTool !== 'eyedropper' as it's no longer relevant
+      if (!isPaintingRef.current) return; 
       isPaintingRef.current = false;
       
       window.removeEventListener('mousemove', handlePaintMove);
@@ -369,12 +370,14 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
         window.addEventListener('touchend', handlePaintEnd);
         window.addEventListener('touchcancel', handlePaintEnd);
 
-      } else if (currentDrawTool === 'eyedropper') {
-          const pixelData = ctx.getImageData(pos.x * (window.devicePixelRatio||1), pos.y * (window.devicePixelRatio||1), 1, 1).data;
-          const hexColor = `#${("000000" + ((pixelData[0] << 16) | (pixelData[1] << 8) | pixelData[2]).toString(16)).slice(-6)}`;
-          onDrawColorChange(hexColor);
-          onAfterColorPick();
-      }
+      } 
+      // Removed Eyedropper specific 'else if' block
+      // else if (currentDrawTool === 'eyedropper') {
+      //     const pixelData = ctx.getImageData(pos.x * (window.devicePixelRatio||1), pos.y * (window.devicePixelRatio||1), 1, 1).data;
+      //     const hexColor = `#${("000000" + ((pixelData[0] << 16) | (pixelData[1] << 8) | pixelData[2]).toString(16)).slice(-6)}`;
+      //     onDrawColorChange(hexColor);
+      //     onAfterColorPick();
+      // }
     };
 
     canvas.addEventListener('mousedown', handlePaintStart);
@@ -396,7 +399,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       }
       isPaintingRef.current = false;
     };
-  }, [isDrawingMode, currentDrawTool, drawColor, drawStrokeWidth, pageTheme, resizeCanvas, onDrawColorChange, onAfterColorPick, currentLineStyle]);
+  }, [isDrawingMode, currentDrawTool, drawColor, drawStrokeWidth, pageTheme, resizeCanvas, onDrawColorChange, /*onAfterColorPick,*/ currentLineStyle]);
 
 
   const handlePaperClick = (event: React.MouseEvent<HTMLDivElement>) => {

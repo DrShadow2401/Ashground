@@ -7,7 +7,7 @@ import {
   // Eraser, // Removed
   Trash2,
   Palette,
-  Pipette,
+  // Pipette, // Icon for removed eyedropper
   ListFilter,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -65,7 +65,7 @@ const DrawTools: React.FC<DrawToolsProps> = ({
   const drawingToolButtons = [
     { name: 'pen', icon: <PenTool />, label: 'Pen' },
     // { name: 'eraser', icon: <Eraser />, label: 'Eraser' }, // Removed
-    { name: 'eyedropper', icon: <Pipette />, label: 'Eyedropper Tool' },
+    // { name: 'eyedropper', icon: <Pipette />, label: 'Eyedropper Tool' }, // Removed Eyedropper
   ];
 
   return (

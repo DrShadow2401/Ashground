@@ -125,10 +125,11 @@ export default function Home() {
   }, [pageTheme, isMounted]);
 
   useEffect(() => {
-    if (activeTab !== 'draw' && currentDrawTool !== 'eyedropper') {
+    // If the active tab is not 'draw', ensure no drawing tool is considered active.
+    if (activeTab !== 'draw') {
       setCurrentDrawTool(null);
     }
-  }, [activeTab, currentDrawTool]);
+  }, [activeTab]);
 
   const handleEditorReady = useCallback(() => {
     setIsEditorInitialized(true);
@@ -145,9 +146,9 @@ export default function Home() {
     setCurrentDrawTool(null);
   };
 
-  const handleAfterColorPick = () => {
-    setCurrentDrawTool(null);
-  };
+  // const handleAfterColorPick = () => { // Removed as it was only for eyedropper
+  //   setCurrentDrawTool(null);
+  // };
 
   const getExportableElementForPdf = () => {
     if (pageEditorComponentRef.current) {
@@ -160,7 +161,7 @@ export default function Home() {
     const exportableElement = pageEditorComponentRef.current?.getExportableElement();
     if (exportableElement) {
       setAnimationTargetRect(exportableElement.getBoundingClientRect());
-      setAnimationSourceElement(exportableElement);
+      setAnimationSourceElement(exportableElement); // Pass the source element for styling
       setIsBurningAnimationActive(true);
     } else {
       setNoteTitle('Untitled Note');
@@ -323,7 +324,7 @@ export default function Home() {
           drawStrokeWidth={drawStrokeWidth}
           currentLineStyle={currentLineStyle}
           onDrawColorChange={setDrawColor}
-          onAfterColorPick={handleAfterColorPick}
+          // onAfterColorPick={handleAfterColorPick} // Removed
         />
       </Tabs>
     </main>
