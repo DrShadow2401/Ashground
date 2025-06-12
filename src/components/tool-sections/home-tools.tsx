@@ -32,11 +32,11 @@ import {
   Undo2,
   Redo2,
   Minus,
-  CheckSquare,
+  // CheckSquare, // Removed
   ImageUp,
   Highlighter,
   Palette,
-  ChevronsUpDown, // Placeholder for Toggle Section
+  // ChevronsUpDown, // Removed
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -174,9 +174,9 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     ],
     [
       { type: 'button', icon: <Minus />, label: 'Horizontal Rule', action: () => editor.chain().focus().setHorizontalRule().run(), isActive: () => false },
-      { type: 'button', icon: <CheckSquare />, label: 'Checklist', action: () => editor.chain().focus().toggleTaskList().run(), isActive: () => isButtonActive('taskList') },
+      // { type: 'button', icon: <CheckSquare />, label: 'Checklist', action: () => editor.chain().focus().toggleTaskList().run(), isActive: () => isButtonActive('taskList') }, // Removed
       { type: 'button', icon: <ImageUp />, label: 'Insert Image', action: handleImageInsert, isActive: () => false },
-      { type: 'button', icon: <ChevronsUpDown />, label: 'Toggle Section (NA)', action: () => {}, isActive: () => false, disabled: true },
+      // { type: 'button', icon: <ChevronsUpDown />, label: 'Toggle Section (NA)', action: () => {}, isActive: () => false, disabled: true }, // Removed
     ],
     [
       { type: 'button', icon: <Undo2 />, label: 'Undo', action: () => editor.chain().focus().undo().run(), isActive: () => false, disabled: !editor.can().undo() },
@@ -266,7 +266,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
               }
               return null;
             })}
-            {groupIndex < toolGroups.length - 1 && (
+            {groupIndex < toolGroups.length - 1 && group.length > 0 && (
               <Separator orientation="vertical" className="h-6 mx-1" />
             )}
           </React.Fragment>
