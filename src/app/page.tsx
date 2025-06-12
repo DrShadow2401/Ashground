@@ -6,7 +6,7 @@ import type { Editor } from '@tiptap/react';
 import AshgroundHeader from '@/components/ashground-header';
 import PageEditor, { type PageEditorRef } from '@/components/page-editor';
 import NoteBurningEffect from '@/components/note-burning-effect';
-import FirePit from '@/components/fire-pit'; // Import the new FirePit component
+import FirePit from '@/components/fire-pit';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,7 +32,7 @@ type PageBackground = 'plain' | 'lined' | 'grid';
 type PageTheme = 'light' | 'dark' | 'pastel';
 export type LineStyle = 'solid' | 'dashed' | 'dotted';
 
-const ANIMATION_DURATION = 3000; 
+const ANIMATION_DURATION = 3500; // Slightly increased for more elaborate fall
 
 export default function Home() {
   const [noteTitle, setNoteTitle] = useState<string>('Untitled Note');
@@ -45,6 +45,7 @@ export default function Home() {
   const [isBurningAnimationActive, setIsBurningAnimationActive] = useState(false);
   const [animationTargetRect, setAnimationTargetRect] = useState<DOMRect | null>(null);
   const [animationSourceElement, setAnimationSourceElement] = useState<HTMLElement | null>(null);
+  const [contentForBurn, setContentForBurn] = useState<string>('');
 
 
   const editorRef = useRef<Editor | null>(null);
@@ -67,7 +68,7 @@ export default function Home() {
 
     if (savedTitle) setNoteTitle(savedTitle);
     if (savedNote) setNoteContent(savedNote);
-    else setNoteContent('<p></p>');
+    else setNoteContent('<p></p>'); // Default to an empty paragraph
 
     if (savedBg) setPageBackground(savedBg);
 
@@ -97,10 +98,11 @@ export default function Home() {
   }, [noteTitle, isMounted]);
 
   useEffect(() => {
-    if(isMounted && noteContent !== undefined) {
+    // Only save if noteContent is not undefined and editor is initialized to avoid overwriting initial load
+    if(isMounted && noteContent !== undefined && isEditorInitialized) {
       localStorage.setItem('ashground_note', noteContent);
     }
-  }, [noteContent, isMounted]);
+  }, [noteContent, isMounted, isEditorInitialized]);
 
   useEffect(() => {
     if(isMounted) {
@@ -133,10 +135,15 @@ export default function Home() {
 
   const handleEditorReady = useCallback(() => {
     setIsEditorInitialized(true);
-  }, []);
+     // Load content into editor once it's ready, if it wasn't set before
+    if (editorRef.current && noteContent && editorRef.current.getHTML() !== noteContent) {
+      editorRef.current.commands.setContent(noteContent, false);
+    }
+  }, [noteContent]); // Add noteContent as dependency
 
   if (!isMounted) {
-    return null;
+    // Optionally, render a loading skeleton or a minimal placeholder
+    return <div className="flex justify-center items-center min-h-screen">Loading Ashground...</div>;
   }
 
   const handleClearCanvas = () => {
@@ -156,10 +163,12 @@ export default function Home() {
   const handleBurnEverything = () => {
     const exportableElement = pageEditorComponentRef.current?.getExportableElement();
     if (exportableElement) {
+      setContentForBurn(editorRef.current?.getHTML() || '<p></p>'); // Get current HTML content for the animation
       setAnimationTargetRect(exportableElement.getBoundingClientRect());
-      setAnimationSourceElement(exportableElement); 
+      setAnimationSourceElement(exportableElement);
       setIsBurningAnimationActive(true);
     } else {
+      // Fallback if the element isn't found (should be rare)
       setNoteTitle('Untitled Note');
       setNoteContent('<p></p>');
       if (editorRef.current) {
@@ -172,15 +181,17 @@ export default function Home() {
       localStorage.removeItem('ashground_note');
       toast({
         title: "Ashes to Ashes",
-        description: "Your note has been cleared (animation skipped as target element was not found).",
+        description: "Your note has been cleared (animation skipped).",
       });
       return;
     }
 
+    // The actual data clearing happens after the animation
     setTimeout(() => {
       setNoteTitle('Untitled Note');
-      setNoteContent('<p></p>');
+      setNoteContent('<p></p>'); // Set to empty paragraph to clear editor
       if (editorRef.current) {
+        // Ensure editor content is also cleared
         editorRef.current.commands.setContent('<p></p>', true);
       }
       if (pageEditorComponentRef.current) {
@@ -189,9 +200,12 @@ export default function Home() {
       localStorage.removeItem('ashground_title');
       localStorage.removeItem('ashground_note');
 
+      // Reset animation states
       setIsBurningAnimationActive(false);
       setAnimationTargetRect(null);
       setAnimationSourceElement(null);
+      setContentForBurn(''); // Clear content for burn
+
       toast({
         title: "Ashes to Ashes",
         description: "Your note has been cleared.",
@@ -209,7 +223,7 @@ export default function Home() {
   return (
     <main className="flex flex-col items-center min-h-screen py-6 px-4 overflow-x-hidden">
       <AshgroundHeader />
-      
+
       {isBurningAnimationActive && animationTargetRect && animationSourceElement && (
         <>
           <NoteBurningEffect
@@ -217,6 +231,7 @@ export default function Home() {
             targetRect={animationTargetRect}
             duration={ANIMATION_DURATION}
             sourceElement={animationSourceElement}
+            noteHTMLContent={contentForBurn}
           />
           <FirePit isActive={isBurningAnimationActive} />
         </>
@@ -314,8 +329,8 @@ export default function Home() {
           onEditorReady={handleEditorReady}
           noteTitle={noteTitle}
           onNoteTitleChange={setNoteTitle}
-          noteContent={noteContent}
-          onNoteChange={setNoteContent}
+          noteContent={noteContent} // This is the source of truth for the editor
+          onNoteChange={setNoteContent} // This updates noteContent when editor changes
           backgroundStyle={pageBackground}
           pageTheme={pageTheme}
           isDrawingMode={activeTab === 'draw'}

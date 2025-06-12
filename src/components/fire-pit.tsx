@@ -13,18 +13,17 @@ const FirePit: React.FC<FirePitProps> = ({ isActive }) => {
     return null;
   }
 
-  // Create a more varied set of flames
-  const flameCount = 15; // Increased for more density
+  const flameCount = 25; // Increased for a wider, denser fire
   const flames = Array.from({ length: flameCount }).map((_, i) => {
-    const size = Math.random() * 50 + 30; // Random size between 30px and 80px
-    const duration = Math.random() * 0.5 + 0.8; // Random duration around 1s
-    const delay = Math.random() * 0.5; // Random delay
-    const horizontalPosition = Math.random() * 80 + 10; // % position from left (10% to 90%)
-    
-    // More varied flame colors
+    const size = Math.random() * 60 + 40; // Random size between 40px and 100px
+    const duration = Math.random() * 0.6 + 0.7; // Random duration around 0.7s to 1.3s
+    const delay = Math.random() * 0.6;
+    const horizontalPosition = Math.random() * 90 + 5; // Spread flames across 5% to 95%
+
     const colors = [
-        'bg-red-500', 'bg-orange-500', 'bg-yellow-400', 
-        'bg-red-600', 'bg-orange-400', 'bg-yellow-500'
+        'bg-red-500/80', 'bg-orange-500/80', 'bg-yellow-400/70',
+        'bg-red-600/80', 'bg-orange-400/80', 'bg-yellow-500/70',
+        'bg-red-700/70', 'bg-orange-600/70',
     ];
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
@@ -34,14 +33,13 @@ const FirePit: React.FC<FirePitProps> = ({ isActive }) => {
         className={cn(
           'flame',
           randomColor,
-          'absolute rounded-[50%_50%_50%_50%_/_80%_80%_20%_20%] opacity-80 filter blur-[3px]',
-          'animate-flame-flicker' // Changed to a single, more complex animation
+          'absolute rounded-[50%_50%_50%_50%_/_70%_70%_30%_30%] filter blur-[3px] animate-flame-flicker'
         )}
         style={{
-          width: `${size * 0.7}px`, // Flames are generally taller than wide
+          width: `${size * 0.65}px`,
           height: `${size}px`,
           left: `${horizontalPosition}%`,
-          bottom: `${Math.random() * -10}px`, // Some flames start slightly lower
+          bottom: `${Math.random() * -15}px`, // Some flames start slightly lower for depth
           animationDuration: `${duration}s`,
           animationDelay: `${delay}s`,
           transformOrigin: 'bottom center',
@@ -52,13 +50,13 @@ const FirePit: React.FC<FirePitProps> = ({ isActive }) => {
 
   return (
     <div
-      className="fire-pit fixed bottom-0 left-1/2 -translate-x-1/2 w-[300px] h-[150px] pointer-events-none z-[998]"
+      className="fire-pit fixed bottom-0 left-0 right-0 w-full h-[180px] pointer-events-none z-[998] flex justify-center"
       aria-hidden="true"
     >
-      <div className="relative w-full h-full">
+      <div className="relative w-4/5 max-w-2xl h-full"> {/* Fire is 80% of viewport width, max 2xl */}
         {flames}
-        {/* Optional: Add a subtle glow at the base */}
-        <div className="absolute bottom-0 left-0 right-0 h-[20px] bg-yellow-400/30 rounded-full blur-md"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-[30px] bg-yellow-500/20 rounded-full blur-lg"></div>
+        <div className="absolute bottom-0 left-1/4 right-1/4 h-[15px] bg-red-600/10 rounded-full blur-md"></div>
       </div>
     </div>
   );

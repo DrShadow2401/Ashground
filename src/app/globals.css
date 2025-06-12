@@ -43,15 +43,16 @@
     --paper-pastel-bg: 320 70% 96%;
     --paper-pastel-fg: 320 30% 35%;
 
-    --text-line-height: 1.625rem;
-    --line-color: var(--border);
+    --text-line-height: 1.625rem; /* 26px */
+    --line-color: hsl(var(--border));
 
-    /* Burn effect colors (still used for note charring) */
-    --note-initial-paper-color: hsl(var(--card));
-    --note-char-color: 20 10% 10%; 
-    --note-ash-color: 0 0% 70%;   
-    --note-ember-color: 25 100% 55%;     
-    --note-smoke-color: 0 0% 50%;       
+    /* Burn effect colors */
+    --note-initial-paper-color-for-burn: 0 0% 100%; /* White for the falling note */
+    --note-text-color-for-burn: 20 15% 30%; /* Initial text color on falling note */
+    --note-char-color: 20 10% 10%;
+    --note-ash-color: 0 0% 70%;
+    --note-ember-color: 25 100% 55%;
+    --note-smoke-color: 0 0% 50%;
   }
 
   .dark {
@@ -94,7 +95,8 @@
     --line-color: 0 0% 40%;
 
     /* Burn effect colors - Dark theme */
-    --note-initial-paper-color: hsl(var(--card));
+    --note-initial-paper-color-for-burn: 0 0% 100%; /* Still white for falling note consistency */
+    --note-text-color-for-burn: 20 15% 30%; /* Dark text on white paper */
     --note-char-color: 0 0% 5%;
     --note-ash-color: 0 0% 35%;
     --note-ember-color: 30 100% 60%;
@@ -139,7 +141,8 @@
     --line-color: 320 40% 85%;
 
     /* Burn effect colors - Pastel theme */
-    --note-initial-paper-color: hsl(var(--card));
+     --note-initial-paper-color-for-burn: 0 0% 100%; /* White for falling note */
+    --note-text-color-for-burn: 20 15% 30%; /* Dark text on white paper */
     --note-char-color: 320 20% 20%;
     --note-ash-color: 320 30% 75%;
     --note-ember-color: 15 100% 65%;
@@ -165,7 +168,7 @@
 
   .ProseMirror {
     @apply font-body leading-relaxed p-0 m-0 w-full;
-    padding-top: 21px;
+    padding-top: 21px; /* Adjust to align with lines if using page-bg-lined */
     color: inherit;
     background-color: transparent;
     caret-color: currentColor;
@@ -341,14 +344,14 @@
     color: hsl(var(--paper-pastel-fg));
   }
 
-  .page-bg-lined {
+  .page-bg-lined, .note-burn-overlay-ruled {
     background-image: linear-gradient(to bottom,
       transparent calc(var(--text-line-height) - 1px),
-      hsl(var(--line-color)) calc(var(--text-line-height) - 1px),
-      hsl(var(--line-color)) var(--text-line-height)
+      hsla(var(--line-color), 0.5) calc(var(--text-line-height) - 1px), /* Softer lines */
+      hsla(var(--line-color), 0.5) var(--text-line-height)
     );
     background-size: 100% var(--text-line-height);
-    background-position-y: 4px;
+    background-position-y: 4px; /* Adjust as needed to align with text */
   }
   .page-bg-grid {
     background-image:
@@ -358,19 +361,44 @@
   }
 }
 
-/* New Fall and Burn Animation Styles */
+/* Fall and Burn Animation Styles */
 @layer utilities {
   .note-burn-overlay {
     /* Positioned by JS */
-    background-color: var(--note-initial-paper-color); 
+    background-color: hsl(var(--note-initial-paper-color-for-burn));
+    color: hsl(var(--note-text-color-for-burn)); /* For text inside */
     transform-origin: center center; /* For rotation */
     animation-name: note-fall-and-burn;
     animation-duration: var(--duration-seconds);
     animation-fill-mode: forwards;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); /* Ease in, then fall */
-    will-change: transform, background-color, opacity;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.8, 0.2); /* Ease in, then accelerate fall */
+    will-change: transform, background-color, color, opacity;
     z-index: 1000;
+    padding: 1rem; /* Padding for the text content */
+    overflow: hidden; /* Keep text contained */
+    box-shadow: 0px 5px 15px rgba(0,0,0,0.2); /* Initial shadow for paper */
   }
+
+  .note-burn-overlay-text-container {
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* Clip text if it overflows padding */
+    font-size: 0.8rem; /* Smaller text for the burning note */
+    line-height: 1.4; /* Adjust line height for smaller text */
+  }
+
+  .note-burn-overlay-text-container .ProseMirror {
+    padding-top: 0; /* Remove default ProseMirror padding if not needed */
+    line-height: var(--text-line-height); /* Align with ruled lines */
+  }
+   .note-burn-overlay-text-container p,
+   .note-burn-overlay-text-container h1,
+   .note-burn-overlay-text-container h2,
+   .note-burn-overlay-text-container h3 {
+    margin-bottom: 0.5em;
+    color: inherit !important; /* Ensure text color animates with overlay */
+  }
+
 
   .note-ember-particle,
   .note-smoke-particle {
@@ -384,57 +412,76 @@
   .note-ember-particle {
     background-color: hsla(var(--note-ember-color), 0.9);
     box-shadow: 0 0 5px 2px hsla(var(--note-ember-color), 0.7);
-    animation-name: ember-sparkle-animation; /* Kept from previous, might need path adjustment */
+    animation-name: ember-sparkle-animation;
     animation-timing-function: ease-out;
   }
 
   .note-smoke-particle {
     background-color: hsla(var(--note-smoke-color), 0.5);
     filter: blur(5px);
-    animation-name: smoke-drift-animation; /* Kept from previous, might need path adjustment */
+    animation-name: smoke-drift-animation;
     animation-timing-function: cubic-bezier(0.1, 0.8, 0.2, 1);
   }
 
   @keyframes note-fall-and-burn {
     0% {
       transform: translateY(0) rotate(0deg) scale(1);
-      background-color: var(--note-initial-paper-color);
+      background-color: hsl(var(--note-initial-paper-color-for-burn));
+      color: hsl(var(--note-text-color-for-burn));
       opacity: 1;
+      box-shadow: 0px 5px 15px rgba(0,0,0,0.2);
     }
-    20% { /* Start charring */
-      transform: translateY(calc(0.1 * (var(--viewport-height, 100vh) - var(--note-height, 300px)))) rotate(-5deg) scale(1);
+    15% { /* Start charring, subtle sway */
+      transform: translateY(calc(0.05 * (var(--viewport-height, 100vh) - var(--note-height, 300px)))) rotate(-2deg) scale(1);
       background-color: hsl(var(--note-char-color));
+      color: hsl(var(--note-ash-color)); /* Text starts to fade/blend */
       opacity: 1;
+      box-shadow: 0px 8px 20px rgba(0,0,0,0.3);
     }
-    70% { /* Falling deeper, turning to ash, starting to fade */
-      transform: translateY(calc(0.7 * (var(--viewport-height, 100vh) - var(--note-height, 300px)))) rotate(15deg) scale(0.8);
+    /* Intermediate charring steps */
+    25% {
+        background-color: hsl(var(--note-char-color), 0.9);
+        color: hsl(var(--note-ash-color), 0.8);
+    }
+    50% { /* Mid-fall, more charring */
+      transform: translateY(calc(0.4 * (var(--viewport-height, 100vh) - var(--note-height, 300px)))) rotate(5deg) scale(0.95);
+      background-color: hsl(var(--note-char-color), 0.7);
+      color: hsl(var(--note-ash-color), 0.6);
+      opacity: 0.95;
+    }
+    75% { /* Deeper fall, turning to ash */
+      transform: translateY(calc(0.75 * (var(--viewport-height, 100vh) - var(--note-height, 300px)))) rotate(-7deg) scale(0.85);
       background-color: hsl(var(--note-ash-color));
+      color: hsla(var(--note-ash-color), 0.3); /* Text very faint */
       opacity: 0.9;
+      box-shadow: 0px 2px 10px hsla(var(--note-ash-color), 0.5);
     }
-    90% { /* Almost gone */
-      transform: translateY(calc(var(--viewport-height, 100vh) - var(--note-height, 300px) - 50px)) rotate(25deg) scale(0.5);
-      background-color: hsl(var(--note-ash-color));
-      opacity: 0.3;
+    90% { /* Almost gone into the fire */
+      transform: translateY(calc(var(--viewport-height, 100vh) - var(--note-height, 300px) - 50px)) rotate(10deg) scale(0.7);
+      background-color: hsl(var(--note-ash-color), 0.5); /* Ash starts to become transparent */
+      color: transparent; /* Text gone */
+      opacity: 0.5;
     }
-    100% { /* Fully disappeared into the "fire zone" */
-      transform: translateY(calc(var(--viewport-height, 100vh) - var(--note-height, 300px))) rotate(30deg) scale(0.3);
-      background-color: hsl(var(--note-ash-color));
+    100% { /* Fully disappeared */
+      transform: translateY(calc(var(--viewport-height, 100vh) - var(--note-height, 300px) + 50px)) rotate(15deg) scale(0.5);
+      background-color: transparent;
+      color: transparent;
       opacity: 0;
+      box-shadow: none;
     }
   }
-  
-  /* Ember and Smoke animations from previous version, potentially adjust Y travel */
+
   @keyframes ember-sparkle-animation {
     0% {
       transform: translateY(0) translateX(-50%) scale(0);
       opacity: 0;
     }
-    20% { 
-      transform: translateY(-10px) translateX(-50%) scale(1);
+    20% {
+      transform: translateY(-10px) translateX(-50%) scale(1); /* Slightly upward initial flicker */
       opacity: 1;
     }
-    100% { 
-      transform: translateY(50px) translateX(calc(-50% + (var(--ember-drift-x, 0px)))) scale(0.2); /* Less downward travel if note is falling */
+    100% {
+      transform: translateY(calc(var(--ember-fall-distance, 70px))) translateX(calc(-50% + (var(--ember-drift-x, 0px)))) scale(0.2);
       opacity: 0;
     }
   }
@@ -444,18 +491,18 @@
       transform: translateY(0px) translateX(-50%) scale(0.5);
       opacity: 0;
     }
-    10% { opacity: 0; } 
+    10% { opacity: 0; }
     30% {
       opacity: 0.7;
     }
     100% {
-      transform: translateY(-150px) translateX(calc(-50% + var(--smoke-drift-x, 0px))) scale(3); /* Less upward travel */
+      transform: translateY(calc(var(--smoke-rise-distance, -180px))) translateX(calc(-50% + var(--smoke-drift-x, 0px))) scale(3.5);
       opacity: 0;
     }
   }
 
   /* Fire Pit Animation Styles */
-  .animate-flame-flicker { /* Consolidated flame animation */
+  .animate-flame-flicker {
     animation-name: flame-flicker-effect;
     animation-timing-function: ease-in-out;
     animation-iteration-count: infinite;
@@ -464,19 +511,31 @@
   @keyframes flame-flicker-effect {
     0%, 100% {
       transform: scaleY(1) scaleX(1) skewX(0deg) skewY(0deg);
-      opacity: 0.8;
+      opacity: 0.85;
     }
-    25% {
-      transform: scaleY(1.2) scaleX(0.9) skewX(-5deg) skewY(2deg);
-      opacity: 0.7;
+    15% {
+      transform: scaleY(1.25) scaleX(0.9) skewX(-6deg) skewY(3deg);
+      opacity: 0.75;
     }
-    50% {
-      transform: scaleY(0.9) scaleX(1.1) skewX(5deg) skewY(-3deg);
+    30% {
+      transform: scaleY(0.85) scaleX(1.15) skewX(4deg) skewY(-2deg);
       opacity: 0.9;
     }
-    75% {
-      transform: scaleY(1.1) scaleX(0.8) skewX(-2deg) skewY(5deg);
-      opacity: 0.75;
+    45% {
+      transform: scaleY(1.15) scaleX(0.8) skewX(-3deg) skewY(4deg);
+      opacity: 0.8;
+    }
+    60% {
+      transform: scaleY(0.9) scaleX(1.05) skewX(2deg) skewY(-1deg);
+      opacity: 0.95;
+    }
+     75% {
+      transform: scaleY(1.3) scaleX(0.85) skewX(-5deg) skewY(2deg);
+      opacity: 0.7;
+    }
+    90% {
+      transform: scaleY(0.95) scaleX(1.1) skewX(3deg) skewY(-3deg);
+      opacity: 0.85;
     }
   }
 }
