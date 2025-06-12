@@ -47,8 +47,11 @@
     --line-color: hsl(var(--border));
 
     /* Burn effect colors */
-    --note-initial-paper-color-for-burn: 0 0% 100%; /* White for the falling note */
-    --note-text-color-for-burn: 20 15% 30%; /* Initial text color on falling note */
+    --note-initial-paper-color-for-burn: 0 0% 100%; /* White for the burning note's base */
+    --note-text-color-for-burn: 20 15% 30%; /* Initial text color on burning note (less relevant now with image capture) */
+    --note-ignition-flash-color: 35 100% 70%; /* Bright orange-yellow flash */
+    --note-flame-main-color: 30 100% 60%; /* Main flame color - orange */
+    --note-flame-accent-color: 45 100% 55%; /* Flame accent - yellow */
     --note-char-color: 20 10% 10%;
     --note-ash-color: 0 0% 70%;
     --note-ember-color: 25 100% 55%;
@@ -95,8 +98,11 @@
     --line-color: 0 0% 40%;
 
     /* Burn effect colors - Dark theme */
-    --note-initial-paper-color-for-burn: 0 0% 100%; /* Still white for falling note consistency */
-    --note-text-color-for-burn: 20 15% 30%; /* Dark text on white paper */
+    --note-initial-paper-color-for-burn: 0 0% 100%;
+    --note-text-color-for-burn: 20 15% 30%;
+    --note-ignition-flash-color: 35 100% 75%;
+    --note-flame-main-color: 30 100% 65%;
+    --note-flame-accent-color: 45 100% 60%;
     --note-char-color: 0 0% 5%;
     --note-ash-color: 0 0% 35%;
     --note-ember-color: 30 100% 60%;
@@ -141,8 +147,11 @@
     --line-color: 320 40% 85%;
 
     /* Burn effect colors - Pastel theme */
-     --note-initial-paper-color-for-burn: 0 0% 100%; /* White for falling note */
-    --note-text-color-for-burn: 20 15% 30%; /* Dark text on white paper */
+    --note-initial-paper-color-for-burn: 0 0% 100%;
+    --note-text-color-for-burn: 20 15% 30%;
+    --note-ignition-flash-color: 30 100% 70%;
+    --note-flame-main-color: 25 100% 65%;
+    --note-flame-accent-color: 40 100% 60%;
     --note-char-color: 320 20% 20%;
     --note-ash-color: 320 30% 75%;
     --note-ember-color: 15 100% 65%;
@@ -259,7 +268,7 @@
 
   .ProseMirror mark {
     @apply rounded-sm px-0.5;
-    background-color: #FFF3A3;
+    background-color: #FFF3A3; /* Default highlight, can be overridden by highlight extension */
   }
 
   .ProseMirror ul[data-type="taskList"] {
@@ -301,15 +310,17 @@
   .ProseMirror ul[data-type="taskList"] li input[type="checkbox"]:checked::before {
     content: "✔";
     position: absolute;
-    top: 0;
-    left: 0;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     width: 100%;
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: hsl(var(--primary-foreground));
-    font-size: 0.75rem;
+    font-size: 0.9rem; /* Increased size */
+    font-weight: bold; /* Make it bolder */
   }
   .ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div > p {
     text-decoration: line-through;
@@ -344,10 +355,10 @@
     color: hsl(var(--paper-pastel-fg));
   }
 
-  .page-bg-lined, .note-burn-overlay-ruled {
+  .page-bg-lined { /* For editor background */
     background-image: linear-gradient(to bottom,
       transparent calc(var(--text-line-height) - 1px),
-      hsla(var(--line-color), 0.5) calc(var(--text-line-height) - 1px), /* Softer lines */
+      hsla(var(--line-color), 0.5) calc(var(--text-line-height) - 1px),
       hsla(var(--line-color), 0.5) var(--text-line-height)
     );
     background-size: 100% var(--text-line-height);
@@ -361,42 +372,25 @@
   }
 }
 
-/* Fall and Burn Animation Styles */
+/* Burn Animation Styles */
 @layer utilities {
   .note-burn-overlay {
     /* Positioned by JS */
-    background-color: hsl(var(--note-initial-paper-color-for-burn));
-    color: hsl(var(--note-text-color-for-burn)); /* For text inside */
-    transform-origin: center center; /* For rotation */
-    animation-name: note-fall-and-burn;
+    background-color: var(--note-initial-paper-color-for-burn); /* Initial paper color, animated */
+    color: var(--note-text-color-for-burn); /* Initial text color, animated */
+    transform-origin: center center;
+    animation-name: note-ignite-and-burn;
     animation-duration: var(--duration-seconds);
     animation-fill-mode: forwards;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.8, 0.2); /* Ease in, then accelerate fall */
-    will-change: transform, background-color, color, opacity;
+    animation-timing-function: ease-out;
+    will-change: transform, background-color, color, opacity, clip-path, box-shadow;
     z-index: 1000;
-    padding: 1rem; /* Padding for the text content */
-    overflow: hidden; /* Keep text contained */
-    box-shadow: 0px 5px 15px rgba(0,0,0,0.2); /* Initial shadow for paper */
+    overflow: hidden; /* Clip content to overlay boundaries */
+    /* box-shadow is animated directly in keyframes now */
   }
 
-  .note-burn-overlay-text-container {
-    width: 100%;
-    height: 100%;
-    overflow: hidden; /* Clip text if it overflows padding */
-    font-size: 0.8rem; /* Smaller text for the burning note */
-    line-height: 1.4; /* Adjust line height for smaller text */
-  }
-
-  .note-burn-overlay-text-container .ProseMirror {
-    padding-top: 0; /* Remove default ProseMirror padding if not needed */
-    line-height: var(--text-line-height); /* Align with ruled lines */
-  }
-   .note-burn-overlay-text-container p,
-   .note-burn-overlay-text-container h1,
-   .note-burn-overlay-text-container h2,
-   .note-burn-overlay-text-container h3 {
-    margin-bottom: 0.5em;
-    color: inherit !important; /* Ensure text color animates with overlay */
+  .note-burn-overlay img { /* Style for the captured image inside */
+      image-rendering: crisp-edges; /* Can help with sharpness if image is scaled */
   }
 
 
@@ -407,6 +401,7 @@
     pointer-events: none;
     animation-fill-mode: forwards;
     will-change: transform, opacity;
+    z-index: 1001; /* Above the note overlay */
   }
 
   .note-ember-particle {
@@ -423,65 +418,91 @@
     animation-timing-function: cubic-bezier(0.1, 0.8, 0.2, 1);
   }
 
-  @keyframes note-fall-and-burn {
-    0% {
-      transform: translateY(0) rotate(0deg) scale(1);
-      background-color: hsl(var(--note-initial-paper-color-for-burn));
-      color: hsl(var(--note-text-color-for-burn));
+  @keyframes note-ignite-and-burn {
+    0% { /* Initial state */
+      transform: scale(1);
+      background-color: var(--note-initial-paper-color-for-burn);
+      color: var(--note-text-color-for-burn);
       opacity: 1;
-      box-shadow: 0px 5px 15px rgba(0,0,0,0.2);
+      clip-path: inset(0% 0% 0% 0%);
+      box-shadow: 0 0 0px hsla(var(--note-ignition-flash-color), 0);
     }
-    15% { /* Start charring, subtle sway */
-      transform: translateY(calc(0.05 * (var(--viewport-height, 100vh) - var(--note-height, 300px)))) rotate(-2deg) scale(1);
-      background-color: hsl(var(--note-char-color));
-      color: hsl(var(--note-ash-color)); /* Text starts to fade/blend */
-      opacity: 1;
-      box-shadow: 0px 8px 20px rgba(0,0,0,0.3);
+    2% { /* Ignition flash */
+      transform: scale(1.02); /* Slight puff */
+      background-color: hsl(var(--note-initial-paper-color-for-burn), 0.9);
+      box-shadow: 0 0 20px 10px hsla(var(--note-ignition-flash-color), 0.7),
+                  inset 0 0 15px 5px hsla(var(--note-flame-main-color), 0.5);
+      clip-path: inset(0% 0% 0% 0%);
     }
-    /* Intermediate charring steps */
-    25% {
-        background-color: hsl(var(--note-char-color), 0.9);
-        color: hsl(var(--note-ash-color), 0.8);
+    5% { /* Flames start spreading, paper starts charring */
+      transform: scale(1);
+      background-color: hsl(var(--note-char-color), 0.3); /* Light char */
+      color: hsl(var(--note-text-color-for-burn), 0.7);
+      box-shadow: 0 0 30px 15px hsla(var(--note-flame-main-color), 0.8),
+                  0 0 10px 5px hsla(var(--note-flame-accent-color), 0.6),
+                  inset 0 0 20px 10px hsla(var(--note-flame-accent-color), 0.6);
+      clip-path: inset(2% 5% 3% 2% round 5px); /* Start burning from an edge */
     }
-    50% { /* Mid-fall, more charring */
-      transform: translateY(calc(0.4 * (var(--viewport-height, 100vh) - var(--note-height, 300px)))) rotate(5deg) scale(0.95);
+    15% { /* Active burning, more char, flames flicker */
       background-color: hsl(var(--note-char-color), 0.7);
-      color: hsl(var(--note-ash-color), 0.6);
+      color: hsl(var(--note-text-color-for-burn), 0.4);
+      box-shadow: 0 0 25px 12px hsla(var(--note-flame-main-color), 0.7),
+                  0 0 15px 8px hsla(var(--note-flame-accent-color), 0.5),
+                  inset 0 0 15px 8px hsla(var(--note-ember-color), 0.7);
+      clip-path: inset(10% 15% 8% 12% round 8px);
+    }
+    30% { /* More of the paper consumed, char darkens */
+      background-color: hsl(var(--note-char-color), 0.9);
+      color: hsl(var(--note-text-color-for-burn), 0.2);
+      box-shadow: 0 0 15px 8px hsla(var(--note-ember-color), 0.8),
+                  inset 0 0 10px 5px hsla(var(--note-ember-color), 0.5);
+      clip-path: inset(25% 30% 20% 35% round 10px);
+    }
+    50% { /* Significant consumption, turning to ash, embers glow */
+      background-color: hsl(var(--note-ash-color), 0.8);
+      color: hsl(var(--note-text-color-for-burn), 0.1);
+      box-shadow: 0 0 10px 5px hsla(var(--note-ember-color), 0.6),
+                  inset 0 0 5px 2px hsla(var(--note-ember-color), 0.4);
+      clip-path: inset(40% 50% 45% 48% round 15px);
       opacity: 0.95;
     }
-    75% { /* Deeper fall, turning to ash */
-      transform: translateY(calc(0.75 * (var(--viewport-height, 100vh) - var(--note-height, 300px)))) rotate(-7deg) scale(0.85);
-      background-color: hsl(var(--note-ash-color));
-      color: hsla(var(--note-ash-color), 0.3); /* Text very faint */
-      opacity: 0.9;
-      box-shadow: 0px 2px 10px hsla(var(--note-ash-color), 0.5);
+    70% { /* Mostly ash, embers dying, starting to crumble */
+      transform: scale(0.98);
+      background-color: hsl(var(--note-ash-color), 0.5);
+      color: transparent;
+      box-shadow: 0 0 5px 2px hsla(var(--note-ember-color), 0.3);
+      clip-path: inset(60% 75% 70% 70% round 20px);
+      opacity: 0.8;
     }
-    90% { /* Almost gone into the fire */
-      transform: translateY(calc(var(--viewport-height, 100vh) - var(--note-height, 300px) - 50px)) rotate(10deg) scale(0.7);
-      background-color: hsl(var(--note-ash-color), 0.5); /* Ash starts to become transparent */
-      color: transparent; /* Text gone */
-      opacity: 0.5;
+    90% { /* Ash crumbling away, faint embers */
+      transform: scale(0.95);
+      background-color: hsl(var(--note-ash-color), 0.2);
+      clip-path: inset(85% 90% 90% 88% round 25px);
+      opacity: 0.3;
+      box-shadow: none;
     }
-    100% { /* Fully disappeared */
-      transform: translateY(calc(var(--viewport-height, 100vh) - var(--note-height, 300px) + 50px)) rotate(15deg) scale(0.5);
+    100% { /* Completely gone */
+      transform: scale(0.9);
       background-color: transparent;
       color: transparent;
       opacity: 0;
+      clip-path: inset(100% 100% 100% 100% round 30px);
       box-shadow: none;
     }
   }
+
 
   @keyframes ember-sparkle-animation {
     0% {
       transform: translateY(0) translateX(-50%) scale(0);
       opacity: 0;
     }
-    20% {
-      transform: translateY(-10px) translateX(-50%) scale(1); /* Slightly upward initial flicker */
+    20% { /* Bright initial spark */
+      transform: translateY(calc(var(--ember-initial-y-offset, -5px))) translateX(calc(-50% + var(--ember-initial-x-offset, 0px))) scale(1.2);
       opacity: 1;
     }
-    100% {
-      transform: translateY(calc(var(--ember-fall-distance, 70px))) translateX(calc(-50% + (var(--ember-drift-x, 0px)))) scale(0.2);
+    100% { /* Fall, fade, and drift */
+      transform: translateY(calc(var(--ember-fall-distance, 70px))) translateX(calc(-50% + var(--ember-drift-x, 0px))) scale(0.1);
       opacity: 0;
     }
   }
@@ -491,51 +512,13 @@
       transform: translateY(0px) translateX(-50%) scale(0.5);
       opacity: 0;
     }
-    10% { opacity: 0; }
+    10% { opacity: 0; } /* Delayed start of visible smoke */
     30% {
       opacity: 0.7;
     }
-    100% {
+    100% { /* Rise, drift, expand, and fade */
       transform: translateY(calc(var(--smoke-rise-distance, -180px))) translateX(calc(-50% + var(--smoke-drift-x, 0px))) scale(3.5);
       opacity: 0;
-    }
-  }
-
-  /* Fire Pit Animation Styles */
-  .animate-flame-flicker {
-    animation-name: flame-flicker-effect;
-    animation-timing-function: ease-in-out;
-    animation-iteration-count: infinite;
-  }
-
-  @keyframes flame-flicker-effect {
-    0%, 100% {
-      transform: scaleY(1) scaleX(1) skewX(0deg) skewY(0deg);
-      opacity: 0.85;
-    }
-    15% {
-      transform: scaleY(1.25) scaleX(0.9) skewX(-6deg) skewY(3deg);
-      opacity: 0.75;
-    }
-    30% {
-      transform: scaleY(0.85) scaleX(1.15) skewX(4deg) skewY(-2deg);
-      opacity: 0.9;
-    }
-    45% {
-      transform: scaleY(1.15) scaleX(0.8) skewX(-3deg) skewY(4deg);
-      opacity: 0.8;
-    }
-    60% {
-      transform: scaleY(0.9) scaleX(1.05) skewX(2deg) skewY(-1deg);
-      opacity: 0.95;
-    }
-     75% {
-      transform: scaleY(1.3) scaleX(0.85) skewX(-5deg) skewY(2deg);
-      opacity: 0.7;
-    }
-    90% {
-      transform: scaleY(0.95) scaleX(1.1) skewX(3deg) skewY(-3deg);
-      opacity: 0.85;
     }
   }
 }

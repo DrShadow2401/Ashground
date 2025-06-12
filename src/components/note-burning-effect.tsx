@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 
 interface NoteBurningEffectProps {
@@ -9,7 +9,7 @@ interface NoteBurningEffectProps {
   targetRect: DOMRect | null;
   duration: number;
   sourceElement: HTMLElement | null;
-  noteHTMLContent: string; // Added prop for HTML content
+  noteImageUri: string; // Changed from noteHTMLContent to noteImageUri
 }
 
 const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
@@ -17,27 +17,23 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
   targetRect,
   duration,
   sourceElement,
-  noteHTMLContent,
+  noteImageUri, // Use image URI
 }) => {
-  const [viewportHeight, setViewportHeight] = useState(0);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setViewportHeight(window.innerHeight);
-    }
+    // Viewport height is no longer needed as the note burns in place
   }, []);
 
-  if (!isActive || !targetRect || !sourceElement) {
+  if (!isActive || !targetRect || !sourceElement || !noteImageUri) {
     return null;
   }
 
   const animationDurationSeconds = duration / 1000;
-  const numSmokeParticles = 50;
-  const numEmberParticles = 40;
+  const numSmokeParticles = 70; // Increased for more intense burn
+  const numEmberParticles = 60; // Increased
 
-  const borderRadius = getComputedStyle(sourceElement).borderRadius || '0.5rem'; // Keep initial border radius
+  const borderRadius = getComputedStyle(sourceElement).borderRadius || '0.5rem';
   // Initial paper color for burn effect is now white, defined in CSS by --note-initial-paper-color-for-burn
-  const noteHeight = targetRect.height;
 
   const particles = useMemo(() => {
     const smoke = Array.from({ length: numSmokeParticles }).map((_, i) => ({
@@ -45,13 +41,15 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
       type: 'smoke',
       style: {
         left: `${Math.random() * 100}%`,
-        top: `${Math.random() * 30 + 10}%`, // Emit more from upper part of falling note
-        width: `${10 + Math.random() * 25}px`,
-        height: `${10 + Math.random() * 25}px`,
-        animationDuration: `${animationDurationSeconds * (0.6 + Math.random() * 0.4)}s`,
-        animationDelay: `${(animationDurationSeconds * 0.15) + (Math.random() * (animationDurationSeconds * 0.7))}s`,
-        '--smoke-drift-x': `${(Math.random() - 0.5) * 100}px`,
-        '--smoke-rise-distance': `-${150 + Math.random() * 100}px`, // Vary smoke rise
+        // Emit smoke more towards the start of burn, from various parts
+        top: `${20 + Math.random() * 60}%`,
+        width: `${15 + Math.random() * 30}px`,
+        height: `${15 + Math.random() * 30}px`,
+        animationDuration: `${animationDurationSeconds * (0.7 + Math.random() * 0.3)}s`,
+        // Start smoke slightly after ignition
+        animationDelay: `${(animationDurationSeconds * 0.1) + (Math.random() * (animationDurationSeconds * 0.6))}s`,
+        '--smoke-drift-x': `${(Math.random() - 0.5) * 150}px`,
+        '--smoke-rise-distance': `-${180 + Math.random() * 120}px`,
       } as React.CSSProperties,
     }));
 
@@ -60,13 +58,13 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
       type: 'ember',
       style: {
         left: `${Math.random() * 100}%`,
-        top: `${Math.random() * 70 + 15}%`, // Emit from various points
-        width: `${3 + Math.random() * 6}px`,
-        height: `${3 + Math.random() * 6}px`,
-        animationDuration: `${animationDurationSeconds * (0.4 + Math.random() * 0.5)}s`,
-        animationDelay: `${(animationDurationSeconds * 0.1) + (Math.random() * (animationDurationSeconds * 0.8))}s`,
-        '--ember-drift-x': `${(Math.random() - 0.5) * 60}px`,
-        '--ember-fall-distance': `${60 + Math.random() * 40}px`, // Vary ember fall
+        top: `${Math.random() * 100}%`, // Embers from all over
+        width: `${4 + Math.random() * 7}px`,
+        height: `${4 + Math.random() * 7}px`,
+        animationDuration: `${animationDurationSeconds * (0.5 + Math.random() * 0.4)}s`,
+        animationDelay: `${(animationDurationSeconds * 0.05) + (Math.random() * (animationDurationSeconds * 0.8))}s`,
+        '--ember-drift-x': `${(Math.random() - 0.5) * 80}px`,
+        '--ember-fall-distance': `${50 + Math.random() * 50}px`,
       } as React.CSSProperties,
     }));
     return [...smoke, ...embers];
@@ -76,7 +74,8 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
   return (
     <div
       className={cn(
-        "note-burn-overlay note-burn-overlay-ruled fixed pointer-events-none"
+        "note-burn-overlay fixed pointer-events-none"
+        // Removed note-burn-overlay-ruled as html2canvas captures visual appearance
       )}
       style={{
         left: `${targetRect.left}px`,
@@ -85,17 +84,18 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
         height: `${targetRect.height}px`,
         borderRadius: borderRadius,
         '--duration-seconds': `${animationDurationSeconds}s`,
-        // '--note-initial-paper-color': 'hsl(var(--note-initial-paper-color-for-burn))', // Set in CSS
-        '--viewport-height': `${viewportHeight}px`,
-        '--note-height': `${noteHeight}px`,
-        '--line-color': 'hsl(var(--foreground))', /* Use a visible line color for the white paper */
-        '--text-line-height': '1.4rem', /* Adjust for smaller text in burn overlay */
+        '--note-initial-paper-color-for-burn': 'hsl(var(--note-initial-paper-color-for-burn))',
+        // Viewport and note height related variables are no longer needed for in-place burn
       } as React.CSSProperties}
     >
-      <div
-        className="note-burn-overlay-text-container ProseMirror" // Apply ProseMirror for basic text styling
-        dangerouslySetInnerHTML={{ __html: noteHTMLContent }}
+      {/* Render the captured image */}
+      <img 
+        src={noteImageUri} 
+        alt="Burning note content" 
+        className="w-full h-full object-cover" // object-cover to fill, object-contain to show all
+        style={{ imageRendering: 'pixelated' }} // Helps if image is scaled up for sharpness
       />
+      
       {particles.map(p => (
         <div
           key={p.id}
