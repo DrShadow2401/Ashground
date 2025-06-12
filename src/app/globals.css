@@ -46,13 +46,12 @@
     --text-line-height: 1.625rem;
     --line-color: var(--border);
 
-    /* Burn effect colors */
-    --note-initial-paper-color: hsl(var(--card)); /* Should match the current paper bg */
-    --note-char-color: 20 10% 10%; /* Very dark grey, almost black */
-    --note-ash-color: 0 0% 70%;   /* Light grey for ash */
-    --note-flame-glow-color: 35 100% 50%; /* Bright orange/yellow for flame glow */
-    --note-ember-color: 25 100% 55%;      /* Slightly redder for embers */
-    --note-smoke-color: 0 0% 50%;        /* Medium grey for smoke */
+    /* Burn effect colors (still used for note charring) */
+    --note-initial-paper-color: hsl(var(--card));
+    --note-char-color: 20 10% 10%; 
+    --note-ash-color: 0 0% 70%;   
+    --note-ember-color: 25 100% 55%;     
+    --note-smoke-color: 0 0% 50%;       
   }
 
   .dark {
@@ -98,7 +97,6 @@
     --note-initial-paper-color: hsl(var(--card));
     --note-char-color: 0 0% 5%;
     --note-ash-color: 0 0% 35%;
-    --note-flame-glow-color: 40 100% 55%;
     --note-ember-color: 30 100% 60%;
     --note-smoke-color: 0 0% 25%;
   }
@@ -144,7 +142,6 @@
     --note-initial-paper-color: hsl(var(--card));
     --note-char-color: 320 20% 20%;
     --note-ash-color: 320 30% 75%;
-    --note-flame-glow-color: 25 100% 60%;
     --note-ember-color: 15 100% 65%;
     --note-smoke-color: 320 20% 50%;
   }
@@ -361,32 +358,18 @@
   }
 }
 
-/* New Burn Animation Styles */
+/* New Fall and Burn Animation Styles */
 @layer utilities {
   .note-burn-overlay {
-    overflow: hidden; /* Contain particles */
-    transform-origin: center center; /* Fallback if needed */
-    position: absolute; /* Positioned by JS */
-    --burn-mask-size: 0%; /* Animated by burn-mask-animation */
-    --flame-opacity: 0; /* Animated by flame-glow-animation */
-    
-    /* Initial paper color comes from sourceElement style or a default */
+    /* Positioned by JS */
     background-color: var(--note-initial-paper-color); 
-
-    mask-image: radial-gradient(circle at 100% 0, /* Burn from top-right */
-      transparent 0%, 
-      transparent var(--burn-mask-size), 
-      black calc(var(--burn-mask-size) + 0.5%) /* Slightly smoother edge for the mask */
-    );
-    mask-repeat: no-repeat;
-    /* mask-size: cover; Not needed if gradient covers */
-    
-    filter: drop-shadow(0 0 0px transparent); /* Initial state for flame glow */
-
-    animation-name: paper-color-change, burn-mask-animation, flame-glow-animation;
-    animation-duration: var(--duration-seconds), var(--duration-seconds), var(--duration-seconds);
-    animation-fill-mode: forwards, forwards, forwards;
-    animation-timing-function: ease-out, ease-in-out, ease-in-out;
+    transform-origin: center center; /* For rotation */
+    animation-name: note-fall-and-burn;
+    animation-duration: var(--duration-seconds);
+    animation-fill-mode: forwards;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); /* Ease in, then fall */
+    will-change: transform, background-color, opacity;
+    z-index: 1000;
   }
 
   .note-ember-particle,
@@ -395,77 +378,63 @@
     border-radius: 50%;
     pointer-events: none;
     animation-fill-mode: forwards;
+    will-change: transform, opacity;
   }
 
   .note-ember-particle {
     background-color: hsla(var(--note-ember-color), 0.9);
     box-shadow: 0 0 5px 2px hsla(var(--note-ember-color), 0.7);
-    animation-name: ember-sparkle-animation;
+    animation-name: ember-sparkle-animation; /* Kept from previous, might need path adjustment */
     animation-timing-function: ease-out;
   }
 
   .note-smoke-particle {
-    background-color: hsla(var(--note-smoke-color), 0.5); /* Use new smoke color var */
+    background-color: hsla(var(--note-smoke-color), 0.5);
     filter: blur(5px);
-    animation-name: smoke-drift-animation;
+    animation-name: smoke-drift-animation; /* Kept from previous, might need path adjustment */
     animation-timing-function: cubic-bezier(0.1, 0.8, 0.2, 1);
   }
 
-  @keyframes paper-color-change {
+  @keyframes note-fall-and-burn {
     0% {
+      transform: translateY(0) rotate(0deg) scale(1);
       background-color: var(--note-initial-paper-color);
       opacity: 1;
     }
-    5% { /* Start charring quickly */
-      background-color: hsl(var(--note-char-color), 0.9); /* Slightly transparent char */
-    }
-    15% { /* Fully charred */
+    20% { /* Start charring */
+      transform: translateY(calc(0.1 * (var(--viewport-height, 100vh) - var(--note-height, 300px)))) rotate(-5deg) scale(1);
       background-color: hsl(var(--note-char-color));
-    }
-    20% { /* Start turning to ash as it's eaten */
-       background-color: hsl(var(--note-char-color)); /* Keep char as base for a bit */
-    }
-    40% {
-      background-color: hsl(var(--note-ash-color));
-    }
-    80% { /* Ash remains */
-      background-color: hsl(var(--note-ash-color));
       opacity: 1;
     }
-    100% { /* Fade out final ash */
+    70% { /* Falling deeper, turning to ash, starting to fade */
+      transform: translateY(calc(0.7 * (var(--viewport-height, 100vh) - var(--note-height, 300px)))) rotate(15deg) scale(0.8);
+      background-color: hsl(var(--note-ash-color));
+      opacity: 0.9;
+    }
+    90% { /* Almost gone */
+      transform: translateY(calc(var(--viewport-height, 100vh) - var(--note-height, 300px) - 50px)) rotate(25deg) scale(0.5);
+      background-color: hsl(var(--note-ash-color));
+      opacity: 0.3;
+    }
+    100% { /* Fully disappeared into the "fire zone" */
+      transform: translateY(calc(var(--viewport-height, 100vh) - var(--note-height, 300px))) rotate(30deg) scale(0.3);
       background-color: hsl(var(--note-ash-color));
       opacity: 0;
     }
   }
-
-  @keyframes burn-mask-animation {
-    0% { --burn-mask-size: 0%; }
-    5% { --burn-mask-size: 0%; } /* Mask starts after charring begins */
-    90% { --burn-mask-size: 150%; } /* Ensure it covers diagonally */
-    100% { --burn-mask-size: 150%; }
-  }
-
-  @keyframes flame-glow-animation {
-    0%, 100% { filter: drop-shadow(0 0 0px transparent); }
-    5% { filter: drop-shadow(0 0 0px transparent); } /* No glow initially */
-    10% { filter: drop-shadow(0 0 10px hsl(var(--note-flame-glow-color))) drop-shadow(0 0 5px hsl(var(--note-flame-glow-color))); }
-    25% { filter: drop-shadow(0 0 20px hsl(var(--note-flame-glow-color))) drop-shadow(0 0 10px hsl(var(--note-flame-glow-color))); }
-    50% { filter: drop-shadow(0 0 12px hsl(var(--note-ember-color))) drop-shadow(0 0 6px hsl(var(--note-ember-color))); } /* Transition to ember glow */
-    75% { filter: drop-shadow(0 0 5px hsl(var(--note-ember-color), 0.7)); }
-    90% { filter: drop-shadow(0 0 0px transparent); }
-  }
   
+  /* Ember and Smoke animations from previous version, potentially adjust Y travel */
   @keyframes ember-sparkle-animation {
     0% {
       transform: translateY(0) translateX(-50%) scale(0);
       opacity: 0;
     }
-    20% { /* Appear quickly */
+    20% { 
       transform: translateY(-10px) translateX(-50%) scale(1);
       opacity: 1;
     }
-    100% { /* Fall, fade, and shrink */
-      transform: translateY(80px) translateX(-50%) scale(0.2);
+    100% { 
+      transform: translateY(50px) translateX(calc(-50% + (var(--ember-drift-x, 0px)))) scale(0.2); /* Less downward travel if note is falling */
       opacity: 0;
     }
   }
@@ -475,13 +444,39 @@
       transform: translateY(0px) translateX(-50%) scale(0.5);
       opacity: 0;
     }
-    10% { opacity: 0; } /* Delay smoke start slightly */
+    10% { opacity: 0; } 
     30% {
       opacity: 0.7;
     }
     100% {
-      transform: translateY(-200px) translateX(calc(-50% + var(--smoke-drift-x, 0px))) scale(3);
+      transform: translateY(-150px) translateX(calc(-50% + var(--smoke-drift-x, 0px))) scale(3); /* Less upward travel */
       opacity: 0;
+    }
+  }
+
+  /* Fire Pit Animation Styles */
+  .animate-flame-flicker { /* Consolidated flame animation */
+    animation-name: flame-flicker-effect;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+  }
+
+  @keyframes flame-flicker-effect {
+    0%, 100% {
+      transform: scaleY(1) scaleX(1) skewX(0deg) skewY(0deg);
+      opacity: 0.8;
+    }
+    25% {
+      transform: scaleY(1.2) scaleX(0.9) skewX(-5deg) skewY(2deg);
+      opacity: 0.7;
+    }
+    50% {
+      transform: scaleY(0.9) scaleX(1.1) skewX(5deg) skewY(-3deg);
+      opacity: 0.9;
+    }
+    75% {
+      transform: scaleY(1.1) scaleX(0.8) skewX(-2deg) skewY(5deg);
+      opacity: 0.75;
     }
   }
 }

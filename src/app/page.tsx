@@ -6,6 +6,7 @@ import type { Editor } from '@tiptap/react';
 import AshgroundHeader from '@/components/ashground-header';
 import PageEditor, { type PageEditorRef } from '@/components/page-editor';
 import NoteBurningEffect from '@/components/note-burning-effect';
+import FirePit from '@/components/fire-pit'; // Import the new FirePit component
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,7 +32,7 @@ type PageBackground = 'plain' | 'lined' | 'grid';
 type PageTheme = 'light' | 'dark' | 'pastel';
 export type LineStyle = 'solid' | 'dashed' | 'dotted';
 
-const ANIMATION_DURATION = 3000; // 3 seconds for the burn animation
+const ANIMATION_DURATION = 3000; 
 
 export default function Home() {
   const [noteTitle, setNoteTitle] = useState<string>('Untitled Note');
@@ -125,7 +126,6 @@ export default function Home() {
   }, [pageTheme, isMounted]);
 
   useEffect(() => {
-    // If the active tab is not 'draw', ensure no drawing tool is considered active.
     if (activeTab !== 'draw') {
       setCurrentDrawTool(null);
     }
@@ -146,10 +146,6 @@ export default function Home() {
     setCurrentDrawTool(null);
   };
 
-  // const handleAfterColorPick = () => { // Removed as it was only for eyedropper
-  //   setCurrentDrawTool(null);
-  // };
-
   const getExportableElementForPdf = () => {
     if (pageEditorComponentRef.current) {
       return pageEditorComponentRef.current.getExportableElement();
@@ -161,7 +157,7 @@ export default function Home() {
     const exportableElement = pageEditorComponentRef.current?.getExportableElement();
     if (exportableElement) {
       setAnimationTargetRect(exportableElement.getBoundingClientRect());
-      setAnimationSourceElement(exportableElement); // Pass the source element for styling
+      setAnimationSourceElement(exportableElement); 
       setIsBurningAnimationActive(true);
     } else {
       setNoteTitle('Untitled Note');
@@ -211,17 +207,21 @@ export default function Home() {
   ];
 
   return (
-    <main className="flex flex-col items-center min-h-screen py-6 px-4">
+    <main className="flex flex-col items-center min-h-screen py-6 px-4 overflow-x-hidden">
       <AshgroundHeader />
-
+      
       {isBurningAnimationActive && animationTargetRect && animationSourceElement && (
-        <NoteBurningEffect
-          isActive={isBurningAnimationActive}
-          targetRect={animationTargetRect}
-          duration={ANIMATION_DURATION}
-          sourceElement={animationSourceElement}
-        />
+        <>
+          <NoteBurningEffect
+            isActive={isBurningAnimationActive}
+            targetRect={animationTargetRect}
+            duration={ANIMATION_DURATION}
+            sourceElement={animationSourceElement}
+          />
+          <FirePit isActive={isBurningAnimationActive} />
+        </>
       )}
+
 
       <div className="flex items-center justify-center w-full max-w-4xl mx-auto mb-8">
         <Tabs defaultValue="home" value={activeTab} onValueChange={setActiveTab} className="flex-grow max-w-md">
@@ -324,7 +324,6 @@ export default function Home() {
           drawStrokeWidth={drawStrokeWidth}
           currentLineStyle={currentLineStyle}
           onDrawColorChange={setDrawColor}
-          // onAfterColorPick={handleAfterColorPick} // Removed
         />
       </Tabs>
     </main>
