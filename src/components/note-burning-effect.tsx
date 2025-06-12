@@ -1,25 +1,58 @@
 
 'use client';
 
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 interface NoteBurningEffectProps {
   isActive: boolean;
   targetRect: DOMRect | null;
   duration: number;
-  sourceElement: HTMLElement | null; // The actual DOM element being "burned" for style consistency
+  sourceElement: HTMLElement | null; 
 }
 
 const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({ isActive, targetRect, duration, sourceElement }) => {
-  if (!isActive || !targetRect) {
+  if (!isActive || !targetRect || !sourceElement) {
     return null;
   }
 
-  const numSmokeParticles = 30; // Increased smoke particles
   const animationDurationSeconds = duration / 1000;
+  const numSmokeParticles = 35;
+  const numEmberParticles = 25;
 
-  // Dynamically get border-radius from the source element, fallback if not available
-  const borderRadius = sourceElement ? getComputedStyle(sourceElement).borderRadius : '0.75rem'; // 0.75rem is for rounded-xl
+  const borderRadius = getComputedStyle(sourceElement).borderRadius || '0.75rem'; // Fallback for rounded-xl
+  const initialPaperColor = getComputedStyle(sourceElement).backgroundColor || 'hsl(var(--card))';
+
+  // Memoize particles to prevent re-generation on every render unless key props change
+  const particles = useMemo(() => {
+    const smoke = Array.from({ length: numSmokeParticles }).map((_, i) => ({
+      id: `smoke-${i}`,
+      type: 'smoke',
+      style: {
+        left: `${Math.random() * 100}%`, // Spread across width
+        top: `${Math.random() * 30 + 60}%`, // Emit from bottom 60-90% initially, rising
+        width: `${6 + Math.random() * 18}px`,
+        height: `${6 + Math.random() * 18}px`,
+        animationDuration: `${animationDurationSeconds * (0.6 + Math.random() * 0.6)}s`,
+        animationDelay: `${animationDurationSeconds * (0.1 + Math.random() * 0.4)}s`, // Staggered start
+        '--smoke-drift-x': `${(Math.random() - 0.5) * 60}px`, // Add random horizontal drift
+      } as React.CSSProperties,
+    }));
+
+    const embers = Array.from({ length: numEmberParticles }).map((_, i) => ({
+      id: `ember-${i}`,
+      type: 'ember',
+      style: {
+        left: `${Math.random() * 70 + 15}%`, // More concentrated initially, avoiding extreme edges
+        top: `${Math.random() * 40 + 50}%`,    // Emit from lower-mid section
+        width: `${2 + Math.random() * 4}px`,
+        height: `${2 + Math.random() * 4}px`,
+        animationDuration: `${animationDurationSeconds * (0.4 + Math.random() * 0.3)}s`,
+        animationDelay: `${animationDurationSeconds * (0.05 + Math.random() * 0.5)}s`, // Embers appear throughout burn
+      } as React.CSSProperties,
+    }));
+    return [...smoke, ...embers];
+  }, [numSmokeParticles, numEmberParticles, animationDurationSeconds]);
+
 
   return (
     <div
@@ -33,25 +66,15 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({ isActive, targetR
         width: `${targetRect.width}px`,
         height: `${targetRect.height}px`,
         borderRadius: borderRadius,
-        animation: `note-burn-animation ${animationDurationSeconds}s ease-out forwards, note-burn-glow-animation ${animationDurationSeconds}s ease-out forwards`,
-      }}
+        '--duration-seconds': `${animationDurationSeconds}s`,
+        '--note-initial-paper-color': initialPaperColor, // Pass initial color to CSS
+      } as React.CSSProperties}
     >
-      {Array.from({ length: numSmokeParticles }).map((_, i) => (
+      {particles.map(p => (
         <div
-          key={i}
-          className="note-smoke-particle"
-          style={{
-            position: 'absolute',
-            left: `${Math.random() * 90 + 5}%`,
-            top: `${Math.random() * 30}%`,
-            width: `${8 + Math.random() * 16}px`, // Adjusted size
-            height: `${8 + Math.random() * 16}px`, // Adjusted size
-            animationName: 'note-smoke-animation',
-            animationDuration: `${animationDurationSeconds * (0.7 + Math.random() * 0.5)}s`, // Smoke lasts longer and varies more
-            animationDelay: `${animationDurationSeconds * (Math.random() * 0.5)}s`, // Stagger smoke start times
-            animationTimingFunction: 'cubic-bezier(0.1, 0.8, 0.2, 1)',
-            animationFillMode: 'forwards',
-          }}
+          key={p.id}
+          className={p.type === 'smoke' ? 'note-smoke-particle' : 'note-ember-particle'}
+          style={p.style}
         />
       ))}
     </div>
