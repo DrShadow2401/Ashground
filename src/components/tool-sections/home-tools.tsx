@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -32,11 +33,9 @@ import {
   Undo2,
   Redo2,
   Minus,
-  // CheckSquare, // Removed
   ImageUp,
   Highlighter,
   Palette,
-  // ChevronsUpDown, // Removed
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -66,24 +65,51 @@ const highlightColors = [
 
 const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
   const editor = editorRef.current;
-  const [, forceUpdate] = useState(0); // Renamed for clarity from setForceUpdateKey
+  const [, forceUpdate] = useState(0);
   const imageFileInputRef = useRef<HTMLInputElement>(null);
+
+  const [isImageSelected, setIsImageSelected] = useState(false);
+  const [selectedImageNodeInfo, setSelectedImageNodeInfo] = useState<{ width: string | number | null }>({ width: null });
+  const [imageWidthInput, setImageWidthInput] = useState('');
+
 
   useEffect(() => {
     const currentEditorInstance = editor;
     if (currentEditorInstance) {
-      const handleUpdate = () => {
-        forceUpdate(k => k + 1);
+      const handleEditorUpdate = () => {
+        forceUpdate(k => k + 1); // For general toolbar active states
+
+        // Image selection specific logic
+        if (currentEditorInstance.isActive('image')) {
+          const attrs = currentEditorInstance.getAttributes('image') as { src: string; alt?: string; title?: string; width?: string | number; height?: string | number };
+          const currentWidth = attrs.width;
+          setSelectedImageNodeInfo({ width: currentWidth ?? null });
+          setImageWidthInput(currentWidth != null ? String(currentWidth) : '');
+          setIsImageSelected(true);
+        } else {
+          setSelectedImageNodeInfo({ width: null });
+          setIsImageSelected(false);
+          // Optionally clear input: setImageWidthInput('');
+        }
       };
-      currentEditorInstance.on('transaction', handleUpdate);
-      currentEditorInstance.on('selectionUpdate', handleUpdate);
-      // Removed problematic immediate handleUpdate() call from here
+
+      currentEditorInstance.on('transaction', handleEditorUpdate);
+      currentEditorInstance.on('selectionUpdate', handleEditorUpdate);
+      
+      // Initial check in case an image is already selected when the toolbar mounts/editor becomes available
+      handleEditorUpdate(); 
+
       return () => {
-        currentEditorInstance.off('transaction', handleUpdate);
-        currentEditorInstance.off('selectionUpdate', handleUpdate);
+        currentEditorInstance.off('transaction', handleEditorUpdate);
+        currentEditorInstance.off('selectionUpdate', handleEditorUpdate);
       };
+    } else {
+      // Editor not available, reset image selection state
+      setIsImageSelected(false);
+      setSelectedImageNodeInfo({ width: null });
+      setImageWidthInput('');
     }
-  }, [editor]); // forceUpdate is stable, dependency is effectively `editor`
+  }, [editor]); // Only re-run if editor instance changes
 
 
   const handleImageInsert = useCallback(() => {
@@ -100,10 +126,31 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
       currentEditor.chain().focus().setImage({ src: reader.result as string }).run();
     };
     reader.readAsDataURL(file);
-    if (event.target) { // Reset file input to allow selecting the same file again
+    if (event.target) {
         event.target.value = '';
     }
   }, [editorRef]);
+
+  const handleApplyImageWidth = useCallback(() => {
+    if (!editor || !isImageSelected) return;
+
+    let newWidthForAttr: string | number | null = imageWidthInput.trim();
+
+    if (newWidthForAttr === '') {
+      newWidthForAttr = null; // Remove width attribute
+    } else if (/^\d+$/.test(newWidthForAttr)) { // Purely numeric, treat as pixels
+      newWidthForAttr = parseInt(newWidthForAttr, 10);
+    } // Otherwise, use as string (e.g., "50%", "300px")
+
+    editor.chain().focus().updateAttributes('image', { 
+      width: newWidthForAttr, 
+      height: undefined // Explicitly set height to undefined
+    }).run();
+    
+    // Update node info state to reflect the change immediately for the input field
+    setSelectedImageNodeInfo({ width: newWidthForAttr });
+
+  }, [editor, isImageSelected, imageWidthInput]);
 
 
   if (!editor) {
@@ -174,9 +221,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     ],
     [
       { type: 'button', icon: <Minus />, label: 'Horizontal Rule', action: () => editor.chain().focus().setHorizontalRule().run(), isActive: () => false },
-      // { type: 'button', icon: <CheckSquare />, label: 'Checklist', action: () => editor.chain().focus().toggleTaskList().run(), isActive: () => isButtonActive('taskList') }, // Removed
       { type: 'button', icon: <ImageUp />, label: 'Insert Image', action: handleImageInsert, isActive: () => false },
-      // { type: 'button', icon: <ChevronsUpDown />, label: 'Toggle Section (NA)', action: () => {}, isActive: () => false, disabled: true }, // Removed
     ],
     [
       { type: 'button', icon: <Undo2 />, label: 'Undo', action: () => editor.chain().focus().undo().run(), isActive: () => false, disabled: !editor.can().undo() },
@@ -193,87 +238,113 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
         style={{ display: 'none' }}
         onChange={handleFileSelect}
       />
-      <div className="flex flex-wrap gap-1 items-center justify-center">
-        {toolGroups.map((group, groupIndex) => (
-          <React.Fragment key={groupIndex}>
-            {group.map((tool) => {
-              if (tool.type === 'button') {
-                return (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    key={tool.label}
-                    onClick={tool.action}
-                    aria-label={tool.label}
-                    title={tool.label}
-                    className={cn(
-                      'hover:bg-accent/50',
-                      tool.isActive() ? 'bg-accent text-accent-foreground' : ''
-                    )}
-                    disabled={(tool as any).disabled || !editor.isEditable}
-                  >
-                    {tool.icon}
-                  </Button>
-                );
-              }
-              if (tool.type === 'dropdown' && tool.items) {
-                return (
-                  <DropdownMenu key={tool.label}>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={tool.label}
-                        title={tool.label}
-                        className={cn(
-                           'hover:bg-accent/50',
-                           tool.isDropdownActive && tool.isDropdownActive() ? 'bg-accent text-accent-foreground' : ''
-                        )}
-                        disabled={!editor.isEditable}
-                      >
-                        {tool.icon}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start">
-                      <DropdownMenuLabel>{tool.label}</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      {tool.items.map((item) => (
-                        <DropdownMenuItem
-                          key={item.name}
-                          onClick={() => tool.action(item.value)}
+      <div className="flex flex-col gap-2 w-full items-center">
+        <div className="flex flex-wrap gap-1 items-center justify-center">
+          {toolGroups.map((group, groupIndex) => (
+            <React.Fragment key={groupIndex}>
+              {group.map((tool) => {
+                if (tool.type === 'button') {
+                  return (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      key={tool.label}
+                      onClick={tool.action}
+                      aria-label={tool.label}
+                      title={tool.label}
+                      className={cn(
+                        'hover:bg-accent/50',
+                        tool.isActive() ? 'bg-accent text-accent-foreground' : ''
+                      )}
+                      disabled={(tool as any).disabled || !editor.isEditable}
+                    >
+                      {tool.icon}
+                    </Button>
+                  );
+                }
+                if (tool.type === 'dropdown' && tool.items) {
+                  return (
+                    <DropdownMenu key={tool.label}>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={tool.label}
+                          title={tool.label}
                           className={cn(
-                            tool.isItemActive && tool.isItemActive(item.value) ? 'bg-accent/80' : ''
+                             'hover:bg-accent/50',
+                             tool.isDropdownActive && tool.isDropdownActive() ? 'bg-accent text-accent-foreground' : ''
                           )}
+                          disabled={!editor.isEditable}
                         >
-                          <div className="flex items-center gap-2">
-                            {item.value ? (
-                              <div
-                                className="w-3 h-3 rounded-full border"
-                                style={{ backgroundColor: item.value,
-                                         border: tool.label === 'Highlight Color' && item.value === '#FFF3A3' ? '1px solid #E0C567': '1px solid hsl(var(--border))'
-                                        }}
-                              />
-                            ) : (
-                              item.icon // For "Default" option with Minus icon
+                          {tool.icon}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start">
+                        <DropdownMenuLabel>{tool.label}</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {tool.items.map((item) => (
+                          <DropdownMenuItem
+                            key={item.name}
+                            onClick={() => tool.action(item.value)}
+                            className={cn(
+                              tool.isItemActive && tool.isItemActive(item.value) ? 'bg-accent/80' : ''
                             )}
-                            {item.name}
-                          </div>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                );
-              }
-              return null;
-            })}
-            {groupIndex < toolGroups.length - 1 && group.length > 0 && (
-              <Separator orientation="vertical" className="h-6 mx-1" />
-            )}
-          </React.Fragment>
-        ))}
+                          >
+                            <div className="flex items-center gap-2">
+                              {item.value ? (
+                                <div
+                                  className="w-3 h-3 rounded-full border"
+                                  style={{ backgroundColor: item.value,
+                                           border: tool.label === 'Highlight Color' && item.value === '#FFF3A3' ? '1px solid #E0C567': '1px solid hsl(var(--border))'
+                                          }}
+                                />
+                              ) : (
+                                item.icon
+                              )}
+                              {item.name}
+                            </div>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  );
+                }
+                return null;
+              })}
+              {groupIndex < toolGroups.length - 1 && group.length > 0 && (
+                <Separator orientation="vertical" className="h-6 mx-1" />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+        {isImageSelected && (
+          <div className="mt-2 p-2 border-t border-border w-full max-w-xs mx-auto">
+            <div className="flex items-center gap-2">
+              <label htmlFor="imageWidthInput" className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+                Image Width:
+              </label>
+              <Input
+                id="imageWidthInput"
+                type="text"
+                value={imageWidthInput}
+                onChange={(e) => setImageWidthInput(e.target.value)}
+                placeholder="e.g., 300 or 50%"
+                className="h-8 text-sm"
+              />
+              <Button onClick={handleApplyImageWidth} size="sm" variant="outline" className="h-8">
+                Apply
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground/70 mt-1 text-center">
+              Enter width (e.g., 300, 300px, 50%). Height auto-adjusts.
+            </p>
+          </div>
+        )}
       </div>
     </>
   );
 };
 
 export default HomeTools;
+
