@@ -42,11 +42,11 @@
     --paper-pastel-fg: 320 30% 35%;
 
     --text-line-height: 1.625rem; /* 26px */
-    --line-color: hsl(var(--border));
+    --line-color: var(--border); /* Corrected: Use HSL values from --border directly */
 
     /* Burn effect colors */
     --note-initial-paper-color-for-burn: 0 0% 100%; /* White for the burning note's base */
-    --note-text-color-for-burn: 20 15% 30%; /* Initial text color on burning note (less relevant now with image capture) */
+    --note-text-color-for-burn: 20 15% 30%; /* Initial text color on burning note */
     --note-ignition-flash-color: 35 100% 70%; /* Bright orange-yellow flash */
     --note-flame-main-color: 30 100% 60%; /* Main flame color - orange */
     --note-flame-accent-color: 45 100% 55%; /* Flame accent - yellow */
@@ -355,8 +355,8 @@
 
   .page-bg-lined { /* For editor background */
     background-image: linear-gradient(to bottom,
-      hsla(var(--line-color), 0.5) 0px,
-      hsla(var(--line-color), 0.5) 1px,
+      hsla(var(--line-color), 0.7) 0px, /* Increased opacity */
+      hsla(var(--line-color), 0.7) 1px, /* Increased opacity */
       transparent 1px,
       transparent var(--text-line-height)
     );
