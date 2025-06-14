@@ -42,7 +42,7 @@
     --paper-pastel-fg: 320 30% 35%;
 
     --text-line-height: 1.625rem; /* 26px */
-    --line-color: var(--border); /* Corrected: Use HSL values from --border directly */
+    --line-color: 0 0% 80%; /* Updated for better contrast on light theme */
 
     /* Burn effect colors */
     --note-initial-paper-color-for-burn: 0 0% 100%; /* White for the burning note's base */
@@ -142,7 +142,7 @@
     --paper-dark-bg: 320 30% 25%;
     --paper-dark-fg:  320 50% 90%;
 
-    --line-color: 320 40% 85%;
+    --line-color: 320 30% 80%; /* Updated for better contrast on pastel theme */
 
     /* Burn effect colors - Pastel theme */
     --note-initial-paper-color-for-burn: 0 0% 100%;
@@ -355,8 +355,8 @@
 
   .page-bg-lined { /* For editor background */
     background-image: linear-gradient(to bottom,
-      hsla(var(--line-color), 0.7) 0px, /* Increased opacity */
-      hsla(var(--line-color), 0.7) 1px, /* Increased opacity */
+      hsla(var(--line-color), 0.7) 0px,
+      hsla(var(--line-color), 0.7) 1px,
       transparent 1px,
       transparent var(--text-line-height)
     );
