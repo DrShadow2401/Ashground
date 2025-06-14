@@ -39,7 +39,7 @@ const ANIMATION_DURATION = 3000;
 
 export default function AshgroundApp() {
   const [noteTitle, setNoteTitle] = useState<string>('Untitled Note');
-  const [noteContent, setNoteContent] = useState<string>('');
+  const [noteContent, setNoteContent] = useState<string>(''); // Initialize as empty, will be populated from localStorage
   const [activeTab, setActiveTab] = useState<string>('home');
   const [pageBackground, setPageBackground] = useState<PageBackground>('plain');
   const [pageTheme, setPageTheme] = useState<PageTheme>('light');
@@ -51,7 +51,7 @@ export default function AshgroundApp() {
   const [contentForBurn, setContentForBurn] = useState<string>(''); // Will store image data URI
 
 
-  const editorRef = useRef<Editor | null>(null);
+  const editorRef = useRef<Editor | null>(null); // This ref will be managed by PageEditor
   const pageEditorComponentRef = useRef<PageEditorRef>(null);
   const { toast } = useToast();
 
@@ -112,6 +112,7 @@ export default function AshgroundApp() {
 
   useEffect(() => {
     if(isMounted && noteContent !== undefined && isEditorInitialized) {
+      // Save noteContent only after editor is ready and content has been potentially set by it
       localStorage.setItem('ashground_note', noteContent);
     }
   }, [noteContent, isMounted, isEditorInitialized]);
@@ -147,10 +148,9 @@ export default function AshgroundApp() {
 
   const handleEditorReady = useCallback(() => {
     setIsEditorInitialized(true);
-    if (editorRef.current && noteContent && editorRef.current.getHTML() !== noteContent) {
-        editorRef.current.commands.setContent(noteContent, false);
-    }
-  }, [noteContent]);
+    // PageEditor's internal useEffect for [noteContent] prop will handle setting initial content.
+    // No need to set content explicitly here.
+  }, []);
 
 
   const handleClearCanvas = () => {
@@ -175,18 +175,16 @@ export default function AshgroundApp() {
         description: "Capturing the note for immolation.",
       });
 
-      // Ensure editor isn't focused to avoid cursor in snapshot
       if (document.activeElement && typeof (document.activeElement as HTMLElement).blur === 'function') {
         (document.activeElement as HTMLElement).blur();
       }
-      // Brief delay for UI to settle after blur
       await new Promise(resolve => setTimeout(resolve, 100));
 
       try {
         const canvas = await html2canvas(exportableElement, {
-          scale: 1.5, // Adjust scale as needed for quality vs performance
+          scale: 1.5,
           useCORS: true,
-          backgroundColor: null, // Use null for transparent background if the element itself has it
+          backgroundColor: null,
         });
         const imageDataUri = canvas.toDataURL('image/png');
         
@@ -197,10 +195,7 @@ export default function AshgroundApp() {
 
         setTimeout(() => {
           setNoteTitle('Untitled Note');
-          setNoteContent('<p></p>');
-          if (editorRef.current) {
-            editorRef.current.commands.setContent('<p></p>', true);
-          }
+          setNoteContent('<p></p>'); // This will trigger PageEditor to update
           if (pageEditorComponentRef.current) {
             pageEditorComponentRef.current.clearCanvas();
           }
@@ -225,19 +220,15 @@ export default function AshgroundApp() {
           description: "Could not capture the note content for burning.",
           variant: "destructive",
         });
-        // Fallback clear without animation if capture fails
         setNoteTitle('Untitled Note');
         setNoteContent('<p></p>');
-        if (editorRef.current) editorRef.current.commands.setContent('<p></p>', true);
         if (pageEditorComponentRef.current) pageEditorComponentRef.current.clearCanvas();
         localStorage.removeItem('ashground_title');
         localStorage.removeItem('ashground_note');
       }
     } else {
-      // Fallback if the element isn't found
       setNoteTitle('Untitled Note');
       setNoteContent('<p></p>');
-      if (editorRef.current) editorRef.current.commands.setContent('<p></p>', true);
       if (pageEditorComponentRef.current) pageEditorComponentRef.current.clearCanvas();
       localStorage.removeItem('ashground_title');
       localStorage.removeItem('ashground_note');
@@ -255,7 +246,6 @@ export default function AshgroundApp() {
     { value: 'export', label: 'Export' },
   ];
 
-  // Main app content structure that can be hidden during animation
   const appContent = (
     <>
       <div className="flex items-center justify-center w-full max-w-4xl mx-auto mb-8">
@@ -345,12 +335,12 @@ export default function AshgroundApp() {
 
         <PageEditor
           ref={pageEditorComponentRef}
-          editorTiptapRef={editorRef}
+          editorTiptapRef={editorRef} // Pass the ref to PageEditor
           onEditorReady={handleEditorReady}
           noteTitle={noteTitle}
           onNoteTitleChange={setNoteTitle}
-          noteContent={noteContent}
-          onNoteChange={setNoteContent}
+          noteContent={noteContent} // Source of truth for editor content
+          onNoteChange={setNoteContent} // Update state when editor content changes
           backgroundStyle={pageBackground}
           pageTheme={pageTheme}
           isDrawingMode={activeTab === 'draw'}
@@ -375,12 +365,9 @@ export default function AshgroundApp() {
           targetRect={animationTargetRect}
           duration={ANIMATION_DURATION}
           sourceElement={animationSourceElement}
-          noteImageUri={contentForBurn} // Pass image URI
+          noteImageUri={contentForBurn}
         />
       )}
-      {/* FirePit component is removed as the note burns in place */}
-      {/* {isBurningAnimationActive && <FirePit isActive={isBurningAnimationActive} />} */}
-
 
       <div className={cn("w-full transition-opacity duration-300", isBurningAnimationActive ? "opacity-0 pointer-events-none" : "opacity-100")}>
         {appContent}
