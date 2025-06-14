@@ -1,4 +1,5 @@
 
+      
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -50,13 +51,13 @@
     --line-a: 0.7;
 
     /* Burn effect colors - Standardized for consistent fire appearance */
-    --note-initial-paper-color-for-burn: 0 0% 100%;
-    --note-text-color-for-burn: 20 15% 30%;
+    --note-initial-paper-color-for-burn: 0 0% 100%; /* Used as overlay background initially */
+    --note-text-color-for-burn: 20 15% 30%; /* Not directly used in animation, but for reference */
     --note-ignition-flash-color: 35 100% 70%; /* Bright orange-yellow flash */
     --note-flame-main-color: 30 100% 60%;    /* Main flame color - orange */
     --note-flame-accent-color: 45 100% 55%;   /* Flame accent - yellow */
-    --note-char-color: 20 10% 10%;          /* Deep char color */
-    --note-ash-color: 0 0% 70%;             /* Medium ash */
+    --note-char-color: 20 10% 10%;          /* Deep char color for overlay bg transition */
+    --note-ash-color: 0 0% 70%;             /* Medium ash for overlay bg transition */
     --note-ember-color: 25 100% 55%;        /* Glowing embers - deep orange/red */
     --note-smoke-color: 0 0% 50%;           /* Smoke particles */
   }
@@ -91,11 +92,11 @@
     --input: 240 5% 25%;
     --ring: 20 20% 45%;
 
-    --paper-light-bg: 240 5% 12%;
+    --paper-light-bg: 240 5% 12%; /* Dark theme's "light" paper is still dark */
     --paper-light-fg: 0 0% 95%;
     --paper-dark-bg: 240 5% 12%;
     --paper-dark-fg: 0 0% 95%;
-    --paper-pastel-bg: 320 30% 25%;
+    --paper-pastel-bg: 320 30% 25%; /* Dark theme's "pastel" paper */
     --paper-pastel-fg: 320 50% 90%;
 
     /* Line color components for dark theme */
@@ -104,14 +105,14 @@
     --line-l: 100%;
     --line-a: 0.7;
 
-    /* Burn effect colors - Standardized for consistent fire appearance */
+    /* Burn effect colors - Standardized */
     --note-initial-paper-color-for-burn: 0 0% 100%;
     --note-text-color-for-burn: 20 15% 30%;
     --note-ignition-flash-color: 35 100% 70%;
     --note-flame-main-color: 30 100% 60%;
     --note-flame-accent-color: 45 100% 55%;
-    --note-char-color: 0 0% 5%;
-    --note-ash-color: 0 0% 35%;
+    --note-char-color: 0 0% 5%; /* Darker char for dark theme */
+    --note-ash-color: 0 0% 35%; /* Darker ash for dark theme */
     --note-ember-color: 25 100% 55%;
     --note-smoke-color: 0 0% 25%;
   }
@@ -146,10 +147,11 @@
     --input: 320 50% 90%;
     --ring: 280 50% 80%;
 
-    --paper-light-bg: 0 0% 100%;
+    --paper-light-bg: 0 0% 100%; /* Pastel theme's "light" paper */
     --paper-light-fg: 320 30% 35%;
-    --paper-dark-bg: 320 30% 25%;
+    --paper-dark-bg: 320 30% 25%; /* Pastel theme's "dark" paper */
     --paper-dark-fg:  320 50% 90%;
+    /* paper-pastel-bg is defined in :root for consistency, used by pastel theme */
 
     /* Line color components for pastel theme */
     --line-h: 280;
@@ -157,14 +159,14 @@
     --line-l: 30%;
     --line-a: 0.7;
 
-    /* Burn effect colors - Standardized for consistent fire appearance */
+    /* Burn effect colors - Standardized */
     --note-initial-paper-color-for-burn: 0 0% 100%;
     --note-text-color-for-burn: 20 15% 30%;
     --note-ignition-flash-color: 35 100% 70%;
     --note-flame-main-color: 30 100% 60%;
     --note-flame-accent-color: 45 100% 55%;
-    --note-char-color: 320 20% 20%;
-    --note-ash-color: 320 30% 75%;
+    --note-char-color: 320 20% 20%; /* Char color for pastel theme */
+    --note-ash-color: 320 30% 75%; /* Ash color for pastel theme */
     --note-ember-color: 15 100% 65%; /* Pastel ember slightly different for theme harmony */
     --note-smoke-color: 320 20% 50%;
   }
@@ -283,10 +285,6 @@
     background-color: #FFF3A3; /* Default highlight, can be overridden by highlight extension */
   }
 
-  .ProseMirror ul[data-type="taskList"] {
-    list-style: none;
-    padding: 0;
-  }
   .ProseMirror ul[data-type="taskList"] li {
     display: flex;
     align-items: center;
@@ -388,7 +386,7 @@
 /* Burn Animation Styles */
 @layer utilities {
   .note-burn-overlay {
-    /* Positioned by JS */
+    /* Positioned by JS, background-image set by JS */
     background-color: hsl(var(--note-initial-paper-color-for-burn)); /* Initial paper color, animated */
     transform-origin: center center;
     animation-name: note-ignite-and-burn;
@@ -400,13 +398,7 @@
     overflow: hidden; /* Clip content to overlay boundaries */
   }
 
-  .note-burn-overlay img { /* Style for the captured image inside */
-      image-rendering: pixelated; /* or auto if pixelated looks too blocky */
-      width: 100%;
-      height: 100%;
-      object-fit: cover; /* Ensure image covers the area */
-  }
-
+  /* Removed .note-burn-overlay img rule as img is no longer a child */
 
   .note-ember-particle,
   .note-smoke-particle {
@@ -433,9 +425,9 @@
   }
 
  @keyframes note-ignite-and-burn {
-    0% { /* Initial state: pristine paper */
+    0% { /* Initial state: pristine paper (via background-image) */
       transform: scale(1);
-      background-color: hsl(var(--note-initial-paper-color-for-burn));
+      background-color: hsl(var(--note-initial-paper-color-for-burn)); /* BG color of overlay */
       opacity: 1;
       clip-path: inset(0% 0% 0% 0% round var(--radius));
       box-shadow: none;
@@ -444,57 +436,62 @@
       transform: scale(1.02) rotate(-0.5deg);
       background-color: hsl(var(--note-initial-paper-color-for-burn));
       box-shadow:
-        inset 0 0 30px 15px hsla(var(--note-ignition-flash-color), 0.95), /* INSET flash */
-        inset 0 0 25px 12px hsla(var(--note-flame-main-color), 0.9),    /* INSET Initial flame */
-        inset 0 0 15px 8px hsla(var(--note-flame-accent-color), 0.9),   /* INSET Brighter accent */
-        inset 0 0 10px 4px hsla(var(--note-char-color), 0.2);
+        /* Intense INSET flame effects at the edge of the clip-path, on top of background-image */
+        inset 0 0 30px 15px hsla(var(--note-ignition-flash-color), 0.95),
+        inset 0 0 25px 12px hsla(var(--note-flame-main-color), 0.9),
+        inset 0 0 15px 8px hsla(var(--note-flame-accent-color), 0.9),
+        inset 0 0 10px 4px hsla(var(--note-char-color), 0.2); /* Subtle early charring shadow */
       clip-path: inset(0% 0% 0% 0% round var(--radius));
     }
     5% { /* First charring: edges begin to darken and curl, small embers, flames appear */
       transform: scale(1.01) rotate(0.5deg);
       background-color: hsl(var(--note-char-color), 0.05); /* Overlay background starts to char subtly */
       box-shadow:
-        inset 0 0 35px 18px hsla(var(--note-flame-main-color), 0.95),  /* INSET Main flame stronger */
-        inset 0 0 25px 12px hsla(var(--note-flame-accent-color), 0.9), /* INSET Accent flame */
-        inset 0 0 18px 7px hsla(var(--note-ember-color), 0.8),        /* INSET Early embers */
-        inset 0 0 12px 5px hsl(var(--note-char-color), 0.4);
+        inset 0 0 50px 25px hsla(var(--note-flame-main-color), 0.95),  /* INSET Main flame stronger & wider */
+        inset 0 0 40px 20px hsla(var(--note-flame-accent-color), 0.9), /* INSET Accent flame wider */
+        inset 0 0 25px 10px hsla(var(--note-ember-color), 0.8),        /* INSET Early embers */
+        inset 0 0 15px 7px hsl(var(--note-char-color), 0.4); /* Charring shadow a bit deeper */
       clip-path: inset(1% 2% 3% 1% round calc(var(--radius) + 2px));
     }
     15% { /* Spreading burn: char deepens, embers glow, paper consumed more, strong flames */
       transform: scale(1) rotate(-0.8deg);
-      background-color: hsl(var(--note-char-color), 0.2);
+      background-color: hsl(var(--note-char-color), 0.2); /* Overlay BG charring more */
       box-shadow:
-        inset 0 0 40px 20px hsla(var(--note-flame-main-color), 0.9),   /* INSET Strong main flame */
-        inset 0 0 30px 15px hsla(var(--note-flame-accent-color), 0.85),/* INSET Strong accent */
-        inset 0 0 25px 10px hsla(var(--note-ember-color), 0.9),       /* INSET Stronger embers */
-        inset 0 0 15px 8px hsl(var(--note-char-color), 0.6);
+        inset 0 0 60px 30px hsla(var(--note-flame-main-color), 0.9),   /* INSET Strong main flame, very wide */
+        inset 0 0 45px 22px hsla(var(--note-flame-accent-color), 0.85),/* INSET Strong accent, very wide */
+        inset 0 0 35px 15px hsla(var(--note-ember-color), 0.9),       /* INSET Stronger embers */
+        inset 0 0 20px 10px hsl(var(--note-char-color), 0.6); /* Charring shadow */
       clip-path: inset(5% 10% 12% 8% round calc(var(--radius) + 5px));
     }
     30% { /* Active, intense burn: large holes, bright core, significant char, sustained flames */
       transform: scale(0.98) rotate(1deg);
-      background-color: hsl(var(--note-char-color), 0.5);
+      background-color: hsl(var(--note-char-color), 0.5); /* Overlay BG significantly charred */
       box-shadow:
-        inset 0 0 35px 18px hsla(var(--note-flame-main-color), 0.8),   /* INSET Sustained main flame */
-        inset 0 0 25px 12px hsla(var(--note-flame-accent-color), 0.75),/* INSET Sustained accent */
-        inset 0 0 30px 15px hsla(var(--note-ember-color), 0.95),      /* INSET Ember glow dominant */
-        inset 0 0 20px 10px hsl(var(--note-char-color), 0.8);
-      clip-path: polygon( /* More complex clip-path for irregular burn */
-        0% 0%, 100% 0%, 100% 100%, 0% 100%,
-        calc(20% + var(--radius)) calc(15% + var(--radius)),
-        calc(80% - var(--radius)) calc(25% + var(--radius)),
-        calc(75% - var(--radius)) calc(85% - var(--radius)),
-        calc(15% + var(--radius)) calc(70% - var(--radius))
+        inset 0 0 55px 28px hsla(var(--note-flame-main-color), 0.8),   /* INSET Sustained main flame */
+        inset 0 0 40px 20px hsla(var(--note-flame-accent-color), 0.75),/* INSET Sustained accent */
+        inset 0 0 40px 20px hsla(var(--note-ember-color), 0.95),      /* INSET Ember glow dominant */
+        inset 0 0 25px 12px hsl(var(--note-char-color), 0.8); /* Deep charring shadow */
+      /* More complex clip-path for irregular burn - this is tricky to make look like holes with inset */
+      /* For true holes, multiple elements or SVG masks would be needed. Sticking to edge consumption. */
+      /* Simplified to aggressive edge consumption: */
+      clip-path: polygon(
+        0% 0%, 100% 0%, 100% 100%, 0% 100%, /* Outer bounds */
+        /* Attempt at inner hole - this won't work as expected with inset shadows filling from outer edge */
+        /* For true holes, multiple elements or SVG masks would be needed. Sticking to edge consumption. */
+        /* Simplified to aggressive edge consumption: */
+        15% 10%, 85% 15%, 90% 85%, 10% 90%
       );
+      /* clip-path: inset(20% 25% 30% 15% round calc(var(--radius) + 10px)); /* Alternative simpler clip */
     }
     50% { /* Peak destruction: mostly consumed, glowing ash and embers, flames dying */
       transform: scale(0.95) rotate(-1.2deg);
-      background-color: hsl(var(--note-ash-color), 0.3); /* Ash background behind image */
+      background-color: hsl(var(--note-ash-color), 0.3); /* Ash background color visible through clipped image */
       opacity: 0.9;
       box-shadow:
-        inset 0 0 25px 12px hsla(var(--note-ember-color), 0.9),      /* INSET Embers dominant */
-        inset 0 0 15px 8px hsla(var(--note-flame-main-color), 0.5), /* INSET Fading flame */
-        inset 0 0 10px 5px hsla(var(--note-ash-color), 0.6),        /* INSET Ashy glow */
-        inset 0 0 18px 9px hsl(var(--note-char-color), 0.7);
+        inset 0 0 35px 18px hsla(var(--note-ember-color), 0.9),      /* INSET Embers dominant */
+        inset 0 0 20px 10px hsla(var(--note-flame-main-color), 0.5), /* INSET Fading flame */
+        inset 0 0 15px 8px hsla(var(--note-ash-color), 0.6),        /* INSET Ashy glow */
+        inset 0 0 20px 10px hsl(var(--note-char-color), 0.7);
       clip-path: inset(40% 45% 50% 35% round calc(var(--radius) + 15px));
     }
     70% { /* Cooling down: ash is prominent, embers are dying, structure crumbles */
@@ -502,20 +499,20 @@
       background-color: hsl(var(--note-ash-color), 0.6);
       opacity: 0.75;
       box-shadow:
-        inset 0 0 20px 10px hsla(var(--note-ember-color), 0.5), /* INSET Fading embers */
-        inset 0 0 10px 5px hsla(var(--note-ash-color), 0.4);   /* INSET Ash */
+        inset 0 0 25px 12px hsla(var(--note-ember-color), 0.5), /* INSET Fading embers */
+        inset 0 0 15px 8px hsla(var(--note-ash-color), 0.4);   /* INSET Ash */
       clip-path: inset(65% 70% 75% 60% round calc(var(--radius) + 20px));
     }
     90% { /* Final ashes: very little left, faint glow, about to dissipate */
       transform: scale(0.9) translateY(8px) rotate(-0.5deg);
       background-color: hsl(var(--note-ash-color), 0.3);
       opacity: 0.3;
-      box-shadow: inset 0 0 10px 5px hsla(var(--note-ember-color), 0.2); /* INSET Faintest embers */
+      box-shadow: inset 0 0 15px 8px hsla(var(--note-ember-color), 0.2); /* INSET Faintest embers */
       clip-path: inset(85% 90% 92% 88% round calc(var(--radius) + 25px));
     }
     100% { /* Completely gone: faded to nothing */
       transform: scale(0.88) translateY(15px);
-      background-color: transparent;
+      background-color: transparent; /* Final overlay BG is transparent */
       opacity: 0;
       clip-path: inset(100% 100% 100% 100% round var(--radius));
       box-shadow: none;
@@ -562,3 +559,5 @@
   }
 }
 
+
+    
