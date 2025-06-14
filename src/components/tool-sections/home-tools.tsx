@@ -67,7 +67,7 @@ const highlightColors = [
 
 const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
   const editor = editorRef.current;
-  const [, forceUpdate] = useState(0); // Used to re-render and update active states of buttons
+  const [, forceUpdate] = useState(0);
   const imageFileInputRef = useRef<HTMLInputElement>(null);
 
   const [isImageSelected, setIsImageSelected] = useState(false);
@@ -75,37 +75,34 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
 
 
   useEffect(() => {
-    const currentEditorInstance = editor;
-    if (currentEditorInstance) {
-      const handleEditorUpdate = () => {
-        forceUpdate(k => k + 1); // For general toolbar active states
-
-        // Image selection specific logic
-        if (currentEditorInstance.isActive('image')) {
-          const attrs = currentEditorInstance.getAttributes('image') as { src: string; alt?: string; title?: string; width?: string | number; height?: string | number };
-          setImageWidthInput(attrs.width != null ? String(attrs.width) : '');
-          setIsImageSelected(true);
-        } else {
-          setIsImageSelected(false);
-          setImageWidthInput(''); // Clear input when image is not selected
-        }
-      };
-
-      currentEditorInstance.on('transaction', handleEditorUpdate);
-      currentEditorInstance.on('selectionUpdate', handleEditorUpdate);
-      
-      handleEditorUpdate(); // Initial check in case an image is already selected
-
-      return () => {
-        currentEditorInstance.off('transaction', handleEditorUpdate);
-        currentEditorInstance.off('selectionUpdate', handleEditorUpdate);
-      };
-    } else {
-      // Editor not available, reset image selection state
+    const currentEditor = editorRef.current; // Use editorRef.current directly
+    if (!currentEditor) {
       setIsImageSelected(false);
       setImageWidthInput('');
+      return;
     }
-  }, [editor]);
+
+    const handleUpdate = () => {
+      if (currentEditor.isActive('image')) {
+        const attrs = currentEditor.getAttributes('image') as { src: string; alt?: string; title?: string; width?: string | number; height?: string | number };
+        setImageWidthInput(attrs.width != null ? String(attrs.width) : '');
+        setIsImageSelected(true);
+      } else {
+        setIsImageSelected(false);
+        setImageWidthInput('');
+      }
+      // forceUpdate(k => k + 1); // For other general toolbar active states if needed
+    };
+
+    currentEditor.on('transaction', handleUpdate);
+    currentEditor.on('selectionUpdate', handleUpdate);
+    handleUpdate(); // Initial check
+
+    return () => {
+      currentEditor.off('transaction', handleUpdate);
+      currentEditor.off('selectionUpdate', handleUpdate);
+    };
+  }, [editorRef, editor]); // Depend on editorRef and editor (its current value)
 
 
   const handleImageInsert = useCallback(() => {
@@ -123,29 +120,29 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     };
     reader.readAsDataURL(file);
     if (event.target) {
-        event.target.value = ''; // Reset file input
+        event.target.value = '';
     }
   }, [editorRef]);
 
   const handleApplyImageWidth = useCallback(() => {
-    if (!editor || !isImageSelected) return;
+    const currentEditor = editorRef.current;
+    if (!currentEditor || !isImageSelected || !currentEditor.isEditable) return;
 
-    let newWidthForAttr: string | number | null = imageWidthInput.trim();
+    let newWidthValue: string | number | null = imageWidthInput.trim();
 
-    if (newWidthForAttr === '') {
-      newWidthForAttr = null; 
-    } else if (/^\d+$/.test(newWidthForAttr)) { 
-      newWidthForAttr = parseInt(newWidthForAttr, 10);
-    } 
-    // Otherwise, use as string (e.g., "50%", "300px")
+    if (newWidthValue === '') {
+      newWidthValue = null; // Remove width attribute
+    } else if (/^\d+$/.test(newWidthValue) && !newWidthValue.endsWith('%') && !newWidthValue.endsWith('px')) {
+      // If it's a plain number (e.g., "300"), parse it. Tiptap treats this as pixels for the attribute.
+      newWidthValue = parseInt(newWidthValue, 10);
+    }
+    // Otherwise, if it's a string like "50%" or "300px", use it as is.
 
-    editor.chain().focus().updateAttributes('image', { 
-      width: newWidthForAttr, 
-      height: null // Set height to null to allow browser to maintain aspect ratio
+    currentEditor.chain().focus().updateAttributes('image', {
+      width: newWidthValue,
+      height: null // Explicitly set height to null to allow browser to maintain aspect ratio
     }).run();
-    
-    // The useEffect listening to Tiptap transactions will update imageWidthInput.
-  }, [editor, isImageSelected, imageWidthInput]);
+  }, [editorRef, isImageSelected, imageWidthInput]);
 
 
   if (!editor) {
@@ -160,6 +157,22 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     if (!editor) return false;
     return editor.isActive(type, options);
   };
+
+  // Keep track of active states for non-image related buttons
+  useEffect(() => {
+    const currentEditor = editorRef.current;
+    if (currentEditor) {
+      const forceU = () => forceUpdate(k => k + 1);
+      currentEditor.on('transaction', forceU);
+      currentEditor.on('selectionUpdate', forceU);
+      forceU();
+      return () => {
+        currentEditor.off('transaction', forceU);
+        currentEditor.off('selectionUpdate', forceU);
+      };
+    }
+  }, [editorRef, editor]);
+
 
   const toolGroups = [
     [
@@ -328,14 +341,14 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
                 onChange={(e) => setImageWidthInput(e.target.value)}
                 placeholder="e.g., 300 or 50%"
                 className="h-8 text-sm"
-                disabled={!editor.isEditable}
+                disabled={!editor || !editor.isEditable}
               />
-              <Button 
-                onClick={handleApplyImageWidth} 
-                size="sm" 
-                variant="outline" 
+              <Button
+                onClick={handleApplyImageWidth}
+                size="sm"
+                variant="outline"
                 className="h-8"
-                disabled={!editor.isEditable}
+                disabled={!editor || !editor.isEditable}
               >
                 Apply
               </Button>
@@ -351,3 +364,4 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
 };
 
 export default HomeTools;
+
