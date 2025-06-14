@@ -369,8 +369,8 @@
 
   .page-bg-lined {
     background-image: linear-gradient(to bottom,
-      hsla(var(--line-h, 0), var(--line-s, 0%), var(--line-l, 0%), var(--line-a, 0.7)) 0px,
-      hsla(var(--line-h, 0), var(--line-s, 0%), var(--line-l, 0%), var(--line-a, 0.7)) 1px,
+      hsla(var(--line-h,0), var(--line-s,0%), var(--line-l,0%), var(--line-a,0.1)) 0px, /* Fallback values */
+      hsla(var(--line-h,0), var(--line-s,0%), var(--line-l,0%), var(--line-a,0.1)) 1px,
       transparent 1px,
       transparent var(--text-line-height)
     );
@@ -379,8 +379,8 @@
   }
   .page-bg-grid {
     background-image:
-      linear-gradient(to right, hsla(var(--line-h, 0), var(--line-s, 0%), var(--line-l, 0%), var(--line-a, 0.3)) 1px, transparent 1px),
-      linear-gradient(to bottom, hsla(var(--line-h, 0), var(--line-s, 0%), var(--line-l, 0%), var(--line-a, 0.3)) 1px, transparent 1px);
+      linear-gradient(to right, hsla(var(--line-h,0), var(--line-s,0%), var(--line-l,0%), calc(var(--line-a,0.1) * 0.5)) 1px, transparent 1px), /* Grid lines are fainter */
+      linear-gradient(to bottom, hsla(var(--line-h,0), var(--line-s,0%), var(--line-l,0%), calc(var(--line-a,0.1) * 0.5)) 1px, transparent 1px);
     background-size: 20px 20px;
   }
 }
@@ -438,48 +438,46 @@
       background-color: hsl(var(--note-initial-paper-color-for-burn));
       opacity: 1;
       clip-path: inset(0% 0% 0% 0% round var(--radius));
-      box-shadow: 0 0 0px hsla(var(--note-ignition-flash-color), 0);
+      box-shadow: none;
     }
     2% { /* Ignition: bright flash, paper starts to react */
       transform: scale(1.02) rotate(-0.5deg);
       background-color: hsl(var(--note-initial-paper-color-for-burn));
       box-shadow:
-        0 0 60px 40px hsla(var(--note-ignition-flash-color), 0.95), /* Enhanced, wider flash */
-        0 0 40px 25px hsla(var(--note-flame-main-color), 0.85),    /* Initial flame presence */
-        0 0 25px 15px hsla(var(--note-flame-accent-color), 0.9),   /* Brighter accent */
-        inset 0 0 12px 5px hsla(var(--note-flame-main-color), 0.7);
+        inset 0 0 30px 15px hsla(var(--note-ignition-flash-color), 0.95), /* INSET flash */
+        inset 0 0 25px 12px hsla(var(--note-flame-main-color), 0.9),    /* INSET Initial flame */
+        inset 0 0 15px 8px hsla(var(--note-flame-accent-color), 0.9),   /* INSET Brighter accent */
+        inset 0 0 10px 4px hsla(var(--note-char-color), 0.2);
       clip-path: inset(0% 0% 0% 0% round var(--radius));
     }
     5% { /* First charring: edges begin to darken and curl, small embers, flames appear */
       transform: scale(1.01) rotate(0.5deg);
-      background-color: hsl(var(--note-char-color), 0.1);
+      background-color: hsl(var(--note-char-color), 0.05); /* Overlay background starts to char subtly */
       box-shadow:
-        0 0 70px 50px hsla(var(--note-flame-main-color), 0.9),  /* Stronger, wider main flame */
-        0 0 50px 35px hsla(var(--note-flame-accent-color), 0.95),/* Brighter, wider accent */
-        0 0 20px 10px hsla(var(--note-ember-color), 0.7),       /* Early embers */
-        inset 0 0 8px 3px hsl(var(--note-char-color), 0.3);
+        inset 0 0 35px 18px hsla(var(--note-flame-main-color), 0.95),  /* INSET Main flame stronger */
+        inset 0 0 25px 12px hsla(var(--note-flame-accent-color), 0.9), /* INSET Accent flame */
+        inset 0 0 18px 7px hsla(var(--note-ember-color), 0.8),        /* INSET Early embers */
+        inset 0 0 12px 5px hsl(var(--note-char-color), 0.4);
       clip-path: inset(1% 2% 3% 1% round calc(var(--radius) + 2px));
     }
     15% { /* Spreading burn: char deepens, embers glow, paper consumed more, strong flames */
       transform: scale(1) rotate(-0.8deg);
-      background-color: hsl(var(--note-char-color), 0.4);
+      background-color: hsl(var(--note-char-color), 0.2);
       box-shadow:
-        0 0 80px 60px hsla(var(--note-flame-main-color), 0.85),  /* Very strong main flame */
-        0 0 60px 40px hsla(var(--note-flame-accent-color), 0.9), /* Very strong accent */
-        0 0 30px 15px hsla(var(--note-ember-color), 0.85),      /* Stronger embers */
-        inset 0 0 15px 8px hsl(var(--note-ember-color), 0.8),
-        inset 0 0 20px 12px hsl(var(--note-char-color), 0.5);
+        inset 0 0 40px 20px hsla(var(--note-flame-main-color), 0.9),   /* INSET Strong main flame */
+        inset 0 0 30px 15px hsla(var(--note-flame-accent-color), 0.85),/* INSET Strong accent */
+        inset 0 0 25px 10px hsla(var(--note-ember-color), 0.9),       /* INSET Stronger embers */
+        inset 0 0 15px 8px hsl(var(--note-char-color), 0.6);
       clip-path: inset(5% 10% 12% 8% round calc(var(--radius) + 5px));
     }
     30% { /* Active, intense burn: large holes, bright core, significant char, sustained flames */
       transform: scale(0.98) rotate(1deg);
-      background-color: hsl(var(--note-char-color), 0.75);
+      background-color: hsl(var(--note-char-color), 0.5);
       box-shadow:
-        0 0 85px 65px hsla(var(--note-flame-main-color), 0.8),   /* Sustained, large main flame */
-        0 0 65px 45px hsla(var(--note-flame-accent-color), 0.85),/* Sustained, large accent */
-        0 0 50px 30px hsla(var(--note-ember-color), 0.9),       /* Ember glow dominant */
-        inset 0 0 25px 15px hsl(var(--note-char-color), 0.9),
-        inset 0 0 12px 6px hsla(var(--note-ember-color), 0.95);
+        inset 0 0 35px 18px hsla(var(--note-flame-main-color), 0.8),   /* INSET Sustained main flame */
+        inset 0 0 25px 12px hsla(var(--note-flame-accent-color), 0.75),/* INSET Sustained accent */
+        inset 0 0 30px 15px hsla(var(--note-ember-color), 0.95),      /* INSET Ember glow dominant */
+        inset 0 0 20px 10px hsl(var(--note-char-color), 0.8);
       clip-path: polygon( /* More complex clip-path for irregular burn */
         0% 0%, 100% 0%, 100% 100%, 0% 100%,
         calc(20% + var(--radius)) calc(15% + var(--radius)),
@@ -490,30 +488,29 @@
     }
     50% { /* Peak destruction: mostly consumed, glowing ash and embers, flames dying */
       transform: scale(0.95) rotate(-1.2deg);
-      background-color: hsl(var(--note-ash-color), 0.7);
+      background-color: hsl(var(--note-ash-color), 0.3); /* Ash background behind image */
       opacity: 0.9;
       box-shadow:
-        0 0 60px 40px hsla(var(--note-ember-color), 0.85),      /* Embers dominant */
-        0 0 30px 20px hsla(var(--note-flame-main-color), 0.4), /* Fading flame */
-        0 0 20px 10px hsla(var(--note-ash-color), 0.4),
-        inset 0 0 15px 8px hsl(var(--note-char-color), 0.5),
-        inset 0 0 8px 4px hsla(var(--note-ember-color), 0.6);
+        inset 0 0 25px 12px hsla(var(--note-ember-color), 0.9),      /* INSET Embers dominant */
+        inset 0 0 15px 8px hsla(var(--note-flame-main-color), 0.5), /* INSET Fading flame */
+        inset 0 0 10px 5px hsla(var(--note-ash-color), 0.6),        /* INSET Ashy glow */
+        inset 0 0 18px 9px hsl(var(--note-char-color), 0.7);
       clip-path: inset(40% 45% 50% 35% round calc(var(--radius) + 15px));
     }
     70% { /* Cooling down: ash is prominent, embers are dying, structure crumbles */
       transform: scale(0.92) translateY(3px) rotate(0.8deg);
-      background-color: hsl(var(--note-ash-color), 0.5);
+      background-color: hsl(var(--note-ash-color), 0.6);
       opacity: 0.75;
       box-shadow:
-        0 0 30px 20px hsla(var(--note-ember-color), 0.4),
-        0 0 15px 8px hsla(var(--note-ash-color), 0.3);
+        inset 0 0 20px 10px hsla(var(--note-ember-color), 0.5), /* INSET Fading embers */
+        inset 0 0 10px 5px hsla(var(--note-ash-color), 0.4);   /* INSET Ash */
       clip-path: inset(65% 70% 75% 60% round calc(var(--radius) + 20px));
     }
     90% { /* Final ashes: very little left, faint glow, about to dissipate */
       transform: scale(0.9) translateY(8px) rotate(-0.5deg);
-      background-color: hsl(var(--note-ash-color), 0.2);
+      background-color: hsl(var(--note-ash-color), 0.3);
       opacity: 0.3;
-      box-shadow: 0 0 15px 8px hsla(var(--note-ember-color), 0.15);
+      box-shadow: inset 0 0 10px 5px hsla(var(--note-ember-color), 0.2); /* INSET Faintest embers */
       clip-path: inset(85% 90% 92% 88% round calc(var(--radius) + 25px));
     }
     100% { /* Completely gone: faded to nothing */
