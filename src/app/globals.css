@@ -379,8 +379,8 @@
   }
   .page-bg-grid {
     background-image:
-      linear-gradient(to right, hsla(var(--line-h, 0), var(--line-s, 0%), var(--line-l, 0%), var(--line-a, 0.5)) 1px, transparent 1px),
-      linear-gradient(to bottom, hsla(var(--line-h, 0), var(--line-s, 0%), var(--line-l, 0%), var(--line-a, 0.5)) 1px, transparent 1px);
+      linear-gradient(to right, hsla(var(--line-h, 0), var(--line-s, 0%), var(--line-l, 0%), var(--line-a, 0.3)) 1px, transparent 1px),
+      linear-gradient(to bottom, hsla(var(--line-h, 0), var(--line-s, 0%), var(--line-l, 0%), var(--line-a, 0.3)) 1px, transparent 1px);
     background-size: 20px 20px;
   }
 }
@@ -441,72 +441,66 @@
       box-shadow: 0 0 0px hsla(var(--note-ignition-flash-color), 0);
     }
     2% { /* Ignition: bright flash, paper starts to react */
-      transform: scale(1.02) rotate(-0.5deg); /* Slight puff and curl */
-      background-color: hsl(var(--note-initial-paper-color-for-burn)); /* Still looks like paper */
-      box-shadow: 0 0 20px 10px hsla(var(--note-ignition-flash-color), 0.85), /* Bright, wide flash */
-                  inset 0 0 8px 3px hsla(var(--note-flame-main-color), 0.6); /* Inner heat glow */
-      clip-path: inset(0% 0% 0% 0% round var(--radius)); /* No visible burn yet */
+      transform: scale(1.02) rotate(-0.5deg);
+      background-color: hsl(var(--note-initial-paper-color-for-burn));
+      box-shadow: 0 0 20px 10px hsla(var(--note-ignition-flash-color), 0.85),
+                  inset 0 0 8px 3px hsla(var(--note-flame-main-color), 0.6);
+      clip-path: inset(0% 0% 0% 0% round var(--radius));
     }
-    5% { /* First charring: edges begin to darken and curl, small embers */
+    5% { /* First charring: edges begin to darken and curl, small embers, flames appear */
       transform: scale(1.01) rotate(0.5deg);
-      background-color: hsl(var(--note-char-color), 0.1); /* Overlay starts to char lightly */
-      box-shadow: 0 0 15px 6px hsla(var(--note-flame-main-color), 0.7), /* Main flame area starts */
-                  0 0 5px 2px hsla(var(--note-flame-accent-color), 0.8), /* Hotter yellow sparks */
-                  inset 0 0 5px 2px hsl(var(--note-char-color), 0.3); /* Inner edge charring */
-      /* Start burning from an edge, slightly irregular */
+      background-color: hsl(var(--note-char-color), 0.1);
+      box-shadow: 0 0 20px 8px hsla(var(--note-flame-main-color), 0.85), /* Wider, more opaque main flame */
+                  0 0 10px 4px hsla(var(--note-flame-accent-color), 0.9), /* Brighter accent */
+                  inset 0 0 5px 2px hsl(var(--note-char-color), 0.3);
       clip-path: inset(1% 2% 3% 1% round calc(var(--radius) + 2px));
     }
-    15% { /* Spreading burn: char deepens, embers glow, paper consumed more */
+    15% { /* Spreading burn: char deepens, embers glow, paper consumed more, strong flames */
       transform: scale(1) rotate(-0.8deg);
-      background-color: hsl(var(--note-char-color), 0.4); /* Darker char on overlay */
-      box-shadow: 0 0 25px 12px hsla(var(--note-flame-main-color), 0.65), /* Wider, softer flame glow */
-                  0 0 10px 5px hsla(var(--note-flame-accent-color), 0.7), /* Intense yellow/white hot spots */
-                  inset 0 0 10px 5px hsl(var(--note-ember-color), 0.8), /* Strong inner ember glow */
-                  inset 0 0 15px 8px hsl(var(--note-char-color), 0.5); /* Deep char inside burned edges */
-      /* More irregular consumption */
+      background-color: hsl(var(--note-char-color), 0.4);
+      box-shadow: 0 0 30px 15px hsla(var(--note-flame-main-color), 0.8), /* Strong main flame */
+                  0 0 15px 7px hsla(var(--note-flame-accent-color), 0.85), /* Strong accent */
+                  inset 0 0 10px 5px hsl(var(--note-ember-color), 0.8),
+                  inset 0 0 15px 8px hsl(var(--note-char-color), 0.5);
       clip-path: inset(5% 10% 12% 8% round calc(var(--radius) + 5px));
     }
-    30% { /* Active, intense burn: large holes, bright core, significant char */
+    30% { /* Active, intense burn: large holes, bright core, significant char, sustained flames */
       transform: scale(0.98) rotate(1deg);
-      background-color: hsl(var(--note-char-color), 0.75); /* Very dark char */
-      box-shadow: 0 0 30px 15px hsla(var(--note-ember-color), 0.75), /* Large ember field */
-                  0 0 15px 8px hsla(var(--note-flame-accent-color), 0.85), /* Brightest core flames */
-                  inset 0 0 18px 10px hsl(var(--note-char-color), 0.9), /* Almost black char inside */
-                  inset 0 0 8px 4px hsla(var(--note-ember-color), 0.9); /* Concentrated embers on inner edges */
-      /* Large, irregular holes, resembling the reference image middle stages */
+      background-color: hsl(var(--note-char-color), 0.75);
+      box-shadow: 0 0 35px 18px hsla(var(--note-flame-main-color), 0.75), /* Sustained main flame */
+                  0 0 20px 10px hsla(var(--note-flame-accent-color), 0.8), /* Sustained accent */
+                  0 0 25px 12px hsla(var(--note-ember-color), 0.7), /* Ember glow */
+                  inset 0 0 18px 10px hsl(var(--note-char-color), 0.9),
+                  inset 0 0 8px 4px hsla(var(--note-ember-color), 0.9);
       clip-path: polygon(
-        0% 0%, 100% 0%, 100% 100%, 0% 100%, /* Outer box */
-        /* Start creating inner holes - this is tricky with one clip-path */
-        /* Simpler: more aggressive, asymmetric inset */
+        0% 0%, 100% 0%, 100% 100%, 0% 100%,
         20% 15%, 80% 25%, 75% 85%, 15% 70% round calc(var(--radius) + 8px)
-      ); /* This attempts a more complex shape. Fallback to aggressive inset if too complex: */
-      /* clip-path: inset(20% 30% 35% 25% round calc(var(--radius) + 8px)); */
+      );
     }
-    50% { /* Peak destruction: mostly consumed, glowing ash and embers */
+    50% { /* Peak destruction: mostly consumed, glowing ash and embers, flames dying */
       transform: scale(0.95) rotate(-1.2deg);
-      background-color: hsl(var(--note-ash-color), 0.7); /* Ash starts to dominate char */
+      background-color: hsl(var(--note-ash-color), 0.7);
       opacity: 0.9;
-      box-shadow: 0 0 20px 10px hsla(var(--note-ember-color), 0.6), /* Embers still strong but softening */
-                  0 0 8px 4px hsla(var(--note-ash-color), 0.4), /* Ash glow */
+      box-shadow: 0 0 20px 10px hsla(var(--note-ember-color), 0.8), /* Embers dominant */
+                  0 0 10px 5px hsla(var(--note-flame-main-color), 0.3), /* Fading flame */
+                  0 0 8px 4px hsla(var(--note-ash-color), 0.4),
                   inset 0 0 10px 6px hsl(var(--note-char-color), 0.5),
                   inset 0 0 5px 3px hsla(var(--note-ember-color), 0.5);
-      /* Paper significantly gone, very irregular edges */
       clip-path: inset(40% 45% 50% 35% round calc(var(--radius) + 15px));
     }
     70% { /* Cooling down: ash is prominent, embers are dying, structure crumbles */
-      transform: scale(0.92) translateY(3px) rotate(0.8deg); /* Slight sink and crumble */
-      background-color: hsl(var(--note-ash-color), 0.5); /* Lighter ash */
+      transform: scale(0.92) translateY(3px) rotate(0.8deg);
+      background-color: hsl(var(--note-ash-color), 0.5);
       opacity: 0.75;
-      box-shadow: 0 0 10px 5px hsla(var(--note-ember-color), 0.3), /* Fading embers */
+      box-shadow: 0 0 10px 5px hsla(var(--note-ember-color), 0.3),
                   0 0 5px 2px hsla(var(--note-ash-color), 0.3);
-      /* Most of the paper is gone, just fragments */
       clip-path: inset(65% 70% 75% 60% round calc(var(--radius) + 20px));
     }
     90% { /* Final ashes: very little left, faint glow, about to dissipate */
       transform: scale(0.9) translateY(8px) rotate(-0.5deg);
-      background-color: hsl(var(--note-ash-color), 0.2); /* Faint ash */
+      background-color: hsl(var(--note-ash-color), 0.2);
       opacity: 0.3;
-      box-shadow: 0 0 5px 2px hsla(var(--note-ember-color), 0.1); /* Barely visible embers */
+      box-shadow: 0 0 5px 2px hsla(var(--note-ember-color), 0.1);
       clip-path: inset(85% 90% 92% 88% round calc(var(--radius) + 25px));
     }
     100% { /* Completely gone: faded to nothing */
