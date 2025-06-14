@@ -42,7 +42,12 @@
     --paper-pastel-fg: 320 30% 35%;
 
     --text-line-height: 1.625rem; /* 26px */
-    --line-color: 0 0% 0%; /* Black for light theme lines (will be semi-transparent) */
+
+    /* Line color components for light theme */
+    --line-h: 0;
+    --line-s: 0%;
+    --line-l: 0%;
+    --line-a: 0.7;
 
     /* Burn effect colors */
     --note-initial-paper-color-for-burn: 0 0% 100%; /* White for the burning note's base */
@@ -93,7 +98,11 @@
     --paper-pastel-bg: 320 30% 25%; /* Dark version of pastel */
     --paper-pastel-fg: 320 50% 90%;
 
-    --line-color: 0 0% 100%; /* White for dark theme lines (will be semi-transparent) */
+    /* Line color components for dark theme */
+    --line-h: 0;
+    --line-s: 0%;
+    --line-l: 100%;
+    --line-a: 0.7;
 
     /* Burn effect colors - Dark theme */
     --note-initial-paper-color-for-burn: 0 0% 100%;
@@ -144,7 +153,11 @@
     /* Note: --paper-pastel-bg is used for the main pastel paper itself */
     /* --paper-pastel-fg is its text color */
 
-    --line-color: 280 25% 30%; /* Dark Purple for pastel theme lines (will be semi-transparent) */
+    /* Line color components for pastel theme */
+    --line-h: 280;
+    --line-s: 25%;
+    --line-l: 30%;
+    --line-a: 0.7;
 
     /* Burn effect colors - Pastel theme */
     --note-initial-paper-color-for-burn: 0 0% 100%;
@@ -244,7 +257,8 @@
     padding: 0;
   }
   .ProseMirror hr {
-    @apply border-t border-[hsl(var(--line-color))] my-6;
+    @apply border-t my-6; /* Uses border-color from *:apply border-border */
+    border-color: hsla(var(--line-h, 0), var(--line-s, 0%), var(--line-l, 0%), var(--line-a, 0.7)); /* Match line color */
   }
   .ProseMirror p.is-editor-empty:first-child::before {
     content: attr(data-placeholder);
@@ -357,18 +371,18 @@
 
   .page-bg-lined { /* For editor background */
     background-image: linear-gradient(to bottom,
-      hsla(var(--line-color), 0.7) 0px,
-      hsla(var(--line-color), 0.7) 1px,
+      hsla(var(--line-h, 0), var(--line-s, 0%), var(--line-l, 0%), var(--line-a, 0.7)) 0px,
+      hsla(var(--line-h, 0), var(--line-s, 0%), var(--line-l, 0%), var(--line-a, 0.7)) 1px,
       transparent 1px,
       transparent var(--text-line-height)
     );
     background-size: 100% var(--text-line-height);
     background-position-y: 21px; /* Match .ProseMirror padding-top */
   }
-  .page-bg-grid {
+  .page-bg-grid { /* Updated to use HSL A variables for consistency */
     background-image:
-      linear-gradient(to right, hsl(var(--line-color)) 1px, transparent 1px),
-      linear-gradient(to bottom, hsl(var(--line-color)) 1px, transparent 1px);
+      linear-gradient(to right, hsla(var(--line-h, 0), var(--line-s, 0%), var(--line-l, 0%), var(--line-a, 0.5)) 1px, transparent 1px),
+      linear-gradient(to bottom, hsla(var(--line-h, 0), var(--line-s, 0%), var(--line-l, 0%), var(--line-a, 0.5)) 1px, transparent 1px);
     background-size: 20px 20px;
   }
 }
