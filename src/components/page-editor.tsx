@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef, useCallback, useMemo } from 'react';
 import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import UnderlineExtension from '@tiptap/extension-underline';
@@ -14,7 +14,7 @@ import ImageExtension from '@tiptap/extension-image';
 import TaskListExtension from '@tiptap/extension-task-list';
 import TaskItemExtension from '@tiptap/extension-task-item';
 
-import type { LineStyle } from '@/app/page';
+import type { LineStyle } from '@/app/ashground-app'; // Adjusted import path
 import { cn } from '@/lib/utils';
 
 type PageBackground = 'plain' | 'lined' | 'grid';
@@ -33,9 +33,8 @@ export interface PageEditorProps {
   drawColor: string;
   drawStrokeWidth: number;
   currentLineStyle: LineStyle;
-  onEditorReady?: (editor: Editor) => void;
+  onEditorReady?: (editor: Editor) => void; // Changed to accept editor instance
   onDrawColorChange: (color: string) => void;
-  // onAfterColorPick: () => void; // Removed as it was only for eyedropper
 }
 
 export interface PageEditorRef {
@@ -58,7 +57,6 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
   currentLineStyle,
   onEditorReady,
   onDrawColorChange,
-  // onAfterColorPick, // Removed
 }, ref) => {
   const themeClassMap: Record<PageTheme, string> = {
     light: 'page-theme-light',
@@ -74,35 +72,38 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
 
   const placeholderText = `Start writing your thoughts here...\nThis is your aesthetic, single-page note space — minimal, classy, no distractions.\n\n*Nothing is saved. Everything burns.*`;
 
+  const tiptapExtensions = useMemo(() => [
+    StarterKit.configure({
+      heading: {
+        levels: [1, 2, 3],
+      },
+      gapcursor: false, // Consider if needed
+    }),
+    UnderlineExtension,
+    PlaceholderExtension.configure({
+      placeholder: placeholderText,
+    }),
+    TextAlignExtension.configure({
+      types: ['heading', 'paragraph'],
+    }),
+    SuperscriptExtension,
+    SubscriptExtension,
+    TextStyleExtension,
+    ColorExtension,
+    HighlightExtension.configure({ multicolor: true }),
+    ImageExtension.configure({
+      allowBase64: true,
+      inline: false, // Explicitly block for resizability expectations
+    }),
+    TaskListExtension,
+    TaskItemExtension.configure({
+      nested: true,
+    }),
+  ], [placeholderText]); // placeholderText is constant, so extensions are memoized once
+
   const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        heading: {
-          levels: [1, 2, 3],
-        },
-        gapcursor: false,
-      }),
-      UnderlineExtension,
-      PlaceholderExtension.configure({
-        placeholder: placeholderText,
-      }),
-      TextAlignExtension.configure({
-        types: ['heading', 'paragraph'],
-      }),
-      SuperscriptExtension,
-      SubscriptExtension,
-      TextStyleExtension,
-      ColorExtension,
-      HighlightExtension.configure({ multicolor: true }),
-      ImageExtension.configure({
-        allowBase64: true,
-      }),
-      TaskListExtension,
-      TaskItemExtension.configure({
-        nested: true,
-      }),
-    ],
-    content: noteContent,
+    extensions: tiptapExtensions,
+    content: noteContent, // Initial content is set here
     onUpdate: ({ editor: tiptapEditor }) => {
       onNoteChange(tiptapEditor.getHTML());
     },
@@ -150,7 +151,6 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
             if (ctx) {
                 ctx.scale(dpr, dpr);
                 canvasContextRef.current = ctx;
-                // Clear rect with logical width/height
                 ctx.clearRect(0, 0, newWidth, newHeight);
 
                 if (drawingDataUrlToRestore && drawingDataUrlToRestore !== "cleared") {
@@ -164,7 +164,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
             }
         }
         if (currentCanvasDataUrlRef.current === "cleared") {
-          currentCanvasDataUrlRef.current = null; // Reset after clear
+          currentCanvasDataUrlRef.current = null;
         } else if (drawingDataUrlToRestore && drawingDataUrlToRestore !== "cleared") {
            currentCanvasDataUrlRef.current = drawingDataUrlToRestore;
         }
@@ -174,7 +174,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
 
   useEffect(() => {
     window.addEventListener('resize', resizeCanvas);
-    const timeoutId = setTimeout(resizeCanvas, 50);
+    const timeoutId = setTimeout(resizeCanvas, 50); // Initial resize after mount
     return () => {
       window.removeEventListener('resize', resizeCanvas);
       clearTimeout(timeoutId);
@@ -189,8 +189,8 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
         const logicalWidth = canvas.width / (window.devicePixelRatio || 1);
         const logicalHeight = canvas.height / (window.devicePixelRatio || 1);
         ctx.clearRect(0, 0, logicalWidth, logicalHeight);
-        currentCanvasDataUrlRef.current = "cleared";
-        setCanvasKey(Date.now());
+        currentCanvasDataUrlRef.current = "cleared"; // Mark as cleared
+        setCanvasKey(Date.now()); // Force re-render of canvas if needed
       }
     },
     getExportableElement: () => exportableAreaRef.current,
@@ -199,7 +199,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
   useEffect(() => {
     if (editor && editorTiptapRef) {
       editorTiptapRef.current = editor;
-      if (onEditorReady && editor.isEditable) onEditorReady(editor);
+      if (onEditorReady && editor.isEditable) onEditorReady(editor); // Pass editor instance
     }
     return () => {
       if (editorTiptapRef) {
@@ -211,7 +211,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
   useEffect(() => {
     if (editor && editor.isEditable && editor.getHTML() !== noteContent) {
       const { from, to } = editor.state.selection;
-      editor.commands.setContent(noteContent, false);
+      editor.commands.setContent(noteContent, false); // emitUpdate = false
       try {
         const docSize = editor.state.doc.content.size;
         editor.commands.setTextSelection({ from: Math.min(from, docSize), to: Math.min(to, docSize) });
@@ -232,21 +232,21 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    resizeCanvas();
+    resizeCanvas(); // Initial resize for canvas context setup
 
     if (!isDrawingMode || !currentDrawTool) {
       isPaintingRef.current = false;
       return;
     }
     
-    if (!canvasContextRef.current) {
+    if (!canvasContextRef.current) { // Ensure context is established
         const ctx = canvas.getContext('2d');
         if (ctx) {
             const dpr = window.devicePixelRatio || 1;
-            ctx.scale(dpr, dpr);
+            ctx.scale(dpr, dpr); // Scale once
             canvasContextRef.current = ctx;
         } else {
-            return;
+            return; // Cannot get context
         }
     }
     const ctx = canvasContextRef.current;
@@ -273,19 +273,20 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
 
     let effectiveDrawColor = drawColor;
     if (pageTheme === 'dark' && (drawColor.toLowerCase() === '#000000' || drawColor.toLowerCase() === '#000')) {
-        effectiveDrawColor = '#FFFFFF';
+        effectiveDrawColor = '#FFFFFF'; // Draw white on dark theme if color is black
     }
 
 
     const handlePaintMove = (event: MouseEvent | TouchEvent) => {
       if (!isPaintingRef.current || !lastPositionRef.current || !ctx ) return;
+      // Ensure painting only continues if primary mouse button is pressed (for mouse events)
       if (!(event instanceof MouseEvent && event.buttons === 1) && !(event instanceof TouchEvent)) {
-        if (event instanceof MouseEvent) {
+        if (event instanceof MouseEvent) { // If mouse button is released mid-drag outside canvas
             handlePaintEnd();
             return;
         }
       }
-      event.preventDefault();
+      event.preventDefault(); // Prevent scrolling on touch devices
 
       const pos = getEventPosition(event);
       if (!pos) return;
@@ -294,14 +295,15 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.strokeStyle = effectiveDrawColor;
-      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalCompositeOperation = 'source-over'; // Default drawing mode
 
 
       if (currentLineStyle === 'dashed') {
           ctx.setLineDash([10, 5]);
       } else if (currentLineStyle === 'dotted') {
+          // For dotted, make dots relative to stroke width for better appearance
           ctx.setLineDash([drawStrokeWidth, drawStrokeWidth * 2]);
-      } else {
+      } else { // Solid line
           ctx.setLineDash([]);
       }
       
@@ -315,43 +317,45 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
     };
 
     const handlePaintEnd = () => {
-      // Removed check for currentDrawTool !== 'eyedropper' as it's no longer relevant
-      if (!isPaintingRef.current) return; 
+      if (!isPaintingRef.current) return; // Don't do anything if not painting
       isPaintingRef.current = false;
       
+      // Clean up global event listeners
       window.removeEventListener('mousemove', handlePaintMove);
       window.removeEventListener('mouseup', handlePaintEnd);
       window.removeEventListener('touchmove', handlePaintMove);
       window.removeEventListener('touchend', handlePaintEnd);
       window.removeEventListener('touchcancel', handlePaintEnd);
 
+      // Save canvas state as data URL if canvas is not empty
       if (canvas && canvas.width > 0 && canvas.height > 0) {
         try { currentCanvasDataUrlRef.current = canvas.toDataURL(); } catch (e) { console.error("Error saving canvas state:", e); }
       }
-       ctx.setLineDash([]);
+       ctx.setLineDash([]); // Reset line dash for other operations or next draw
     };
     
     const handlePaintStart = (event: MouseEvent | TouchEvent) => {
-      if (!(event.target === canvas) || !currentDrawTool || (event instanceof MouseEvent && event.button !== 0)) return;
-      event.preventDefault();
+      if (!(event.target === canvas) || !currentDrawTool || (event instanceof MouseEvent && event.button !== 0)) return; // Only react to primary mouse button
+      event.preventDefault(); // Prevent default actions like text selection or page scroll
       
       const pos = getEventPosition(event);
-      if (!pos || !ctx) return;
+      if (!pos || !ctx) return; // No position or context, abort
       
-      resizeCanvas(); 
+      resizeCanvas(); // Ensure canvas is sized correctly before drawing start
       
+      // Configure context for current tool
       ctx.lineWidth = drawStrokeWidth;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round'; // Smoother line ends
+      ctx.lineJoin = 'round'; // Smoother line joins
       ctx.strokeStyle = effectiveDrawColor;
-      ctx.fillStyle = effectiveDrawColor;
-      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = effectiveDrawColor; // For tools that might fill
+      ctx.globalCompositeOperation = 'source-over'; // Reset composite operation
 
       if (currentLineStyle === 'dashed') {
           ctx.setLineDash([10, 5]);
       } else if (currentLineStyle === 'dotted') {
           ctx.setLineDash([drawStrokeWidth, drawStrokeWidth * 2]);
-      } else {
+      } else { // Solid
           ctx.setLineDash([]);
       }
 
@@ -359,53 +363,55 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
         isPaintingRef.current = true;
         lastPositionRef.current = pos;
         
+        // Draw a single dot for click-without-drag
         ctx.beginPath();
         ctx.moveTo(pos.x, pos.y);
-        ctx.lineTo(pos.x, pos.y); 
+        ctx.lineTo(pos.x, pos.y); // Tiny line to make a dot visible with lineCap='round'
         ctx.stroke();
 
+        // Attach global listeners for move and end events
         window.addEventListener('mousemove', handlePaintMove, { passive: false });
         window.addEventListener('mouseup', handlePaintEnd);
         window.addEventListener('touchmove', handlePaintMove, { passive: false });
         window.addEventListener('touchend', handlePaintEnd);
-        window.addEventListener('touchcancel', handlePaintEnd);
+        window.addEventListener('touchcancel', handlePaintEnd); // Handle touch interruptions
 
       } 
-      // Removed Eyedropper specific 'else if' block
-      // else if (currentDrawTool === 'eyedropper') {
-      //     const pixelData = ctx.getImageData(pos.x * (window.devicePixelRatio||1), pos.y * (window.devicePixelRatio||1), 1, 1).data;
-      //     const hexColor = `#${("000000" + ((pixelData[0] << 16) | (pixelData[1] << 8) | pixelData[2]).toString(16)).slice(-6)}`;
-      //     onDrawColorChange(hexColor);
-      //     onAfterColorPick();
-      // }
+      // Eyedropper removed, so no 'else if' for it
     };
 
+    // Attach start event listeners to the canvas itself
     canvas.addEventListener('mousedown', handlePaintStart);
-    canvas.addEventListener('touchstart', handlePaintStart, { passive: false });
+    canvas.addEventListener('touchstart', handlePaintStart, { passive: false }); // passive:false to allow preventDefault
 
+    // Cleanup function for the useEffect hook
     return () => {
       canvas.removeEventListener('mousedown', handlePaintStart);
       canvas.removeEventListener('touchstart', handlePaintStart);
       
+      // Ensure global listeners are removed if effect re-runs or component unmounts while painting
       window.removeEventListener('mousemove', handlePaintMove);
       window.removeEventListener('mouseup', handlePaintEnd);
       window.removeEventListener('touchmove', handlePaintMove);
       window.removeEventListener('touchend', handlePaintEnd);
       window.removeEventListener('touchcancel', handlePaintEnd);
+      // If painting was in progress, capture final state
       if (isPaintingRef.current) { 
         if (canvas && canvas.width > 0 && canvas.height > 0) {
-            try { currentCanvasDataUrlRef.current = canvas.toDataURL(); } catch (e) { /* ignore */ }
+            try { currentCanvasDataUrlRef.current = canvas.toDataURL(); } catch (e) { /* ignore error during cleanup */ }
         }
       }
-      isPaintingRef.current = false;
+      isPaintingRef.current = false; // Ensure painting state is reset
     };
-  }, [isDrawingMode, currentDrawTool, drawColor, drawStrokeWidth, pageTheme, resizeCanvas, onDrawColorChange, /*onAfterColorPick,*/ currentLineStyle]);
+  }, [isDrawingMode, currentDrawTool, drawColor, drawStrokeWidth, pageTheme, resizeCanvas, onDrawColorChange, currentLineStyle]);
 
 
   const handlePaperClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    // If in drawing mode, or if the click is inside the editor, do nothing.
     if (isDrawingMode || (event.target as HTMLElement).closest('.ProseMirror')) {
       return;
     }
+    // If clicked on the paper area itself (not editor), focus the editor.
     if (editor && event.target === event.currentTarget) {
       editor.chain().focus('end').run();
     }
@@ -426,29 +432,31 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
         onChange={(e) => onNoteTitleChange(e.target.value)}
         className="font-headline text-3xl md:text-4xl mb-6 pb-2 border-b border-[hsl(var(--line-color))] bg-transparent focus:outline-none w-full placeholder-muted-foreground"
         placeholder="Untitled Note"
-        disabled={isDrawingMode}
+        disabled={isDrawingMode} // Disable title input when drawing
       />
       <div
         className={cn(
-          'flex-1 relative flex flex-col min-h-0',
+          'flex-1 relative flex flex-col min-h-0', // Ensure flex container for editor and canvas
           backgroundClassMap[backgroundStyle]
         )}
-        onClick={handlePaperClick}
+        onClick={handlePaperClick} // Click on paper to focus editor
       >
         <EditorContent
           editor={editor}
           className={cn(
-            "flex-1 tiptap-editor",
-            isDrawingMode ? 'pointer-events-none opacity-70' : ''
+            "flex-1 tiptap-editor", // tiptap-editor class to apply ProseMirror styles
+            isDrawingMode ? 'pointer-events-none opacity-70' : '' // Disable editor interaction in drawing mode
           )}
         />
+        {/* Drawing Canvas */}
         <canvas
-          key={canvasKey}
+          key={canvasKey} // Used to force re-render on clear
           ref={canvasRef}
           className={cn(
-            "absolute top-0 left-0 w-full h-full",
-            isDrawingMode && currentDrawTool ? 'pointer-events-auto z-10' : 'pointer-events-none -z-10'
+            "absolute top-0 left-0 w-full h-full", // Overlay canvas
+            isDrawingMode && currentDrawTool ? 'pointer-events-auto z-10' : 'pointer-events-none -z-10' // Enable interaction only in draw mode
           )}
+          // Conditionally set touch-action to prevent scrolling while drawing on touch devices
           style={{ touchAction: isDrawingMode && currentDrawTool ? 'none' : 'auto' }}
         />
       </div>
@@ -458,3 +466,4 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
 
 PageEditor.displayName = 'PageEditor';
 export default PageEditor;
+
