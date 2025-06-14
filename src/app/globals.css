@@ -42,7 +42,7 @@
     --paper-pastel-fg: 320 30% 35%;
 
     --text-line-height: 1.625rem; /* 26px */
-    --line-color: 0 0% 85%; /* Light theme line color */
+    --line-color: 0 0% 0%; /* Black for light theme lines (will be semi-transparent) */
 
     /* Burn effect colors */
     --note-initial-paper-color-for-burn: 0 0% 100%; /* White for the burning note's base */
@@ -93,7 +93,7 @@
     --paper-pastel-bg: 320 30% 25%; /* Dark version of pastel */
     --paper-pastel-fg: 320 50% 90%;
 
-    --line-color: 0 0% 50%; /* Dark theme line color - increased contrast */
+    --line-color: 0 0% 100%; /* White for dark theme lines (will be semi-transparent) */
 
     /* Burn effect colors - Dark theme */
     --note-initial-paper-color-for-burn: 0 0% 100%;
@@ -144,7 +144,7 @@
     /* Note: --paper-pastel-bg is used for the main pastel paper itself */
     /* --paper-pastel-fg is its text color */
 
-    --line-color: 320 25% 75%; /* Pastel theme line color - adjusted */
+    --line-color: 280 25% 30%; /* Dark Purple for pastel theme lines (will be semi-transparent) */
 
     /* Burn effect colors - Pastel theme */
     --note-initial-paper-color-for-burn: 0 0% 100%;
