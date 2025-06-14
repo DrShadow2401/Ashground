@@ -9,7 +9,7 @@ interface NoteBurningEffectProps {
   targetRect: DOMRect | null;
   duration: number;
   sourceElement: HTMLElement | null;
-  noteImageUri: string; // Changed from noteHTMLContent to noteImageUri
+  noteImageUri: string;
 }
 
 const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
@@ -17,23 +17,18 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
   targetRect,
   duration,
   sourceElement,
-  noteImageUri, // Use image URI
+  noteImageUri,
 }) => {
-
-  useEffect(() => {
-    // Viewport height is no longer needed as the note burns in place
-  }, []);
 
   if (!isActive || !targetRect || !sourceElement || !noteImageUri) {
     return null;
   }
 
   const animationDurationSeconds = duration / 1000;
-  const numSmokeParticles = 70; // Increased for more intense burn
-  const numEmberParticles = 60; // Increased
+  const numSmokeParticles = 80; // Slightly more smoke
+  const numEmberParticles = 70; // Slightly more embers
 
-  const borderRadius = getComputedStyle(sourceElement).borderRadius || '0.5rem';
-  // Initial paper color for burn effect is now white, defined in CSS by --note-initial-paper-color-for-burn
+  const borderRadius = getComputedStyle(sourceElement).borderRadius || '0.5rem'; // Use source element's border radius
 
   const particles = useMemo(() => {
     const smoke = Array.from({ length: numSmokeParticles }).map((_, i) => ({
@@ -41,15 +36,13 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
       type: 'smoke',
       style: {
         left: `${Math.random() * 100}%`,
-        // Emit smoke more towards the start of burn, from various parts
-        top: `${20 + Math.random() * 60}%`,
-        width: `${15 + Math.random() * 30}px`,
-        height: `${15 + Math.random() * 30}px`,
-        animationDuration: `${animationDurationSeconds * (0.7 + Math.random() * 0.3)}s`,
-        // Start smoke slightly after ignition
-        animationDelay: `${(animationDurationSeconds * 0.1) + (Math.random() * (animationDurationSeconds * 0.6))}s`,
-        '--smoke-drift-x': `${(Math.random() - 0.5) * 150}px`,
-        '--smoke-rise-distance': `-${180 + Math.random() * 120}px`,
+        top: `${10 + Math.random() * 70}%`, // Emit from a wider vertical range
+        width: `${10 + Math.random() * 25}px`, // Smoke puffs can vary more
+        height: `${10 + Math.random() * 25}px`,
+        animationDuration: `${animationDurationSeconds * (0.65 + Math.random() * 0.4)}s`, // Smoke lingers a bit
+        animationDelay: `${(animationDurationSeconds * 0.08) + (Math.random() * (animationDurationSeconds * 0.7))}s`, // Smoke starts a bit after ignition
+        '--smoke-drift-x': `${(Math.random() - 0.5) * 180}px`, // Wider horizontal drift
+        '--smoke-rise-distance': `-${160 + Math.random() * 150}px`, // Smoke rises further
       } as React.CSSProperties,
     }));
 
@@ -58,13 +51,15 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
       type: 'ember',
       style: {
         left: `${Math.random() * 100}%`,
-        top: `${Math.random() * 100}%`, // Embers from all over
-        width: `${4 + Math.random() * 7}px`,
-        height: `${4 + Math.random() * 7}px`,
-        animationDuration: `${animationDurationSeconds * (0.5 + Math.random() * 0.4)}s`,
-        animationDelay: `${(animationDurationSeconds * 0.05) + (Math.random() * (animationDurationSeconds * 0.8))}s`,
-        '--ember-drift-x': `${(Math.random() - 0.5) * 80}px`,
-        '--ember-fall-distance': `${50 + Math.random() * 50}px`,
+        top: `${Math.random() * 100}%`, // Embers from all over, as before
+        width: `${3 + Math.random() * 6}px`, // Embers slightly smaller on average, more sparkle-like
+        height: `${3 + Math.random() * 6}px`,
+        animationDuration: `${animationDurationSeconds * (0.45 + Math.random() * 0.45)}s`, // Ember lifetime
+        animationDelay: `${(animationDurationSeconds * 0.03) + (Math.random() * (animationDurationSeconds * 0.85))}s`, // Embers appear very early
+        '--ember-drift-x': `${(Math.random() - 0.5) * 100}px`, // Embers drift less than smoke
+        '--ember-fall-distance': `${60 + Math.random() * 60}px`, // Embers fall a bit
+        '--ember-initial-y-offset': `${(Math.random() - 0.5) * 10}px`, // Slight initial vertical jitter for embers
+        '--ember-initial-x-offset': `${(Math.random() - 0.5) * 10}px`, // Slight initial horizontal jitter
       } as React.CSSProperties,
     }));
     return [...smoke, ...embers];
@@ -75,27 +70,23 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
     <div
       className={cn(
         "note-burn-overlay fixed pointer-events-none"
-        // Removed note-burn-overlay-ruled as html2canvas captures visual appearance
       )}
       style={{
         left: `${targetRect.left}px`,
         top: `${targetRect.top}px`,
         width: `${targetRect.width}px`,
         height: `${targetRect.height}px`,
-        borderRadius: borderRadius,
+        borderRadius: borderRadius, // Apply original element's border radius
         '--duration-seconds': `${animationDurationSeconds}s`,
-        '--note-initial-paper-color-for-burn': 'hsl(var(--note-initial-paper-color-for-burn))',
-        // Viewport and note height related variables are no longer needed for in-place burn
+        '--radius': borderRadius, // Pass radius as a CSS variable for clip-path
       } as React.CSSProperties}
     >
-      {/* Render the captured image */}
-      <img 
-        src={noteImageUri} 
-        alt="Burning note content" 
-        className="w-full h-full object-cover" // object-cover to fill, object-contain to show all
-        style={{ imageRendering: 'pixelated' }} // Helps if image is scaled up for sharpness
+      <img
+        src={noteImageUri}
+        alt="Burning note content"
+        className="w-full h-full object-cover"
       />
-      
+
       {particles.map(p => (
         <div
           key={p.id}
@@ -108,3 +99,4 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
 };
 
 export default NoteBurningEffect;
+
