@@ -36,7 +36,6 @@ import {
   ImageUp,
   Highlighter,
   Palette,
-  CheckSquare,
   ChevronsUpDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -75,7 +74,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
 
 
   useEffect(() => {
-    const currentEditor = editorRef.current; // Use editorRef.current directly
+    const currentEditor = editorRef.current;
     if (!currentEditor) {
       setIsImageSelected(false);
       setImageWidthInput('');
@@ -91,18 +90,33 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
         setIsImageSelected(false);
         setImageWidthInput('');
       }
-      // forceUpdate(k => k + 1); // For other general toolbar active states if needed
     };
 
     currentEditor.on('transaction', handleUpdate);
     currentEditor.on('selectionUpdate', handleUpdate);
-    handleUpdate(); // Initial check
+    handleUpdate(); 
 
     return () => {
       currentEditor.off('transaction', handleUpdate);
       currentEditor.off('selectionUpdate', handleUpdate);
     };
-  }, [editorRef, editor]); // Depend on editorRef and editor (its current value)
+  }, [editorRef, editor]);
+
+
+  // Separate useEffect for general toolbar button active states (non-image related)
+  useEffect(() => {
+    const currentEditor = editorRef.current;
+    if (currentEditor) {
+      const forceU = () => forceUpdate(k => k + 1);
+      currentEditor.on('transaction', forceU);
+      currentEditor.on('selectionUpdate', forceU);
+      forceU(); // Initial update
+      return () => {
+        currentEditor.off('transaction', forceU);
+        currentEditor.off('selectionUpdate', forceU);
+      };
+    }
+  }, [editorRef, editor]);
 
 
   const handleImageInsert = useCallback(() => {
@@ -131,16 +145,15 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     let newWidthValue: string | number | null = imageWidthInput.trim();
 
     if (newWidthValue === '') {
-      newWidthValue = null; // Remove width attribute
+      newWidthValue = null; 
     } else if (/^\d+$/.test(newWidthValue) && !newWidthValue.endsWith('%') && !newWidthValue.endsWith('px')) {
-      // If it's a plain number (e.g., "300"), parse it. Tiptap treats this as pixels for the attribute.
       newWidthValue = parseInt(newWidthValue, 10);
     }
-    // Otherwise, if it's a string like "50%" or "300px", use it as is.
+    
 
     currentEditor.chain().focus().updateAttributes('image', {
       width: newWidthValue,
-      height: null // Explicitly set height to null to allow browser to maintain aspect ratio
+      height: null 
     }).run();
   }, [editorRef, isImageSelected, imageWidthInput]);
 
@@ -157,22 +170,6 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     if (!editor) return false;
     return editor.isActive(type, options);
   };
-
-  // Keep track of active states for non-image related buttons
-  useEffect(() => {
-    const currentEditor = editorRef.current;
-    if (currentEditor) {
-      const forceU = () => forceUpdate(k => k + 1);
-      currentEditor.on('transaction', forceU);
-      currentEditor.on('selectionUpdate', forceU);
-      forceU();
-      return () => {
-        currentEditor.off('transaction', forceU);
-        currentEditor.off('selectionUpdate', forceU);
-      };
-    }
-  }, [editorRef, editor]);
-
 
   const toolGroups = [
     [
@@ -224,7 +221,6 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     [
       { type: 'button', icon: <List />, label: 'Bulleted List', action: () => editor.chain().focus().toggleBulletList().run(), isActive: () => isButtonActive('bulletList') },
       { type: 'button', icon: <ListOrdered />, label: 'Numbered List', action: () => editor.chain().focus().toggleOrderedList().run(), isActive: () => isButtonActive('orderedList') },
-      { type: 'button', icon: <CheckSquare/>, label: 'Checklist / Task List', action: () => editor.chain().focus().toggleTaskList().run(), isActive: () => isButtonActive('taskList') },
       { type: 'button', icon: <Quote />, label: 'Blockquote', action: () => editor.chain().focus().toggleBlockquote().run(), isActive: () => isButtonActive('blockquote') },
       { type: 'button', icon: <Code2 />, label: 'Code Block', action: () => editor.chain().focus().toggleCodeBlock().run(), isActive: () => isButtonActive('codeBlock') },
     ],
