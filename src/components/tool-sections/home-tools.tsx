@@ -36,6 +36,8 @@ import {
   ImageUp,
   Highlighter,
   Palette,
+  CheckSquare,
+  ChevronsUpDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -65,11 +67,10 @@ const highlightColors = [
 
 const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
   const editor = editorRef.current;
-  const [, forceUpdate] = useState(0);
+  const [, forceUpdate] = useState(0); // Used to re-render and update active states of buttons
   const imageFileInputRef = useRef<HTMLInputElement>(null);
 
   const [isImageSelected, setIsImageSelected] = useState(false);
-  const [selectedImageNodeInfo, setSelectedImageNodeInfo] = useState<{ width: string | number | null }>({ width: null });
   const [imageWidthInput, setImageWidthInput] = useState('');
 
 
@@ -82,22 +83,18 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
         // Image selection specific logic
         if (currentEditorInstance.isActive('image')) {
           const attrs = currentEditorInstance.getAttributes('image') as { src: string; alt?: string; title?: string; width?: string | number; height?: string | number };
-          const currentWidth = attrs.width;
-          setSelectedImageNodeInfo({ width: currentWidth ?? null });
-          setImageWidthInput(currentWidth != null ? String(currentWidth) : '');
+          setImageWidthInput(attrs.width != null ? String(attrs.width) : '');
           setIsImageSelected(true);
         } else {
-          setSelectedImageNodeInfo({ width: null });
           setIsImageSelected(false);
-          // Optionally clear input: setImageWidthInput('');
+          setImageWidthInput(''); // Clear input when image is not selected
         }
       };
 
       currentEditorInstance.on('transaction', handleEditorUpdate);
       currentEditorInstance.on('selectionUpdate', handleEditorUpdate);
       
-      // Initial check in case an image is already selected when the toolbar mounts/editor becomes available
-      handleEditorUpdate(); 
+      handleEditorUpdate(); // Initial check in case an image is already selected
 
       return () => {
         currentEditorInstance.off('transaction', handleEditorUpdate);
@@ -106,10 +103,9 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     } else {
       // Editor not available, reset image selection state
       setIsImageSelected(false);
-      setSelectedImageNodeInfo({ width: null });
       setImageWidthInput('');
     }
-  }, [editor]); // Only re-run if editor instance changes
+  }, [editor]);
 
 
   const handleImageInsert = useCallback(() => {
@@ -127,7 +123,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     };
     reader.readAsDataURL(file);
     if (event.target) {
-        event.target.value = '';
+        event.target.value = ''; // Reset file input
     }
   }, [editorRef]);
 
@@ -137,19 +133,18 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     let newWidthForAttr: string | number | null = imageWidthInput.trim();
 
     if (newWidthForAttr === '') {
-      newWidthForAttr = null; // Remove width attribute
-    } else if (/^\d+$/.test(newWidthForAttr)) { // Purely numeric, treat as pixels
+      newWidthForAttr = null; 
+    } else if (/^\d+$/.test(newWidthForAttr)) { 
       newWidthForAttr = parseInt(newWidthForAttr, 10);
-    } // Otherwise, use as string (e.g., "50%", "300px")
+    } 
+    // Otherwise, use as string (e.g., "50%", "300px")
 
     editor.chain().focus().updateAttributes('image', { 
       width: newWidthForAttr, 
-      height: undefined // Explicitly set height to undefined
+      height: null // Set height to null to allow browser to maintain aspect ratio
     }).run();
     
-    // Update node info state to reflect the change immediately for the input field
-    setSelectedImageNodeInfo({ width: newWidthForAttr });
-
+    // The useEffect listening to Tiptap transactions will update imageWidthInput.
   }, [editor, isImageSelected, imageWidthInput]);
 
 
@@ -216,12 +211,14 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     [
       { type: 'button', icon: <List />, label: 'Bulleted List', action: () => editor.chain().focus().toggleBulletList().run(), isActive: () => isButtonActive('bulletList') },
       { type: 'button', icon: <ListOrdered />, label: 'Numbered List', action: () => editor.chain().focus().toggleOrderedList().run(), isActive: () => isButtonActive('orderedList') },
+      { type: 'button', icon: <CheckSquare/>, label: 'Checklist / Task List', action: () => editor.chain().focus().toggleTaskList().run(), isActive: () => isButtonActive('taskList') },
       { type: 'button', icon: <Quote />, label: 'Blockquote', action: () => editor.chain().focus().toggleBlockquote().run(), isActive: () => isButtonActive('blockquote') },
       { type: 'button', icon: <Code2 />, label: 'Code Block', action: () => editor.chain().focus().toggleCodeBlock().run(), isActive: () => isButtonActive('codeBlock') },
     ],
     [
       { type: 'button', icon: <Minus />, label: 'Horizontal Rule', action: () => editor.chain().focus().setHorizontalRule().run(), isActive: () => false },
       { type: 'button', icon: <ImageUp />, label: 'Insert Image', action: handleImageInsert, isActive: () => false },
+      { type: 'button', icon: <ChevronsUpDown />, label: 'Toggle Section (NA)', action: () => { /* No action */ }, isActive: () => false, disabled: true },
     ],
     [
       { type: 'button', icon: <Undo2 />, label: 'Undo', action: () => editor.chain().focus().undo().run(), isActive: () => false, disabled: !editor.can().undo() },
@@ -242,7 +239,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
         <div className="flex flex-wrap gap-1 items-center justify-center">
           {toolGroups.map((group, groupIndex) => (
             <React.Fragment key={groupIndex}>
-              {group.map((tool) => {
+              {group.length > 0 && group.map((tool) => {
                 if (tool.type === 'button') {
                   return (
                     <Button
@@ -331,8 +328,15 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
                 onChange={(e) => setImageWidthInput(e.target.value)}
                 placeholder="e.g., 300 or 50%"
                 className="h-8 text-sm"
+                disabled={!editor.isEditable}
               />
-              <Button onClick={handleApplyImageWidth} size="sm" variant="outline" className="h-8">
+              <Button 
+                onClick={handleApplyImageWidth} 
+                size="sm" 
+                variant="outline" 
+                className="h-8"
+                disabled={!editor.isEditable}
+              >
                 Apply
               </Button>
             </div>
@@ -347,4 +351,3 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
 };
 
 export default HomeTools;
-
