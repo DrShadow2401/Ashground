@@ -161,8 +161,7 @@ export default function AshgroundApp() {
   const handleBurnEverything = async () => {
     const exportableElement = pageEditorComponentRef.current?.getExportableElement();
     if (exportableElement) {
-      // Removed toast: "Preparing burn..."
-
+      
       if (document.activeElement && typeof (document.activeElement as HTMLElement).blur === 'function') {
         (document.activeElement as HTMLElement).blur();
       }
@@ -195,7 +194,7 @@ export default function AshgroundApp() {
           setAnimationSourceElement(null);
           setContentForBurn('');
 
-          // Removed toast: "Ashes to Ashes"
+          
         }, ANIMATION_DURATION);
 
       } catch (error) {
@@ -219,7 +218,7 @@ export default function AshgroundApp() {
       if (pageEditorComponentRef.current) pageEditorComponentRef.current.clearCanvas();
       localStorage.removeItem('ashground_title');
       localStorage.removeItem('ashground_note');
-      // Removed toast: "Ashes to Ashes (animation skipped)"
+      
     }
   };
 
@@ -271,8 +270,7 @@ export default function AshgroundApp() {
             <AlertDialogHeader>
               <AlertDialogTitle>Burn Everything?</AlertDialogTitle>
               <AlertDialogDescription>
-                This will clear your current note title, content, and any drawings.
-                This action cannot be undone.
+                No more EmOtIoNaL DaMaGe
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
