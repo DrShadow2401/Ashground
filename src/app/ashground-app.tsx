@@ -268,7 +268,7 @@ export default function AshgroundApp() {
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Note Yeeted</AlertDialogTitle>
+              <AlertDialogTitle>Its Lit 🔥</AlertDialogTitle>
               <AlertDialogDescription>
                 No more EmOtIoNaL DaMaGe
               </AlertDialogDescription>
