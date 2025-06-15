@@ -268,7 +268,7 @@ export default function AshgroundApp() {
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Its Lit 🔥</AlertDialogTitle>
+              <AlertDialogTitle> Burn it down like my GPA </AlertDialogTitle>
               <AlertDialogDescription>
                 No more EmOtIoNaL DaMaGe
               </AlertDialogDescription>
