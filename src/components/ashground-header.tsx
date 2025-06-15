@@ -8,7 +8,14 @@ const AshgroundHeader: React.FC = () => {
         ASHGROUND
       </h1>
       <p className="font-body italic text-base md:text-lg text-foreground/70 mt-2">
-        By Asto Eterna
+        <a
+          href="https://astoeterna.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:underline focus:underline focus:outline-none"
+        >
+          By Asto Eterna
+        </a>
       </p>
     </header>
   );
