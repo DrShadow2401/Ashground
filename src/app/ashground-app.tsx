@@ -260,7 +260,7 @@ export default function AshgroundApp() {
                          hover:text-amber-600 dark:hover:text-amber-300
                          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 dark:focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
                          transition-all duration-150 ease-in-out flex items-center justify-center"
-              title="Burn Everything"
+              title="Yeet Note"
               disabled={!isEditorInitialized || isBurningAnimationActive}
             >
               <Flame className="w-5 h-5" />
@@ -268,7 +268,7 @@ export default function AshgroundApp() {
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Burn Everything?</AlertDialogTitle>
+              <AlertDialogTitle>Note Yeeted</AlertDialogTitle>
               <AlertDialogDescription>
                 No more EmOtIoNaL DaMaGe
               </AlertDialogDescription>
