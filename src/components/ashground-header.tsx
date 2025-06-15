@@ -12,7 +12,7 @@ const AshgroundHeader: React.FC = () => {
           href="https://astoeterna.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:underline focus:underline focus:outline-none"
+          className="underline hover:underline focus:underline focus:outline-none"
         >
           By Asto Eterna
         </a>
