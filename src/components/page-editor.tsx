@@ -102,6 +102,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
   ], [placeholderText]);
 
   const handleEditorUpdate = useCallback(({ editor: tiptapEditor }: { editor: Editor }) => {
+    if (tiptapEditor.isDestroyed) return;
     onNoteChange(tiptapEditor.getHTML());
   }, [onNoteChange]);
 
@@ -201,7 +202,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
   }), []);
 
   useEffect(() => {
-    if (editor && editorTiptapRef) {
+    if (editor && !editor.isDestroyed && editorTiptapRef) {
       editorTiptapRef.current = editor;
       if (onEditorReady && editor.isEditable) onEditorReady(editor);
     }
@@ -213,7 +214,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
   }, [editor, editorTiptapRef, onEditorReady]);
 
   useEffect(() => {
-    if (editor && editor.isEditable && editor.getHTML() !== noteContent) {
+    if (editor && !editor.isDestroyed && editor.isEditable && editor.getHTML() !== noteContent) {
       const { from, to } = editor.state.selection;
       editor.commands.setContent(noteContent, false);
       try {
@@ -226,7 +227,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
   }, [noteContent, editor]);
 
   useEffect(() => {
-    if (editor) {
+    if (editor && !editor.isDestroyed) {
       editor.setEditable(!isDrawingMode);
     }
   }, [isDrawingMode, editor]);
@@ -402,7 +403,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
     if (isDrawingMode || (event.target as HTMLElement).closest('.ProseMirror')) {
       return;
     }
-    if (editor && event.target === event.currentTarget) {
+    if (editor && !editor.isDestroyed && event.target === event.currentTarget) {
       editor.chain().focus('end').run();
     }
   };

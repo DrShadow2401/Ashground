@@ -36,7 +36,6 @@ import {
   ImageUp,
   Highlighter,
   Palette,
-  // ChevronsUpDown, // Removed as the tool is being removed
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -65,13 +64,10 @@ const highlightColors = [
 
 
 const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
-  const editor = editorRef.current;
   const [, forceUpdate] = useState(0);
   const imageFileInputRef = useRef<HTMLInputElement>(null);
-
   const [isImageSelected, setIsImageSelected] = useState(false);
   const [imageWidthInput, setImageWidthInput] = useState('');
-
 
   useEffect(() => {
     const currentEditor = editorRef.current;
@@ -81,7 +77,10 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
       return;
     }
 
-    const handleUpdate = () => {
+    const handleTransactionOrSelectionUpdate = () => {
+      if (currentEditor.isDestroyed) return;
+
+      // Update for image selection state
       if (currentEditor.isActive('image')) {
         const attrs = currentEditor.getAttributes('image') as { src: string; alt?: string; title?: string; width?: string | number; height?: string | number };
         setImageWidthInput(attrs.width != null ? String(attrs.width) : '');
@@ -90,33 +89,26 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
         setIsImageSelected(false);
         setImageWidthInput('');
       }
+      
+      // Force update for general toolbar buttons active states
+      forceUpdate(k => k + 1);
     };
 
-    currentEditor.on('transaction', handleUpdate);
-    currentEditor.on('selectionUpdate', handleUpdate);
-    handleUpdate(); 
+    // Initial update
+    if (!currentEditor.isDestroyed) {
+        handleTransactionOrSelectionUpdate();
+    }
+    
+    currentEditor.on('transaction', handleTransactionOrSelectionUpdate);
+    currentEditor.on('selectionUpdate', handleTransactionOrSelectionUpdate);
 
     return () => {
-      currentEditor.off('transaction', handleUpdate);
-      currentEditor.off('selectionUpdate', handleUpdate);
+      if (!currentEditor.isDestroyed) {
+        currentEditor.off('transaction', handleTransactionOrSelectionUpdate);
+        currentEditor.off('selectionUpdate', handleTransactionOrSelectionUpdate);
+      }
     };
-  }, [editorRef, editor]);
-
-
-  // Separate useEffect for general toolbar button active states (non-image related)
-  useEffect(() => {
-    const currentEditor = editorRef.current;
-    if (currentEditor) {
-      const forceU = () => forceUpdate(k => k + 1);
-      currentEditor.on('transaction', forceU);
-      currentEditor.on('selectionUpdate', forceU);
-      forceU(); // Initial update
-      return () => {
-        currentEditor.off('transaction', forceU);
-        currentEditor.off('selectionUpdate', forceU);
-      };
-    }
-  }, [editorRef, editor]);
+  }, [editorRef.current]); // Depend directly on the editor instance from the ref
 
 
   const handleImageInsert = useCallback(() => {
@@ -125,7 +117,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
 
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const currentEditor = editorRef.current;
-    if (!currentEditor || !event.target.files?.[0]) return;
+    if (!currentEditor || !event.target.files?.[0] || currentEditor.isDestroyed) return;
 
     const file = event.target.files[0];
     const reader = new FileReader();
@@ -140,7 +132,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
 
   const handleApplyImageWidth = useCallback(() => {
     const currentEditor = editorRef.current;
-    if (!currentEditor || !isImageSelected || !currentEditor.isEditable) return;
+    if (!currentEditor || !isImageSelected || !currentEditor.isEditable || currentEditor.isDestroyed) return;
 
     let newWidthValue: string | number | null = imageWidthInput.trim();
 
@@ -150,15 +142,14 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
       newWidthValue = parseInt(newWidthValue, 10);
     }
     
-
     currentEditor.chain().focus().updateAttributes('image', {
       width: newWidthValue,
       height: null 
     }).run();
   }, [editorRef, isImageSelected, imageWidthInput]);
 
-
-  if (!editor) {
+  const editor = editorRef.current;
+  if (!editor || editor.isDestroyed) {
     return (
       <div className="flex justify-center items-center h-full w-full">
         <p className="text-muted-foreground text-sm">Editor loading...</p>
@@ -167,7 +158,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
   }
 
   const isButtonActive = (type: string, options?: Record<string, any>): boolean => {
-    if (!editor) return false;
+    if (editor.isDestroyed) return false;
     return editor.isActive(type, options);
   };
 
@@ -190,11 +181,12 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
         label: 'Font Color',
         items: textColors,
         action: (colorValue: string) => {
+          if (editor.isDestroyed) return;
           if (colorValue === '') editor.chain().focus().unsetColor().run();
           else editor.chain().focus().setColor(colorValue).run();
         },
-        isDropdownActive: () => !!editor.getAttributes('textStyle').color,
-        isItemActive: (colorValue?: string) => colorValue ? editor.isActive('textStyle', { color: colorValue }) : !editor.getAttributes('textStyle').color && colorValue === '',
+        isDropdownActive: () => editor.isDestroyed ? false : !!editor.getAttributes('textStyle').color,
+        isItemActive: (colorValue?: string) => editor.isDestroyed ? false : (colorValue ? editor.isActive('textStyle', { color: colorValue }) : !editor.getAttributes('textStyle').color && colorValue === ''),
       },
       {
         type: 'dropdown',
@@ -202,11 +194,13 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
         label: 'Highlight Color',
         items: highlightColors,
         action: (colorValue: string) => {
+            if (editor.isDestroyed) return;
             if (colorValue === '') editor.chain().focus().unsetHighlight().run();
             else editor.chain().focus().toggleHighlight({ color: colorValue }).run();
         },
-        isDropdownActive: () => !!editor.getAttributes('highlight')?.color,
+        isDropdownActive: () => editor.isDestroyed ? false : !!editor.getAttributes('highlight')?.color,
         isItemActive: (colorValue?: string) => {
+          if (editor.isDestroyed) return false;
           if (colorValue === '') return !editor.getAttributes('highlight')?.color && !editor.isActive('highlight');
           return editor.isActive('highlight', { color: colorValue });
         }
@@ -227,11 +221,10 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     [
       { type: 'button', icon: <Minus />, label: 'Horizontal Rule', action: () => editor.chain().focus().setHorizontalRule().run(), isActive: () => false },
       { type: 'button', icon: <ImageUp />, label: 'Insert Image', action: handleImageInsert, isActive: () => false },
-      // { type: 'button', icon: <ChevronsUpDown />, label: 'Toggle Section (NA)', action: () => { /* No action */ }, isActive: () => false, disabled: true }, // Removed this tool
     ],
     [
-      { type: 'button', icon: <Undo2 />, label: 'Undo', action: () => editor.chain().focus().undo().run(), isActive: () => false, disabled: !editor.can().undo() },
-      { type: 'button', icon: <Redo2 />, label: 'Redo', action: () => editor.chain().focus().redo().run(), isActive: () => false, disabled: !editor.can().redo() },
+      { type: 'button', icon: <Undo2 />, label: 'Undo', action: () => editor.chain().focus().undo().run(), isActive: () => false, disabled: editor.isDestroyed ? true : !editor.can().undo() },
+      { type: 'button', icon: <Redo2 />, label: 'Redo', action: () => editor.chain().focus().redo().run(), isActive: () => false, disabled: editor.isDestroyed ? true : !editor.can().redo() },
     ],
   ];
 
@@ -262,7 +255,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
                         'hover:bg-accent/50',
                         tool.isActive() ? 'bg-accent text-accent-foreground' : ''
                       )}
-                      disabled={(tool as any).disabled || !editor.isEditable}
+                      disabled={(tool as any).disabled || editor.isDestroyed || !editor.isEditable}
                     >
                       {tool.icon}
                     </Button>
@@ -281,7 +274,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
                              'hover:bg-accent/50',
                              tool.isDropdownActive && tool.isDropdownActive() ? 'bg-accent text-accent-foreground' : ''
                           )}
-                          disabled={!editor.isEditable}
+                          disabled={editor.isDestroyed || !editor.isEditable}
                         >
                           {tool.icon}
                         </Button>
@@ -324,7 +317,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
             </React.Fragment>
           ))}
         </div>
-        {isImageSelected && (
+        {isImageSelected && !editor.isDestroyed && (
           <div className="mt-2 p-2 border-t border-border w-full max-w-xs mx-auto">
             <div className="flex items-center gap-2">
               <label htmlFor="imageWidthInput" className="text-sm font-medium text-muted-foreground whitespace-nowrap">
@@ -337,14 +330,14 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
                 onChange={(e) => setImageWidthInput(e.target.value)}
                 placeholder="e.g., 300 or 50%"
                 className="h-8 text-sm"
-                disabled={!editor || !editor.isEditable}
+                disabled={!editor || !editor.isEditable || editor.isDestroyed}
               />
               <Button
                 onClick={handleApplyImageWidth}
                 size="sm"
                 variant="outline"
                 className="h-8"
-                disabled={!editor || !editor.isEditable}
+                disabled={!editor || !editor.isEditable || editor.isDestroyed}
               >
                 Apply
               </Button>
@@ -360,4 +353,3 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
 };
 
 export default HomeTools;
-

@@ -37,7 +37,7 @@ const ANIMATION_DURATION = 3000;
 
 export default function AshgroundApp() {
   const [noteTitle, setNoteTitle] = useState<string>('Untitled Note');
-  const [noteContent, setNoteContent] = useState<string>('<p></p>'); // Initialize to prevent undefined issues
+  const [noteContent, setNoteContent] = useState<string>('<p></p>');
   const [activeTab, setActiveTab] = useState<string>('home');
   const [pageBackground, setPageBackground] = useState<PageBackground>('plain');
   const [pageTheme, setPageTheme] = useState<PageTheme>('light');
@@ -72,12 +72,12 @@ export default function AshgroundApp() {
       const savedTheme = localStorage.getItem('ashground_theme') as PageTheme | null;
 
       if (savedTitle) setNoteTitle(savedTitle);
-      setNoteContent(savedNote || '<p></p>'); // Ensure noteContent is initialized
+      setNoteContent(savedNote || '<p></p>');
 
       if (savedBg) setPageBackground(savedBg);
 
       const htmlClasses = document.documentElement.classList;
-      htmlClasses.remove('dark', 'theme-pastel'); // Clear previous theme classes
+      htmlClasses.remove('dark', 'theme-pastel'); 
 
       if (savedTheme) {
         if (savedTheme === 'dark') {
@@ -85,11 +85,9 @@ export default function AshgroundApp() {
         } else if (savedTheme === 'pastel') {
           htmlClasses.add('theme-pastel');
         }
-        // If 'light', classes are already cleared.
         setPageTheme(savedTheme);
       } else {
-        // Default to light theme if nothing is saved
-        setPageTheme('light'); // This will trigger the theme saving effect
+        setPageTheme('light'); 
       }
     }
   }, [isMounted]);
@@ -117,13 +115,12 @@ export default function AshgroundApp() {
     if(isMounted) {
       localStorage.setItem('ashground_theme', pageTheme);
       const htmlClasses = document.documentElement.classList;
-      htmlClasses.remove('dark', 'theme-pastel'); // Ensure clean state
+      htmlClasses.remove('dark', 'theme-pastel'); 
       if (pageTheme === 'dark') {
         htmlClasses.add('dark');
       } else if (pageTheme === 'pastel') {
         htmlClasses.add('theme-pastel');
       }
-       // If 'light', classes are already removed.
     }
   }, [pageTheme, isMounted]);
 
@@ -135,6 +132,15 @@ export default function AshgroundApp() {
 
   const handleEditorReady = useCallback(() => {
     setIsEditorInitialized(true);
+  }, []);
+
+  const handleNoteContentChange = useCallback((newContent: string) => {
+    setNoteContent(prevContent => {
+      if (prevContent === newContent) {
+        return prevContent; 
+      }
+      return newContent;
+    });
   }, []);
 
 
@@ -169,13 +175,13 @@ export default function AshgroundApp() {
         const canvas = await html2canvas(exportableElement, {
           scale: 1.5,
           useCORS: true,
-          backgroundColor: null, // Important for transparent background if needed
+          backgroundColor: null, 
         });
         const imageDataUri = canvas.toDataURL('image/png');
         
         setContentForBurn(imageDataUri);
         setAnimationTargetRect(exportableElement.getBoundingClientRect());
-        setAnimationSourceElement(exportableElement); // Keep this if needed for positioning or context
+        setAnimationSourceElement(exportableElement); 
         setIsBurningAnimationActive(true);
 
         setTimeout(() => {
@@ -205,7 +211,7 @@ export default function AshgroundApp() {
           description: "Could not capture the note content for burning.",
           variant: "destructive",
         });
-        // Fallback: Clear data even if animation capture fails
+        
         setNoteTitle('Untitled Note');
         setNoteContent('<p></p>');
         if (pageEditorComponentRef.current) pageEditorComponentRef.current.clearCanvas();
@@ -213,7 +219,7 @@ export default function AshgroundApp() {
         localStorage.removeItem('ashground_note');
       }
     } else {
-       // Fallback if exportableElement is null for some reason
+       
       setNoteTitle('Untitled Note');
       setNoteContent('<p></p>');
       if (pageEditorComponentRef.current) pageEditorComponentRef.current.clearCanvas();
@@ -327,7 +333,7 @@ export default function AshgroundApp() {
           noteTitle={noteTitle}
           onNoteTitleChange={setNoteTitle}
           noteContent={noteContent}
-          onNoteChange={setNoteContent}
+          onNoteChange={handleNoteContentChange}
           backgroundStyle={pageBackground}
           pageTheme={pageTheme}
           isDrawingMode={activeTab === 'draw'}
@@ -357,7 +363,7 @@ export default function AshgroundApp() {
       )}
 
       <div className={cn("w-full transition-opacity duration-300", isBurningAnimationActive ? "opacity-0 pointer-events-none" : "opacity-100")}>
-        {isMounted ? appContent : null} {/* Render appContent only when mounted to ensure localStorage access is safe */}
+        {isMounted ? appContent : null} 
       </div>
     </main>
   );
