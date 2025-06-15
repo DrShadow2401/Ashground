@@ -161,10 +161,7 @@ export default function AshgroundApp() {
   const handleBurnEverything = async () => {
     const exportableElement = pageEditorComponentRef.current?.getExportableElement();
     if (exportableElement) {
-      toast({
-        title: "Preparing burn...",
-        description: "Capturing the note for immolation.",
-      });
+      // Removed toast: "Preparing burn..."
 
       if (document.activeElement && typeof (document.activeElement as HTMLElement).blur === 'function') {
         (document.activeElement as HTMLElement).blur();
@@ -198,10 +195,7 @@ export default function AshgroundApp() {
           setAnimationSourceElement(null);
           setContentForBurn('');
 
-          toast({
-            title: "Ashes to Ashes",
-            description: "Your note has been cleared.",
-          });
+          // Removed toast: "Ashes to Ashes"
         }, ANIMATION_DURATION);
 
       } catch (error) {
@@ -225,10 +219,7 @@ export default function AshgroundApp() {
       if (pageEditorComponentRef.current) pageEditorComponentRef.current.clearCanvas();
       localStorage.removeItem('ashground_title');
       localStorage.removeItem('ashground_note');
-      toast({
-        title: "Ashes to Ashes",
-        description: "Your note has been cleared (animation skipped).",
-      });
+      // Removed toast: "Ashes to Ashes (animation skipped)"
     }
   };
 
