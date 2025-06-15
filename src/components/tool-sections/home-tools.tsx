@@ -64,40 +64,84 @@ const highlightColors = [
 
 
 const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
-  const [, forceUpdate] = useState(0);
   const imageFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Local state for button active states
+  const [isBoldActive, setIsBoldActive] = useState(false);
+  const [isItalicActive, setIsItalicActive] = useState(false);
+  const [isUnderlineActive, setIsUnderlineActive] = useState(false);
+  const [isStrikeActive, setIsStrikeActive] = useState(false);
+  const [isSuperscriptActive, setIsSuperscriptActive] = useState(false);
+  const [isSubscriptActive, setIsSubscriptActive] = useState(false);
+  const [currentHeadingLevel, setCurrentHeadingLevel] = useState<0 | 1 | 2 | 3>(0);
+  const [currentTextColor, setCurrentTextColor] = useState<string | null>(null);
+  const [currentHighlightColor, setCurrentHighlightColor] = useState<string | null>(null);
+  const [currentTextAlign, setCurrentTextAlign] = useState<string | null>(null);
+  const [isBulletListActive, setIsBulletListActive] = useState(false);
+  const [isOrderedListActive, setIsOrderedListActive] = useState(false);
+  const [isBlockquoteActive, setIsBlockquoteActive] = useState(false);
+  const [isCodeBlockActive, setIsCodeBlockActive] = useState(false);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
+  // Image specific state
   const [isImageSelected, setIsImageSelected] = useState(false);
   const [imageWidthInput, setImageWidthInput] = useState('');
 
-  useEffect(() => {
-    const currentEditor = editorRef.current;
-    if (!currentEditor) {
+
+  const handleTransactionOrSelectionUpdate = useCallback(() => {
+    const editor = editorRef.current;
+    if (!editor || editor.isDestroyed) return;
+
+    setIsBoldActive(editor.isActive('bold'));
+    setIsItalicActive(editor.isActive('italic'));
+    setIsUnderlineActive(editor.isActive('underline'));
+    setIsStrikeActive(editor.isActive('strike'));
+    setIsSuperscriptActive(editor.isActive('superscript'));
+    setIsSubscriptActive(editor.isActive('subscript'));
+
+    if (editor.isActive('heading', { level: 1 })) setCurrentHeadingLevel(1);
+    else if (editor.isActive('heading', { level: 2 })) setCurrentHeadingLevel(2);
+    else if (editor.isActive('heading', { level: 3 })) setCurrentHeadingLevel(3);
+    else setCurrentHeadingLevel(0);
+
+    setCurrentTextColor(editor.getAttributes('textStyle').color || null);
+    setCurrentHighlightColor(editor.getAttributes('highlight')?.color || null);
+    
+    if (editor.isActive({ textAlign: 'left' })) setCurrentTextAlign('left');
+    else if (editor.isActive({ textAlign: 'center' })) setCurrentTextAlign('center');
+    else if (editor.isActive({ textAlign: 'right' })) setCurrentTextAlign('right');
+    else if (editor.isActive({ textAlign: 'justify' })) setCurrentTextAlign('justify');
+    else setCurrentTextAlign(null);
+
+    setIsBulletListActive(editor.isActive('bulletList'));
+    setIsOrderedListActive(editor.isActive('orderedList'));
+    setIsBlockquoteActive(editor.isActive('blockquote'));
+    setIsCodeBlockActive(editor.isActive('codeBlock'));
+
+    setCanUndo(editor.can().undo());
+    setCanRedo(editor.can().redo());
+
+    // Image specific updates
+    if (editor.isActive('image')) {
+      const attrs = editor.getAttributes('image') as { src: string; alt?: string; title?: string; width?: string | number; height?: string | number };
+      setImageWidthInput(attrs.width != null ? String(attrs.width) : '');
+      setIsImageSelected(true);
+    } else {
       setIsImageSelected(false);
       setImageWidthInput('');
+    }
+  }, [editorRef]);
+
+
+  useEffect(() => {
+    const currentEditor = editorRef.current;
+    if (!currentEditor || currentEditor.isDestroyed) {
       return;
     }
-
-    const handleTransactionOrSelectionUpdate = () => {
-      if (currentEditor.isDestroyed) return;
-
-      // Update for image selection state
-      if (currentEditor.isActive('image')) {
-        const attrs = currentEditor.getAttributes('image') as { src: string; alt?: string; title?: string; width?: string | number; height?: string | number };
-        setImageWidthInput(attrs.width != null ? String(attrs.width) : '');
-        setIsImageSelected(true);
-      } else {
-        setIsImageSelected(false);
-        setImageWidthInput('');
-      }
-      
-      // Force update for general toolbar buttons active states
-      forceUpdate(k => k + 1);
-    };
-
-    // Initial update
-    if (!currentEditor.isDestroyed) {
-        handleTransactionOrSelectionUpdate();
-    }
+    
+    // Initial update of states
+    handleTransactionOrSelectionUpdate();
     
     currentEditor.on('transaction', handleTransactionOrSelectionUpdate);
     currentEditor.on('selectionUpdate', handleTransactionOrSelectionUpdate);
@@ -108,7 +152,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
         currentEditor.off('selectionUpdate', handleTransactionOrSelectionUpdate);
       }
     };
-  }, [editorRef.current]); // Depend directly on the editor instance from the ref
+  }, [editorRef, handleTransactionOrSelectionUpdate]);
 
 
   const handleImageInsert = useCallback(() => {
@@ -157,24 +201,19 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     );
   }
 
-  const isButtonActive = (type: string, options?: Record<string, any>): boolean => {
-    if (editor.isDestroyed) return false;
-    return editor.isActive(type, options);
-  };
-
   const toolGroups = [
     [
-      { type: 'button', icon: <Bold />, label: 'Bold', action: () => editor.chain().focus().toggleBold().run(), isActive: () => isButtonActive('bold') },
-      { type: 'button', icon: <Italic />, label: 'Italic', action: () => editor.chain().focus().toggleItalic().run(), isActive: () => isButtonActive('italic') },
-      { type: 'button', icon: <Underline />, label: 'Underline', action: () => editor.chain().focus().toggleUnderline().run(), isActive: () => isButtonActive('underline') },
-      { type: 'button', icon: <Strikethrough />, label: 'Strikethrough', action: () => editor.chain().focus().toggleStrike().run(), isActive: () => isButtonActive('strike') },
-      { type: 'button', icon: <Superscript />, label: 'Superscript', action: () => editor.chain().focus().toggleSuperscript().run(), isActive: () => isButtonActive('superscript') },
-      { type: 'button', icon: <Subscript />, label: 'Subscript', action: () => editor.chain().focus().toggleSubscript().run(), isActive: () => isButtonActive('subscript') },
+      { type: 'button', icon: <Bold />, label: 'Bold', action: () => editor.chain().focus().toggleBold().run(), isActive: () => isBoldActive },
+      { type: 'button', icon: <Italic />, label: 'Italic', action: () => editor.chain().focus().toggleItalic().run(), isActive: () => isItalicActive },
+      { type: 'button', icon: <Underline />, label: 'Underline', action: () => editor.chain().focus().toggleUnderline().run(), isActive: () => isUnderlineActive },
+      { type: 'button', icon: <Strikethrough />, label: 'Strikethrough', action: () => editor.chain().focus().toggleStrike().run(), isActive: () => isStrikeActive },
+      { type: 'button', icon: <Superscript />, label: 'Superscript', action: () => editor.chain().focus().toggleSuperscript().run(), isActive: () => isSuperscriptActive },
+      { type: 'button', icon: <Subscript />, label: 'Subscript', action: () => editor.chain().focus().toggleSubscript().run(), isActive: () => isSubscriptActive },
     ],
     [
-      { type: 'button', icon: <Heading1 />, label: 'Heading 1', action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(), isActive: () => isButtonActive('heading', { level: 1 }) },
-      { type: 'button', icon: <Heading2 />, label: 'Heading 2', action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), isActive: () => isButtonActive('heading', { level: 2 }) },
-      { type: 'button', icon: <Heading3 />, label: 'Heading 3', action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(), isActive: () => isButtonActive('heading', { level: 3 }) },
+      { type: 'button', icon: <Heading1 />, label: 'Heading 1', action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(), isActive: () => currentHeadingLevel === 1 },
+      { type: 'button', icon: <Heading2 />, label: 'Heading 2', action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), isActive: () => currentHeadingLevel === 2 },
+      { type: 'button', icon: <Heading3 />, label: 'Heading 3', action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(), isActive: () => currentHeadingLevel === 3 },
       {
         type: 'dropdown',
         icon: <Palette />,
@@ -185,8 +224,8 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
           if (colorValue === '') editor.chain().focus().unsetColor().run();
           else editor.chain().focus().setColor(colorValue).run();
         },
-        isDropdownActive: () => editor.isDestroyed ? false : !!editor.getAttributes('textStyle').color,
-        isItemActive: (colorValue?: string) => editor.isDestroyed ? false : (colorValue ? editor.isActive('textStyle', { color: colorValue }) : !editor.getAttributes('textStyle').color && colorValue === ''),
+        isDropdownActive: () => !!currentTextColor,
+        isItemActive: (colorValue?: string) => (colorValue ? currentTextColor === colorValue : !currentTextColor && colorValue === ''),
       },
       {
         type: 'dropdown',
@@ -198,33 +237,32 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
             if (colorValue === '') editor.chain().focus().unsetHighlight().run();
             else editor.chain().focus().toggleHighlight({ color: colorValue }).run();
         },
-        isDropdownActive: () => editor.isDestroyed ? false : !!editor.getAttributes('highlight')?.color,
+        isDropdownActive: () => !!currentHighlightColor,
         isItemActive: (colorValue?: string) => {
-          if (editor.isDestroyed) return false;
-          if (colorValue === '') return !editor.getAttributes('highlight')?.color && !editor.isActive('highlight');
-          return editor.isActive('highlight', { color: colorValue });
+          if (colorValue === '') return !currentHighlightColor && !editor.isActive('highlight');
+          return currentHighlightColor === colorValue;
         }
       },
     ],
     [
-      { type: 'button', icon: <AlignLeft />, label: 'Align Left', action: () => editor.chain().focus().setTextAlign('left').run(), isActive: () => isButtonActive({ textAlign: 'left' }) },
-      { type: 'button', icon: <AlignCenter />, label: 'Align Center', action: () => editor.chain().focus().setTextAlign('center').run(), isActive: () => isButtonActive({ textAlign: 'center' }) },
-      { type: 'button', icon: <AlignRight />, label: 'Align Right', action: () => editor.chain().focus().setTextAlign('right').run(), isActive: () => isButtonActive({ textAlign: 'right' }) },
-      { type: 'button', icon: <AlignJustify />, label: 'Align Justify', action: () => editor.chain().focus().setTextAlign('justify').run(), isActive: () => isButtonActive({ textAlign: 'justify' }) },
+      { type: 'button', icon: <AlignLeft />, label: 'Align Left', action: () => editor.chain().focus().setTextAlign('left').run(), isActive: () => currentTextAlign === 'left' },
+      { type: 'button', icon: <AlignCenter />, label: 'Align Center', action: () => editor.chain().focus().setTextAlign('center').run(), isActive: () => currentTextAlign === 'center' },
+      { type: 'button', icon: <AlignRight />, label: 'Align Right', action: () => editor.chain().focus().setTextAlign('right').run(), isActive: () => currentTextAlign === 'right' },
+      { type: 'button', icon: <AlignJustify />, label: 'Align Justify', action: () => editor.chain().focus().setTextAlign('justify').run(), isActive: () => currentTextAlign === 'justify' },
     ],
     [
-      { type: 'button', icon: <List />, label: 'Bulleted List', action: () => editor.chain().focus().toggleBulletList().run(), isActive: () => isButtonActive('bulletList') },
-      { type: 'button', icon: <ListOrdered />, label: 'Numbered List', action: () => editor.chain().focus().toggleOrderedList().run(), isActive: () => isButtonActive('orderedList') },
-      { type: 'button', icon: <Quote />, label: 'Blockquote', action: () => editor.chain().focus().toggleBlockquote().run(), isActive: () => isButtonActive('blockquote') },
-      { type: 'button', icon: <Code2 />, label: 'Code Block', action: () => editor.chain().focus().toggleCodeBlock().run(), isActive: () => isButtonActive('codeBlock') },
+      { type: 'button', icon: <List />, label: 'Bulleted List', action: () => editor.chain().focus().toggleBulletList().run(), isActive: () => isBulletListActive },
+      { type: 'button', icon: <ListOrdered />, label: 'Numbered List', action: () => editor.chain().focus().toggleOrderedList().run(), isActive: () => isOrderedListActive },
+      { type: 'button', icon: <Quote />, label: 'Blockquote', action: () => editor.chain().focus().toggleBlockquote().run(), isActive: () => isBlockquoteActive },
+      { type: 'button', icon: <Code2 />, label: 'Code Block', action: () => editor.chain().focus().toggleCodeBlock().run(), isActive: () => isCodeBlockActive },
     ],
     [
       { type: 'button', icon: <Minus />, label: 'Horizontal Rule', action: () => editor.chain().focus().setHorizontalRule().run(), isActive: () => false },
       { type: 'button', icon: <ImageUp />, label: 'Insert Image', action: handleImageInsert, isActive: () => false },
     ],
     [
-      { type: 'button', icon: <Undo2 />, label: 'Undo', action: () => editor.chain().focus().undo().run(), isActive: () => false, disabled: editor.isDestroyed ? true : !editor.can().undo() },
-      { type: 'button', icon: <Redo2 />, label: 'Redo', action: () => editor.chain().focus().redo().run(), isActive: () => false, disabled: editor.isDestroyed ? true : !editor.can().redo() },
+      { type: 'button', icon: <Undo2 />, label: 'Undo', action: () => editor.chain().focus().undo().run(), isActive: () => false, disabled: !canUndo },
+      { type: 'button', icon: <Redo2 />, label: 'Redo', action: () => editor.chain().focus().redo().run(), isActive: () => false, disabled: !canRedo },
     ],
   ];
 
@@ -299,7 +337,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
                                           }}
                                 />
                               ) : (
-                                item.icon
+                                item.icon // For 'Default' option which uses an icon
                               )}
                               {item.name}
                             </div>
