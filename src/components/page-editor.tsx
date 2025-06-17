@@ -41,30 +41,28 @@ const CustomImageExtension = OriginalImageExtension.extend({
           if (!attributes.width) {
             return {};
           }
-          // Apply width and ensure height is auto for aspect ratio
           return { style: `width: ${attributes.width}px; height: auto; max-width: 100%; display: block;` };
         },
       },
-      height: { // Height is mostly ignored in favor of width + auto for aspect ratio
+      height: { 
         default: null,
         parseHTML: _element => null,
-        renderHTML: _attributes => ({}), // No direct height attribute, style handles it
+        renderHTML: _attributes => ({}), 
       },
-      // Tiptap's default Image extension includes src, alt, title.
-      // We ensure they are preserved by calling this.parent?.()
+      offsetX: {
+        default: 0,
+      },
+      offsetY: {
+        default: 0,
+      },
     };
   },
-  // inline: false, // Ensure images are block-level, this is a prop for configure()
-  // draggable: true, // Allow Tiptap's default node dragging
-  // selectable: true, // Images should be selectable
-
   addNodeView() {
     return getResizableImageNodeView();
   },
 }).configure({
   allowBase64: true,
-  inline: false, // Images are block by default
-  // HTMLAttributes: { class: 'my-custom-image-class' }, // if needed
+  inline: false,
 });
 
 
@@ -125,7 +123,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       heading: {
         levels: [1, 2, 3],
       },
-      gapcursor: false,
+      gapcursor: false, // Consider disabling if it interferes with image interaction
     }),
     UnderlineExtension,
     PlaceholderExtension.configure({
@@ -139,7 +137,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
     TextStyleExtension,
     ColorExtension,
     HighlightExtension.configure({ multicolor: true }),
-    CustomImageExtension, // Use our custom image extension
+    CustomImageExtension, 
     TaskListExtension,
     TaskItemExtension.configure({
       nested: true,
@@ -473,7 +471,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       />
       <div
         className={cn(
-          'flex-1 relative flex flex-col min-h-0',
+          'flex-1 relative flex flex-col min-h-0', // Ensure this container can shrink if needed
           backgroundClassMap[backgroundStyle]
         )}
         onClick={handlePaperClick}
@@ -481,8 +479,8 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
         <EditorContent
           editor={editor}
           className={cn(
-            "flex-1 tiptap-editor relative", // Added relative
-            isDrawingMode ? 'pointer-events-none opacity-70 z-[1]' : 'z-[5]' // Adjusted z-index
+            "flex-1 tiptap-editor", 
+            isDrawingMode ? 'pointer-events-none opacity-70 z-[1]' : 'relative z-[5]' 
           )}
         />
         <canvas
@@ -490,10 +488,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
           ref={canvasRef}
           className={cn(
             "absolute top-0 left-0 w-full h-full",
-             // isDrawingMode && currentDrawTool ? 'pointer-events-auto z-[10]' : 'pointer-events-none z-[1]'
-            isDrawingMode && currentDrawTool ? 'pointer-events-auto z-[10]' :
-            isDrawingMode && !currentDrawTool ? 'pointer-events-none z-[1]' : // Drawing tab, no tool selected
-                                                'pointer-events-none z-[1]' // Not drawing tab
+            isDrawingMode && currentDrawTool ? 'pointer-events-auto z-[10]' : 'pointer-events-none z-[1]'
           )}
           style={{ touchAction: isDrawingMode && currentDrawTool ? 'none' : 'auto' }}
         />
@@ -504,3 +499,4 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
 
 PageEditor.displayName = 'PageEditor';
 export default PageEditor;
+
