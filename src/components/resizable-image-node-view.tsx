@@ -12,43 +12,33 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selec
   const wrapperRef = React.useRef<HTMLDivElement>(null);
 
   const { src, alt, title, width } = node.attrs;
-  const initialOffsetX = node.attrs.offsetX || 0;
-  const initialOffsetY = node.attrs.offsetY || 0;
+  // offsetX and offsetY are used to initialize transform, actual values are read from node.attrs inside effect
+  // const initialOffsetX = node.attrs.offsetX || 0;
+  // const initialOffsetY = node.attrs.offsetY || 0;
+
 
   // Draggable logic for the wrapper
   React.useEffect(() => {
     const wrapperElement = wrapperRef.current;
-    if (!wrapperElement || !editor.isEditable) {
-      if (interact.isSet(wrapperElement)) {
-        interact(wrapperElement).unset();
-      }
-      // Reset cursor if interact instance is removed
-      if (wrapperElement) wrapperElement.style.cursor = 'default';
+    if (!wrapperElement) {
       return;
     }
 
-    if (!selected) {
-        if (interact.isSet(wrapperElement)) {
-           interact(wrapperElement).draggable(false); // Disable draggable when not selected
-        }
-        if (wrapperElement) wrapperElement.style.cursor = 'default';
-        return;
-    }
-    
-    // If selected and editable, enable draggable
-    if (wrapperElement) wrapperElement.style.cursor = 'grab';
+    const interactable = interact(wrapperElement);
 
+    if (editor.isEditable && selected) {
+      wrapperElement.style.cursor = 'grab';
+      let currentX = node.attrs.offsetX || 0;
+      let currentY = node.attrs.offsetY || 0;
 
-    let currentX = initialOffsetX;
-    let currentY = initialOffsetY;
+      // Set initial transform based on attributes
+      wrapperElement.style.transform = `translateX(${currentX}px) translateY(${currentY}px)`;
 
-    const interactInstance = interact(wrapperElement)
-      .draggable({
+      interactable.draggable({
         inertia: false,
-        enabled: selected && editor.isEditable, // Ensure only draggable when selected and editable
         listeners: {
           start() {
-            currentX = node.attrs.offsetX || 0; // Re-fetch on start, in case of external updates
+            currentX = node.attrs.offsetX || 0;
             currentY = node.attrs.offsetY || 0;
             if (wrapperElement) wrapperElement.style.cursor = 'grabbing';
           },
@@ -62,44 +52,40 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selec
           end() {
             updateAttributes({ offsetX: currentX, offsetY: currentY });
             if (wrapperElement) {
-              wrapperElement.style.cursor = selected && editor.isEditable ? 'grab' : 'default';
+              wrapperElement.style.cursor = (editor.isEditable && selected) ? 'grab' : 'default';
             }
           },
         },
       });
+    } else {
+      interactable.draggable(false);
+      wrapperElement.style.cursor = 'default';
+      // Reset transform if not draggable (e.g. deselected)
+      // wrapperElement.style.transform = `translateX(${node.attrs.offsetX || 0}px) translateY(${node.attrs.offsetY || 0}px)`;
+    }
     
     return () => {
-      if (interact.isSet(wrapperElement)) {
-        interactInstance.unset();
+      // Cleanup: disable draggable
+      if (wrapperElement && interact.isSet(wrapperElement)) {
+        interact(wrapperElement).draggable(false);
       }
-       if (wrapperElement) wrapperElement.style.cursor = 'default';
     };
-  }, [selected, editor.isEditable, updateAttributes, initialOffsetX, initialOffsetY, node.attrs.offsetX, node.attrs.offsetY]);
+  }, [selected, editor.isEditable, updateAttributes, node.attrs.offsetX, node.attrs.offsetY]);
 
 
   // Resizable logic for the image element itself
   React.useEffect(() => {
     const imageElement = imgRef.current;
-    if (!imageElement || !editor.isEditable) {
-      if (interact.isSet(imageElement)) {
-        interact(imageElement).unset();
-      }
+    if (!imageElement) {
       return;
     }
-    
-    if (!selected) {
-        if (interact.isSet(imageElement)) {
-            interact(imageElement).resizable(false); // Disable resizable when not selected
-        }
-        return;
-    }
 
-    // If selected and editable, enable resizable
-    const interactResizableInstance = interact(imageElement)
-      .resizable({
+    const interactable = interact(imageElement);
+
+    if (editor.isEditable && selected) {
+      interactable.resizable({
         edges: { left: true, right: true, bottom: true, top: true },
         inertia: false,
-        enabled: selected && editor.isEditable,
         modifiers: [
           interact.modifiers.restrictSize({
             min: { width: 50 },
@@ -107,44 +93,56 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selec
         ],
         listeners: {
           move(event) {
-            imageElement.style.width = `${event.rect.width}px`;
-            imageElement.style.height = 'auto';
+            if (event.target instanceof HTMLElement) {
+              event.target.style.width = `${event.rect.width}px`;
+              event.target.style.height = 'auto';
+            }
           },
           end(event) {
             updateAttributes({
               width: Math.round(event.rect.width),
-              height: null,
+              height: null, 
             });
           },
         },
       });
+    } else {
+      interactable.resizable(false);
+    }
     
     return () => {
-        if(interact.isSet(imageElement)){
-            interactResizableInstance.unset();
-        }
+      if (imageElement && interact.isSet(imageElement)) {
+        interact(imageElement).resizable(false);
+      }
     };
-  }, [selected, editor.isEditable, updateAttributes, width]);
+  }, [selected, editor.isEditable, updateAttributes, node.attrs.width]);
 
   const handleDelete = (event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent other click handlers
+    event.stopPropagation(); 
     if (editor.isEditable) {
       const nodePosition = getPos();
-      editor.chain().focus().deleteRange({ from: nodePosition, to: nodePosition + node.nodeSize }).run();
+      if (typeof nodePosition === 'number') { // Check if getPos() returned a valid position
+        editor.chain().focus().deleteRange({ from: nodePosition, to: nodePosition + node.nodeSize }).run();
+      }
     }
   };
 
+  // Apply initial transform from attributes directly to style prop for NodeViewWrapper
+  // This ensures the wrapper is positioned correctly on initial render and if attributes change.
   const wrapperStyle: React.CSSProperties = {
-    transform: `translateX(${initialOffsetX}px) translateY(${initialOffsetY}px)`,
+    transform: `translateX(${node.attrs.offsetX || 0}px) translateY(${node.attrs.offsetY || 0}px)`,
     position: 'relative', // For positioning the delete button
-    // Cursor is handled by the draggable useEffect
+    // Cursor is managed by useEffect
   };
+
 
   return (
     <NodeViewWrapper
       ref={wrapperRef}
       className={cn("resizable-image-wrapper inline-block", node.attrs.className)}
       style={wrapperStyle}
+      draggable="true" // Setting draggable true on wrapper to allow Tiptap to handle node selection drag
+      data-drag-handle // Tiptap uses this for drag handle for the node itself
     >
       {selected && editor.isEditable && (
         <button
@@ -153,6 +151,8 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selec
           aria-label="Delete image"
           title="Delete image"
           type="button"
+          // Prevent this button from being a drag handle for the node itself
+          onMouseDown={(e) => e.stopPropagation()} 
         >
           <X size={14} strokeWidth={2.5}/>
         </button>
@@ -160,18 +160,19 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selec
       <img
         ref={imgRef}
         src={src}
-        alt={alt}
-        title={title}
+        alt={alt || ''}
+        title={title || ''}
         style={{
           width: width ? `${width}px` : 'auto',
           height: 'auto',
-          display: 'block', // Important for sizing and layout
+          display: 'block', 
         }}
         className={cn(
             'rounded',
             selected && editor.isEditable ? 'outline-accent outline-2 outline-dashed outline-offset-2' : ''
         )}
-        draggable="false" // Prevent native image drag
+        // Prevent native image drag, interact.js handles dragging of the wrapper
+        draggable="false" 
       />
     </NodeViewWrapper>
   );
