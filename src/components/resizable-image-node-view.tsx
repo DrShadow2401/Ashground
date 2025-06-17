@@ -12,10 +12,6 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selec
   const wrapperRef = React.useRef<HTMLDivElement>(null);
 
   const { src, alt, title, width } = node.attrs;
-  // offsetX and offsetY are used to initialize transform, actual values are read from node.attrs inside effect
-  // const initialOffsetX = node.attrs.offsetX || 0;
-  // const initialOffsetY = node.attrs.offsetY || 0;
-
 
   // Draggable logic for the wrapper
   React.useEffect(() => {
@@ -60,17 +56,15 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selec
     } else {
       interactable.draggable(false);
       wrapperElement.style.cursor = 'default';
-      // Reset transform if not draggable (e.g. deselected)
-      // wrapperElement.style.transform = `translateX(${node.attrs.offsetX || 0}px) translateY(${node.attrs.offsetY || 0}px)`;
+      // Ensure transform is based on attributes if not selected or editable
+      wrapperElement.style.transform = `translateX(${node.attrs.offsetX || 0}px) translateY(${node.attrs.offsetY || 0}px)`;
     }
     
     return () => {
-      // Cleanup: disable draggable
-      if (wrapperElement && interact.isSet(wrapperElement)) {
-        interact(wrapperElement).draggable(false);
-      }
+      // Cleanup: unset the interactable instance
+      interactable.unset();
     };
-  }, [selected, editor.isEditable, updateAttributes, node.attrs.offsetX, node.attrs.offsetY]);
+  }, [selected, editor.isEditable, updateAttributes, node.attrs.offsetX, node.attrs.offsetY, editor]);
 
 
   // Resizable logic for the image element itself
@@ -80,10 +74,10 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selec
       return;
     }
 
-    const interactable = interact(imageElement);
+    const resizableInteractable = interact(imageElement);
 
     if (editor.isEditable && selected) {
-      interactable.resizable({
+      resizableInteractable.resizable({
         edges: { left: true, right: true, bottom: true, top: true },
         inertia: false,
         modifiers: [
@@ -107,32 +101,29 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selec
         },
       });
     } else {
-      interactable.resizable(false);
+      resizableInteractable.resizable(false);
     }
     
     return () => {
-      if (imageElement && interact.isSet(imageElement)) {
-        interact(imageElement).resizable(false);
-      }
+      // Cleanup: unset the interactable instance
+      resizableInteractable.unset();
     };
-  }, [selected, editor.isEditable, updateAttributes, node.attrs.width]);
+  }, [selected, editor.isEditable, updateAttributes, node.attrs.width, editor]);
 
   const handleDelete = (event: React.MouseEvent) => {
     event.stopPropagation(); 
     if (editor.isEditable) {
       const nodePosition = getPos();
-      if (typeof nodePosition === 'number') { // Check if getPos() returned a valid position
+      // Ensure getPos() returns a number before attempting to delete
+      if (typeof nodePosition === 'number' && nodePosition >= 0) {
         editor.chain().focus().deleteRange({ from: nodePosition, to: nodePosition + node.nodeSize }).run();
       }
     }
   };
 
-  // Apply initial transform from attributes directly to style prop for NodeViewWrapper
-  // This ensures the wrapper is positioned correctly on initial render and if attributes change.
   const wrapperStyle: React.CSSProperties = {
     transform: `translateX(${node.attrs.offsetX || 0}px) translateY(${node.attrs.offsetY || 0}px)`,
-    position: 'relative', // For positioning the delete button
-    // Cursor is managed by useEffect
+    position: 'relative', 
   };
 
 
@@ -141,8 +132,8 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selec
       ref={wrapperRef}
       className={cn("resizable-image-wrapper inline-block", node.attrs.className)}
       style={wrapperStyle}
-      draggable="true" // Setting draggable true on wrapper to allow Tiptap to handle node selection drag
-      data-drag-handle // Tiptap uses this for drag handle for the node itself
+      draggable="true" 
+      data-drag-handle 
     >
       {selected && editor.isEditable && (
         <button
@@ -151,7 +142,6 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selec
           aria-label="Delete image"
           title="Delete image"
           type="button"
-          // Prevent this button from being a drag handle for the node itself
           onMouseDown={(e) => e.stopPropagation()} 
         >
           <X size={14} strokeWidth={2.5}/>
@@ -171,7 +161,6 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selec
             'rounded',
             selected && editor.isEditable ? 'outline-accent outline-2 outline-dashed outline-offset-2' : ''
         )}
-        // Prevent native image drag, interact.js handles dragging of the wrapper
         draggable="false" 
       />
     </NodeViewWrapper>
