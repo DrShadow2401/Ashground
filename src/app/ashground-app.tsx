@@ -23,7 +23,6 @@ import HomeTools from '@/components/tool-sections/home-tools';
 import DrawTools from '@/components/tool-sections/draw-tools';
 import ViewTools from '@/components/tool-sections/view-tools';
 import ExportTools from '@/components/tool-sections/export-tools';
-import { useToast } from "@/hooks/use-toast";
 import { Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import html2canvas from 'html2canvas';
@@ -51,7 +50,6 @@ export default function AshgroundApp() {
 
   const editorRef = useRef<Editor | null>(null);
   const pageEditorComponentRef = useRef<PageEditorRef>(null);
-  const { toast } = useToast();
 
 
   const [currentDrawTool, setCurrentDrawTool] = useState<string | null>(null);
@@ -199,11 +197,6 @@ export default function AshgroundApp() {
 
       } catch (error) {
         console.error("Error capturing note for burning:", error);
-        toast({
-          title: "Burn Failed",
-          description: "Could not capture the note content for burning.",
-          variant: "destructive",
-        });
         
         setNoteTitle('Untitled Note');
         setNoteContent('<p></p>');
@@ -231,14 +224,14 @@ export default function AshgroundApp() {
 
   const appContent = (
     <>
-      <div className="flex items-center justify-center w-full max-w-4xl mx-auto mb-8">
-        <Tabs defaultValue="home" value={activeTab} onValueChange={setActiveTab} className="flex-grow max-w-md">
+      <div className="flex flex-col items-center gap-4 px-2 sm:flex-row sm:justify-center sm:gap-6 w-full max-w-4xl mx-auto mb-8">
+        <Tabs defaultValue="home" value={activeTab} onValueChange={setActiveTab} className="w-full sm:w-auto sm:flex-grow sm:max-w-lg">
           <TabsList className="mx-auto w-full bg-card rounded-xl shadow-lg p-1.5 flex justify-around">
             {tabItems.map(tab => (
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className="px-3 py-1.5 data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground hover:text-foreground/80 transition-colors rounded-md text-sm"
+                className="flex-1 sm:flex-initial px-2 py-1.5 text-xs data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground hover:text-foreground/80 transition-colors rounded-md sm:text-sm"
               >
                 {tab.label}
               </TabsTrigger>
@@ -251,7 +244,7 @@ export default function AshgroundApp() {
             <Button
               size="icon"
               variant="outline"
-              className="ml-4 rounded-full h-10 w-10
+              className="rounded-full h-10 w-10
                          border-2 border-amber-500 dark:border-amber-400
                          bg-muted/30 dark:bg-muted/20
                          text-amber-500 dark:text-amber-400

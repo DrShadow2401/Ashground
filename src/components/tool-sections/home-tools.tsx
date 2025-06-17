@@ -66,7 +66,6 @@ const highlightColors = [
 const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
   const imageFileInputRef = useRef<HTMLInputElement>(null);
 
-  // Local state for button active states
   const [isBoldActive, setIsBoldActive] = useState(false);
   const [isItalicActive, setIsItalicActive] = useState(false);
   const [isUnderlineActive, setIsUnderlineActive] = useState(false);
@@ -84,7 +83,6 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
-  // Image specific state
   const [isImageSelected, setIsImageSelected] = useState(false);
   const [imageWidthInput, setImageWidthInput] = useState('');
 
@@ -106,7 +104,8 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     else setCurrentHeadingLevel(0);
 
     setCurrentTextColor(editor.getAttributes('textStyle').color || null);
-    setCurrentHighlightColor(editor.getAttributes('highlight')?.color || null);
+    const highlightAttrs = editor.getAttributes('highlight');
+    setCurrentHighlightColor(highlightAttrs?.color || null);
     
     if (editor.isActive({ textAlign: 'left' })) setCurrentTextAlign('left');
     else if (editor.isActive({ textAlign: 'center' })) setCurrentTextAlign('center');
@@ -122,7 +121,6 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     setCanUndo(editor.can().undo());
     setCanRedo(editor.can().redo());
 
-    // Image specific updates
     if (editor.isActive('image')) {
       const attrs = editor.getAttributes('image') as { src: string; alt?: string; title?: string; width?: string | number; height?: string | number };
       setImageWidthInput(attrs.width != null ? String(attrs.width) : '');
@@ -131,7 +129,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
       setIsImageSelected(false);
       setImageWidthInput('');
     }
-  }, [editorRef]);
+  }, [editorRef, setIsBoldActive, setIsItalicActive, setIsUnderlineActive, setIsStrikeActive, setIsSuperscriptActive, setIsSubscriptActive, setCurrentHeadingLevel, setCurrentTextColor, setCurrentHighlightColor, setCurrentTextAlign, setIsBulletListActive, setIsOrderedListActive, setIsBlockquoteActive, setIsCodeBlockActive, setCanUndo, setCanRedo, setIsImageSelected, setImageWidthInput]);
 
 
   useEffect(() => {
@@ -140,7 +138,6 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
       return;
     }
     
-    // Initial update of states
     handleTransactionOrSelectionUpdate();
     
     currentEditor.on('transaction', handleTransactionOrSelectionUpdate);
@@ -337,7 +334,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
                                           }}
                                 />
                               ) : (
-                                item.icon // For 'Default' option which uses an icon
+                                item.icon 
                               )}
                               {item.name}
                             </div>
@@ -356,9 +353,9 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
           ))}
         </div>
         {isImageSelected && !editor.isDestroyed && (
-          <div className="mt-2 p-2 border-t border-border w-full max-w-xs mx-auto">
-            <div className="flex items-center gap-2">
-              <label htmlFor="imageWidthInput" className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+          <div className="mt-2 p-2 border-t border-border w-full max-w-md mx-auto">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <label htmlFor="imageWidthInput" className="text-sm font-medium text-muted-foreground whitespace-nowrap self-center sm:self-auto">
                 Image Width:
               </label>
               <Input
@@ -367,14 +364,14 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
                 value={imageWidthInput}
                 onChange={(e) => setImageWidthInput(e.target.value)}
                 placeholder="e.g., 300 or 50%"
-                className="h-8 text-sm"
+                className="h-8 text-sm w-full sm:flex-1"
                 disabled={!editor || !editor.isEditable || editor.isDestroyed}
               />
               <Button
                 onClick={handleApplyImageWidth}
                 size="sm"
                 variant="outline"
-                className="h-8"
+                className="h-8 w-full sm:w-auto"
                 disabled={!editor || !editor.isEditable || editor.isDestroyed}
               >
                 Apply
