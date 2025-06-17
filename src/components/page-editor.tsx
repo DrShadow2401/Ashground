@@ -214,7 +214,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
   }, [editor, editorTiptapRef, onEditorReady]);
 
   useEffect(() => {
-    if (editor && !editor.isDestroyed && editor.isEditable && editor.getHTML() !== noteContent) {
+    if (editor && !editor.isDestroyed && editor.getHTML() !== noteContent) {
       const { from, to } = editor.state.selection;
       editor.commands.setContent(noteContent, false);
       try {

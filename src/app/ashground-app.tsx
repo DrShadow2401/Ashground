@@ -163,7 +163,7 @@ export default function AshgroundApp() {
       if (document.activeElement && typeof (document.activeElement as HTMLElement).blur === 'function') {
         (document.activeElement as HTMLElement).blur();
       }
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 250)); // Increased delay for DOM to settle
 
       try {
         const canvas = await html2canvas(exportableElement, {
