@@ -1,5 +1,4 @@
 
-      
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -173,6 +172,9 @@
 }
 
 @layer base {
+  html {
+    overflow-x: hidden;
+  }
   * {
     @apply border-border;
   }
@@ -180,6 +182,7 @@
     @apply bg-background text-foreground font-body antialiased;
     background-image: linear-gradient(to bottom, hsl(var(--background)), hsl(var(--background-end)));
     min-height: 100vh;
+    overflow-x: hidden;
   }
 }
 
@@ -398,7 +401,6 @@
     overflow: hidden; /* Clip content to overlay boundaries */
   }
 
-  /* Removed .note-burn-overlay img rule as img is no longer a child */
 
   .note-ember-particle,
   .note-smoke-particle {
@@ -552,6 +554,3 @@
     }
   }
 }
-
-
-    

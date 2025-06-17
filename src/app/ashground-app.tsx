@@ -75,7 +75,7 @@ export default function AshgroundApp() {
       if (savedBg) setPageBackground(savedBg);
 
       const htmlClasses = document.documentElement.classList;
-      htmlClasses.remove('dark', 'theme-pastel'); 
+      htmlClasses.remove('dark', 'theme-pastel');
 
       if (savedTheme) {
         if (savedTheme === 'dark') {
@@ -85,7 +85,7 @@ export default function AshgroundApp() {
         }
         setPageTheme(savedTheme);
       } else {
-        setPageTheme('light'); 
+        setPageTheme('light');
       }
     }
   }, [isMounted]);
@@ -113,7 +113,7 @@ export default function AshgroundApp() {
     if(isMounted) {
       localStorage.setItem('ashground_theme', pageTheme);
       const htmlClasses = document.documentElement.classList;
-      htmlClasses.remove('dark', 'theme-pastel'); 
+      htmlClasses.remove('dark', 'theme-pastel');
       if (pageTheme === 'dark') {
         htmlClasses.add('dark');
       } else if (pageTheme === 'pastel') {
@@ -135,7 +135,7 @@ export default function AshgroundApp() {
   const handleNoteContentChange = useCallback((newContent: string) => {
     setNoteContent(prevContent => {
       if (prevContent === newContent) {
-        return prevContent; 
+        return prevContent;
       }
       return newContent;
     });
@@ -159,7 +159,7 @@ export default function AshgroundApp() {
   const handleBurnEverything = async () => {
     const exportableElement = pageEditorComponentRef.current?.getExportableElement();
     if (exportableElement) {
-      
+
       if (document.activeElement && typeof (document.activeElement as HTMLElement).blur === 'function') {
         (document.activeElement as HTMLElement).blur();
       }
@@ -169,13 +169,13 @@ export default function AshgroundApp() {
         const canvas = await html2canvas(exportableElement, {
           scale: 1.5,
           useCORS: true,
-          backgroundColor: null, 
+          backgroundColor: null,
         });
         const imageDataUri = canvas.toDataURL('image/png');
-        
+
         setContentForBurn(imageDataUri);
         setAnimationTargetRect(exportableElement.getBoundingClientRect());
-        setAnimationSourceElement(exportableElement); 
+        setAnimationSourceElement(exportableElement);
         setIsBurningAnimationActive(true);
 
         setTimeout(() => {
@@ -192,12 +192,12 @@ export default function AshgroundApp() {
           setAnimationSourceElement(null);
           setContentForBurn('');
 
-          
+
         }, ANIMATION_DURATION);
 
       } catch (error) {
         console.error("Error capturing note for burning:", error);
-        
+
         setNoteTitle('Untitled Note');
         setNoteContent('<p></p>');
         if (pageEditorComponentRef.current) pageEditorComponentRef.current.clearCanvas();
@@ -205,13 +205,13 @@ export default function AshgroundApp() {
         localStorage.removeItem('ashground_note');
       }
     } else {
-       
+
       setNoteTitle('Untitled Note');
       setNoteContent('<p></p>');
       if (pageEditorComponentRef.current) pageEditorComponentRef.current.clearCanvas();
       localStorage.removeItem('ashground_title');
       localStorage.removeItem('ashground_note');
-      
+
     }
   };
 
@@ -279,7 +279,7 @@ export default function AshgroundApp() {
         </AlertDialog>
       </div>
 
-      <Tabs value={activeTab} className="w-full max-w-4xl">
+      <Tabs value={activeTab} className="w-full max-w-4xl mx-auto">
         <div className="max-w-3xl mx-auto mb-6">
           <div className="bg-muted p-3 rounded-lg shadow-inner min-h-[52px] flex justify-center items-start">
             {activeTab === 'home' && (isEditorInitialized ? <HomeTools editorRef={editorRef} /> : <p className="text-muted-foreground text-sm">Editor loading...</p>)}
@@ -345,7 +345,7 @@ export default function AshgroundApp() {
       )}
 
       <div className={cn("w-full transition-opacity duration-300", isBurningAnimationActive ? "opacity-0 pointer-events-none" : "opacity-100")}>
-        {isMounted ? appContent : null} 
+        {isMounted ? appContent : null}
       </div>
     </main>
   );
