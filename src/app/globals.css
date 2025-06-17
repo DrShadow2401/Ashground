@@ -34,7 +34,7 @@
     --input: 45 20% 85%;
     --ring: 20 20% 65%;
 
-    --paper-light-bg: 0 0% 100%;
+    --paper-light-bg: 40 33% 96%; /* Updated from 0 0% 100% for #F8F5F0 */
     --paper-light-fg: 20 15% 30%;
     --paper-dark-bg: 240 5% 12%;
     --paper-dark-fg: 0 0% 95%;
@@ -50,7 +50,7 @@
     --line-a: 0.7;
 
     /* Burn effect colors - Standardized for consistent fire appearance */
-    --note-initial-paper-color-for-burn: 0 0% 100%; /* Used as overlay background initially */
+    --note-initial-paper-color-for-burn: 40 33% 96%; /* Updated from 0 0% 100% */
     --note-text-color-for-burn: 20 15% 30%; /* Not directly used in animation, but for reference */
     --note-ignition-flash-color: 35 100% 70%; /* Bright orange-yellow flash */
     --note-flame-main-color: 30 100% 60%;    /* Main flame color - orange */
@@ -105,7 +105,7 @@
     --line-a: 0.7;
 
     /* Burn effect colors - Standardized */
-    --note-initial-paper-color-for-burn: 0 0% 100%;
+    --note-initial-paper-color-for-burn: 40 33% 96%; /* Updated from 0 0% 100% */
     --note-text-color-for-burn: 20 15% 30%;
     --note-ignition-flash-color: 35 100% 70%;
     --note-flame-main-color: 30 100% 60%;
@@ -146,7 +146,7 @@
     --input: 320 50% 90%;
     --ring: 280 50% 80%;
 
-    --paper-light-bg: 0 0% 100%; /* Pastel theme's "light" paper */
+    --paper-light-bg: 40 33% 96%; /* Pastel theme's "light" paper, Updated for #F8F5F0 */
     --paper-light-fg: 320 30% 35%;
     --paper-dark-bg: 320 30% 25%; /* Pastel theme's "dark" paper */
     --paper-dark-fg:  320 50% 90%;
@@ -159,7 +159,7 @@
     --line-a: 0.7;
 
     /* Burn effect colors - Standardized */
-    --note-initial-paper-color-for-burn: 0 0% 100%;
+    --note-initial-paper-color-for-burn: 40 33% 96%; /* Updated from 0 0% 100% */
     --note-text-color-for-burn: 20 15% 30%;
     --note-ignition-flash-color: 35 100% 70%;
     --note-flame-main-color: 30 100% 60%;
@@ -554,3 +554,6 @@
     }
   }
 }
+
+
+    
