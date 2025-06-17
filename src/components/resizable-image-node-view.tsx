@@ -4,30 +4,31 @@
 import React from 'react';
 import { NodeViewWrapper, type NodeViewProps, ReactNodeViewRenderer } from '@tiptap/react';
 import interact from 'interactjs';
+import type { Interactable } from '@interactjs/core/Interactable';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selected, editor, getPos }) => {
-  const imgRef = React.useRef<HTMLImageElement>(null);
   const wrapperRef = React.useRef<HTMLDivElement>(null);
+  const resizableImageContainerRef = React.useRef<HTMLDivElement>(null);
+  // imgRef is not strictly necessary anymore for interact.js but can be kept if needed for other direct img manipulations
+  // const imgRef = React.useRef<HTMLImageElement>(null);
+
 
   const { src, alt, title, width } = node.attrs;
 
-  // Draggable logic for the wrapper
+  // Draggable logic for the NodeViewWrapper
   React.useEffect(() => {
     const wrapperElement = wrapperRef.current;
-    if (!wrapperElement) {
-      return;
-    }
+    if (!wrapperElement) return;
 
-    const interactable = interact(wrapperElement);
+    const interactable: Interactable = interact(wrapperElement);
 
     if (editor.isEditable && selected) {
       wrapperElement.style.cursor = 'grab';
       let currentX = node.attrs.offsetX || 0;
       let currentY = node.attrs.offsetY || 0;
 
-      // Set initial transform based on attributes
       wrapperElement.style.transform = `translateX(${currentX}px) translateY(${currentY}px)`;
 
       interactable.draggable({
@@ -55,26 +56,25 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selec
       });
     } else {
       interactable.draggable(false);
-      if (wrapperElement) wrapperElement.style.cursor = 'default';
-      // Ensure transform is based on attributes if not selected or editable
-      if (wrapperElement) wrapperElement.style.transform = `translateX(${node.attrs.offsetX || 0}px) translateY(${node.attrs.offsetY || 0}px)`;
+      if (wrapperElement) {
+        wrapperElement.style.cursor = 'default';
+        // Ensure transform is based on attributes if not selected or editable
+        wrapperElement.style.transform = `translateX(${node.attrs.offsetX || 0}px) translateY(${node.attrs.offsetY || 0}px)`;
+      }
     }
     
     return () => {
-      // Cleanup: unset the interactable instance
       interactable.unset();
     };
   }, [selected, editor.isEditable, updateAttributes, node.attrs.offsetX, node.attrs.offsetY, editor]);
 
 
-  // Resizable logic for the image element itself
+  // Resizable logic for the resizableImageContainerRef
   React.useEffect(() => {
-    const imageElement = imgRef.current;
-    if (!imageElement) {
-      return;
-    }
+    const imageContainerElement = resizableImageContainerRef.current;
+    if (!imageContainerElement) return;
 
-    const resizableInteractable = interact(imageElement); // Get or create instance
+    const resizableInteractable: Interactable = interact(imageContainerElement);
 
     if (editor.isEditable && selected) {
       resizableInteractable.resizable({
@@ -89,7 +89,7 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selec
           move(event) {
             if (event.target instanceof HTMLElement) {
               event.target.style.width = `${event.rect.width}px`;
-              event.target.style.height = 'auto'; 
+              // Height of the inner img is auto, so container height is also auto based on img
             }
           },
           end(event) {
@@ -101,14 +101,13 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selec
         },
       });
     } else {
-      resizableInteractable.resizable(false); // Disable resizable
+      resizableInteractable.resizable(false); 
     }
     
     return () => {
-      // Cleanup: unset the interactable instance
       resizableInteractable.unset();
     };
-  }, [selected, editor.isEditable, updateAttributes, node.attrs.width, editor]); // Added node.attrs.width here
+  }, [selected, editor.isEditable, updateAttributes, node.attrs.width, editor]);
 
   const handleDelete = (event: React.MouseEvent) => {
     event.stopPropagation(); 
@@ -122,14 +121,23 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selec
 
   const wrapperStyle: React.CSSProperties = {
     transform: `translateX(${node.attrs.offsetX || 0}px) translateY(${node.attrs.offsetY || 0}px)`,
-    position: 'relative', 
+    position: 'relative', // For positioning delete button and ensuring wrapper can be dragged
+    display: 'inline-block', // To match previous inline-block behavior
+  };
+  
+  const imageContainerStyle: React.CSSProperties = {
+    width: width ? `${width}px` : 'auto',
+    // height is auto based on img content to maintain aspect ratio
+    position: 'relative', // For outline and potentially for interact.js handles if they are children
+    touchAction: (selected && editor.isEditable) ? 'none' : 'auto',
+    display: 'inline-block', // Or 'block' if preferred, matching the wrapper's display intent
   };
 
 
   return (
     <NodeViewWrapper
       ref={wrapperRef}
-      className={cn("resizable-image-wrapper inline-block", node.attrs.className)}
+      className={cn("resizable-image-node-wrapper", node.attrs.className)} // Changed class name for clarity
       style={wrapperStyle}
       draggable="true" 
       data-drag-handle 
@@ -146,23 +154,27 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selec
           <X size={14} strokeWidth={2.5}/>
         </button>
       )}
-      <img
-        ref={imgRef}
-        src={src}
-        alt={alt || ''}
-        title={title || ''}
-        style={{
-          width: width ? `${width}px` : 'auto',
-          height: 'auto',
-          display: 'block', 
-          touchAction: (selected && editor.isEditable) ? 'none' : 'auto', // Added touch-action
-        }}
+      <div
+        ref={resizableImageContainerRef}
         className={cn(
-            'rounded',
+            'rounded', // Keep rounded corners
             selected && editor.isEditable ? 'outline-accent outline-2 outline-dashed outline-offset-2' : ''
         )}
-        draggable="false" 
-      />
+        style={imageContainerStyle}
+      >
+        <img
+          // ref={imgRef} // Not strictly needed if not directly manipulating img for resize
+          src={src}
+          alt={alt || ''}
+          title={title || ''}
+          style={{
+            width: '100%', // Image fills the resizable container
+            height: 'auto',
+            display: 'block', 
+          }}
+          draggable="false" 
+        />
+      </div>
     </NodeViewWrapper>
   );
 };
