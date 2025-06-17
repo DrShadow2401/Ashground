@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input';
+// import { Input } from '@/components/ui/input'; // Removed
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -83,53 +83,54 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
-  const [isImageSelected, setIsImageSelected] = useState(false);
-  const [imageWidthInput, setImageWidthInput] = useState('');
+  // Removed imageWidthInput and isImageSelected states as they are no longer needed for the input field
+
+
+  const allSetters = {
+    setIsBoldActive, setIsItalicActive, setIsUnderlineActive, setIsStrikeActive,
+    setIsSuperscriptActive, setIsSubscriptActive, setCurrentHeadingLevel,
+    setCurrentTextColor, setCurrentHighlightColor, setCurrentTextAlign,
+    setIsBulletListActive, setIsOrderedListActive, setIsBlockquoteActive,
+    setIsCodeBlockActive, setCanUndo, setCanRedo,
+  };
 
 
   const handleTransactionOrSelectionUpdate = useCallback(() => {
     const editor = editorRef.current;
     if (!editor || editor.isDestroyed) return;
 
-    setIsBoldActive(editor.isActive('bold'));
-    setIsItalicActive(editor.isActive('italic'));
-    setIsUnderlineActive(editor.isActive('underline'));
-    setIsStrikeActive(editor.isActive('strike'));
-    setIsSuperscriptActive(editor.isActive('superscript'));
-    setIsSubscriptActive(editor.isActive('subscript'));
+    allSetters.setIsBoldActive(editor.isActive('bold'));
+    allSetters.setIsItalicActive(editor.isActive('italic'));
+    allSetters.setIsUnderlineActive(editor.isActive('underline'));
+    allSetters.setIsStrikeActive(editor.isActive('strike'));
+    allSetters.setIsSuperscriptActive(editor.isActive('superscript'));
+    allSetters.setIsSubscriptActive(editor.isActive('subscript'));
 
-    if (editor.isActive('heading', { level: 1 })) setCurrentHeadingLevel(1);
-    else if (editor.isActive('heading', { level: 2 })) setCurrentHeadingLevel(2);
-    else if (editor.isActive('heading', { level: 3 })) setCurrentHeadingLevel(3);
-    else setCurrentHeadingLevel(0);
+    if (editor.isActive('heading', { level: 1 })) allSetters.setCurrentHeadingLevel(1);
+    else if (editor.isActive('heading', { level: 2 })) allSetters.setCurrentHeadingLevel(2);
+    else if (editor.isActive('heading', { level: 3 })) allSetters.setCurrentHeadingLevel(3);
+    else allSetters.setCurrentHeadingLevel(0);
 
-    setCurrentTextColor(editor.getAttributes('textStyle').color || null);
+    allSetters.setCurrentTextColor(editor.getAttributes('textStyle').color || null);
     const highlightAttrs = editor.getAttributes('highlight');
-    setCurrentHighlightColor(highlightAttrs?.color || null);
+    allSetters.setCurrentHighlightColor(highlightAttrs?.color || null);
     
-    if (editor.isActive({ textAlign: 'left' })) setCurrentTextAlign('left');
-    else if (editor.isActive({ textAlign: 'center' })) setCurrentTextAlign('center');
-    else if (editor.isActive({ textAlign: 'right' })) setCurrentTextAlign('right');
-    else if (editor.isActive({ textAlign: 'justify' })) setCurrentTextAlign('justify');
-    else setCurrentTextAlign(null);
+    if (editor.isActive({ textAlign: 'left' })) allSetters.setCurrentTextAlign('left');
+    else if (editor.isActive({ textAlign: 'center' })) allSetters.setCurrentTextAlign('center');
+    else if (editor.isActive({ textAlign: 'right' })) allSetters.setCurrentTextAlign('right');
+    else if (editor.isActive({ textAlign: 'justify' })) allSetters.setCurrentTextAlign('justify');
+    else allSetters.setCurrentTextAlign(null);
 
-    setIsBulletListActive(editor.isActive('bulletList'));
-    setIsOrderedListActive(editor.isActive('orderedList'));
-    setIsBlockquoteActive(editor.isActive('blockquote'));
-    setIsCodeBlockActive(editor.isActive('codeBlock'));
+    allSetters.setIsBulletListActive(editor.isActive('bulletList'));
+    allSetters.setIsOrderedListActive(editor.isActive('orderedList'));
+    allSetters.setIsBlockquoteActive(editor.isActive('blockquote'));
+    allSetters.setIsCodeBlockActive(editor.isActive('codeBlock'));
 
-    setCanUndo(editor.can().undo());
-    setCanRedo(editor.can().redo());
+    allSetters.setCanUndo(editor.can().undo());
+    allSetters.setCanRedo(editor.can().redo());
 
-    if (editor.isActive('image')) {
-      const attrs = editor.getAttributes('image') as { src: string; alt?: string; title?: string; width?: string | number; height?: string | number };
-      setImageWidthInput(attrs.width != null ? String(attrs.width) : '');
-      setIsImageSelected(true);
-    } else {
-      setIsImageSelected(false);
-      setImageWidthInput('');
-    }
-  }, [editorRef, setIsBoldActive, setIsItalicActive, setIsUnderlineActive, setIsStrikeActive, setIsSuperscriptActive, setIsSubscriptActive, setCurrentHeadingLevel, setCurrentTextColor, setCurrentHighlightColor, setCurrentTextAlign, setIsBulletListActive, setIsOrderedListActive, setIsBlockquoteActive, setIsCodeBlockActive, setCanUndo, setCanRedo, setIsImageSelected, setImageWidthInput]);
+    // No need to update image specific states like isImageSelected for the input field
+  }, [editorRef, allSetters]);
 
 
   useEffect(() => {
@@ -138,7 +139,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
       return;
     }
     
-    handleTransactionOrSelectionUpdate();
+    handleTransactionOrSelectionUpdate(); // Initial check
     
     currentEditor.on('transaction', handleTransactionOrSelectionUpdate);
     currentEditor.on('selectionUpdate', handleTransactionOrSelectionUpdate);
@@ -163,6 +164,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     const file = event.target.files[0];
     const reader = new FileReader();
     reader.onloadend = () => {
+      // Insert image with default (auto) width initially
       currentEditor.chain().focus().setImage({ src: reader.result as string }).run();
     };
     reader.readAsDataURL(file);
@@ -171,23 +173,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     }
   }, [editorRef]);
 
-  const handleApplyImageWidth = useCallback(() => {
-    const currentEditor = editorRef.current;
-    if (!currentEditor || !isImageSelected || !currentEditor.isEditable || currentEditor.isDestroyed) return;
-
-    let newWidthValue: string | number | null = imageWidthInput.trim();
-
-    if (newWidthValue === '') {
-      newWidthValue = null; 
-    } else if (/^\d+$/.test(newWidthValue) && !newWidthValue.endsWith('%') && !newWidthValue.endsWith('px')) {
-      newWidthValue = parseInt(newWidthValue, 10);
-    }
-    
-    currentEditor.chain().focus().updateAttributes('image', {
-      width: newWidthValue,
-      height: null 
-    }).run();
-  }, [editorRef, isImageSelected, imageWidthInput]);
+  // Removed handleApplyImageWidth as the input field is gone
 
   const editor = editorRef.current;
   if (!editor || editor.isDestroyed) {
@@ -352,36 +338,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
             </React.Fragment>
           ))}
         </div>
-        {isImageSelected && !editor.isDestroyed && (
-          <div className="mt-2 p-2 border-t border-border w-full max-w-md mx-auto">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <label htmlFor="imageWidthInput" className="text-sm font-medium text-muted-foreground whitespace-nowrap self-center sm:self-auto">
-                Image Width:
-              </label>
-              <Input
-                id="imageWidthInput"
-                type="text"
-                value={imageWidthInput}
-                onChange={(e) => setImageWidthInput(e.target.value)}
-                placeholder="e.g., 300 or 50%"
-                className="h-8 text-sm w-full sm:flex-1"
-                disabled={!editor || !editor.isEditable || editor.isDestroyed}
-              />
-              <Button
-                onClick={handleApplyImageWidth}
-                size="sm"
-                variant="outline"
-                className="h-8 w-full sm:w-auto"
-                disabled={!editor || !editor.isEditable || editor.isDestroyed}
-              >
-                Apply
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground/70 mt-1 text-center">
-              Enter width (e.g., 300, 300px, 50%). Height auto-adjusts.
-            </p>
-          </div>
-        )}
+        {/* Removed the conditional rendering block for image width input */}
       </div>
     </>
   );

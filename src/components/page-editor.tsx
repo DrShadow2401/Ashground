@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef, useCallback, useMemo } from 'react';
-import { useEditor, EditorContent, Editor } from '@tiptap/react';
+import { useEditor, EditorContent, Editor, NodeViewProps, ReactNodeViewRenderer } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import UnderlineExtension from '@tiptap/extension-underline';
 import PlaceholderExtension from '@tiptap/extension-placeholder';
@@ -10,7 +10,10 @@ import SubscriptExtension from '@tiptap/extension-subscript';
 import TextStyleExtension from '@tiptap/extension-text-style';
 import ColorExtension from '@tiptap/extension-color';
 import HighlightExtension from '@tiptap/extension-highlight';
-import ImageExtension from '@tiptap/extension-image';
+// import ImageExtension from '@tiptap/extension-image'; // Original
+import OriginalImageExtension from '@tiptap/extension-image';
+import { getResizableImageNodeView } from '@/components/resizable-image-node-view';
+
 import TaskListExtension from '@tiptap/extension-task-list';
 import TaskItemExtension from '@tiptap/extension-task-item';
 
@@ -19,6 +22,51 @@ import { cn } from '@/lib/utils';
 
 type PageBackground = 'plain' | 'lined' | 'grid';
 type PageTheme = 'light' | 'dark' | 'pastel';
+
+
+const CustomImageExtension = OriginalImageExtension.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      width: {
+        default: null,
+        parseHTML: element => {
+          const widthAttr = element.getAttribute('width');
+          if (widthAttr && /^\d+$/.test(widthAttr)) return parseInt(widthAttr, 10);
+          const styleWidth = element.style.width;
+          if (styleWidth && styleWidth.endsWith('px')) return parseInt(styleWidth.replace('px',''), 10);
+          return null;
+        },
+        renderHTML: attributes => {
+          if (!attributes.width) {
+            return {};
+          }
+          // Apply width and ensure height is auto for aspect ratio
+          return { style: `width: ${attributes.width}px; height: auto; max-width: 100%; display: block;` };
+        },
+      },
+      height: { // Height is mostly ignored in favor of width + auto for aspect ratio
+        default: null,
+        parseHTML: _element => null,
+        renderHTML: _attributes => ({}), // No direct height attribute, style handles it
+      },
+      // Tiptap's default Image extension includes src, alt, title.
+      // We ensure they are preserved by calling this.parent?.()
+    };
+  },
+  // inline: false, // Ensure images are block-level, this is a prop for configure()
+  // draggable: true, // Allow Tiptap's default node dragging
+  // selectable: true, // Images should be selectable
+
+  addNodeView() {
+    return getResizableImageNodeView();
+  },
+}).configure({
+  allowBase64: true,
+  inline: false, // Images are block by default
+  // HTMLAttributes: { class: 'my-custom-image-class' }, // if needed
+});
+
 
 export interface PageEditorProps {
   noteTitle: string;
@@ -91,10 +139,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
     TextStyleExtension,
     ColorExtension,
     HighlightExtension.configure({ multicolor: true }),
-    ImageExtension.configure({
-      allowBase64: true,
-      inline: false,
-    }),
+    CustomImageExtension, // Use our custom image extension
     TaskListExtension,
     TaskItemExtension.configure({
       nested: true,
@@ -436,8 +481,8 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
         <EditorContent
           editor={editor}
           className={cn(
-            "flex-1 tiptap-editor",
-            isDrawingMode ? 'pointer-events-none opacity-70' : 'relative z-[5]'
+            "flex-1 tiptap-editor relative", // Added relative
+            isDrawingMode ? 'pointer-events-none opacity-70 z-[1]' : 'z-[5]' // Adjusted z-index
           )}
         />
         <canvas
@@ -445,7 +490,10 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
           ref={canvasRef}
           className={cn(
             "absolute top-0 left-0 w-full h-full",
-            isDrawingMode && currentDrawTool ? 'pointer-events-auto z-[10]' : 'pointer-events-none z-[1]'
+             // isDrawingMode && currentDrawTool ? 'pointer-events-auto z-[10]' : 'pointer-events-none z-[1]'
+            isDrawingMode && currentDrawTool ? 'pointer-events-auto z-[10]' :
+            isDrawingMode && !currentDrawTool ? 'pointer-events-none z-[1]' : // Drawing tab, no tool selected
+                                                'pointer-events-none z-[1]' // Not drawing tab
           )}
           style={{ touchAction: isDrawingMode && currentDrawTool ? 'none' : 'auto' }}
         />
