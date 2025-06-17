@@ -55,9 +55,9 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selec
       });
     } else {
       interactable.draggable(false);
-      wrapperElement.style.cursor = 'default';
+      if (wrapperElement) wrapperElement.style.cursor = 'default';
       // Ensure transform is based on attributes if not selected or editable
-      wrapperElement.style.transform = `translateX(${node.attrs.offsetX || 0}px) translateY(${node.attrs.offsetY || 0}px)`;
+      if (wrapperElement) wrapperElement.style.transform = `translateX(${node.attrs.offsetX || 0}px) translateY(${node.attrs.offsetY || 0}px)`;
     }
     
     return () => {
@@ -74,22 +74,22 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selec
       return;
     }
 
-    const resizableInteractable = interact(imageElement);
+    const resizableInteractable = interact(imageElement); // Get or create instance
 
     if (editor.isEditable && selected) {
       resizableInteractable.resizable({
         edges: { left: true, right: true, bottom: true, top: true },
-        inertia: false,
+        inertia: false, 
         modifiers: [
           interact.modifiers.restrictSize({
-            min: { width: 50 },
+            min: { width: 50 }, 
           }),
         ],
         listeners: {
           move(event) {
             if (event.target instanceof HTMLElement) {
               event.target.style.width = `${event.rect.width}px`;
-              event.target.style.height = 'auto';
+              event.target.style.height = 'auto'; 
             }
           },
           end(event) {
@@ -101,20 +101,19 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selec
         },
       });
     } else {
-      resizableInteractable.resizable(false);
+      resizableInteractable.resizable(false); // Disable resizable
     }
     
     return () => {
       // Cleanup: unset the interactable instance
       resizableInteractable.unset();
     };
-  }, [selected, editor.isEditable, updateAttributes, node.attrs.width, editor]);
+  }, [selected, editor.isEditable, updateAttributes, node.attrs.width, editor]); // Added node.attrs.width here
 
   const handleDelete = (event: React.MouseEvent) => {
     event.stopPropagation(); 
     if (editor.isEditable) {
       const nodePosition = getPos();
-      // Ensure getPos() returns a number before attempting to delete
       if (typeof nodePosition === 'number' && nodePosition >= 0) {
         editor.chain().focus().deleteRange({ from: nodePosition, to: nodePosition + node.nodeSize }).run();
       }
@@ -156,6 +155,7 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selec
           width: width ? `${width}px` : 'auto',
           height: 'auto',
           display: 'block', 
+          touchAction: (selected && editor.isEditable) ? 'none' : 'auto', // Added touch-action
         }}
         className={cn(
             'rounded',
