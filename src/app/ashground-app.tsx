@@ -56,6 +56,7 @@ export default function AshgroundApp() {
   const [drawColor, setDrawColor] = useState<string>('#000000');
   const [drawStrokeWidth, setDrawStrokeWidth] = useState<number>(2);
   const [currentLineStyle, setCurrentLineStyle] = useState<LineStyle>('solid');
+  const [canUndoDrawing, setCanUndoDrawing] = useState<boolean>(false);
 
 
   useEffect(() => {
@@ -146,8 +147,19 @@ export default function AshgroundApp() {
     if (pageEditorComponentRef.current) {
       pageEditorComponentRef.current.clearCanvas();
     }
-    setCurrentDrawTool(null);
+    setCurrentDrawTool(null); // Optionally deactivate tool after clearing
   };
+  
+  const handleUndoDrawing = () => {
+    if (pageEditorComponentRef.current) {
+      pageEditorComponentRef.current.undoDrawing();
+    }
+  };
+
+  const handleDrawingUndoStateChange = useCallback((canUndo: boolean) => {
+    setCanUndoDrawing(canUndo);
+  }, []);
+
 
   const getExportableElementForPdf = () => {
     if (pageEditorComponentRef.current) {
@@ -163,7 +175,7 @@ export default function AshgroundApp() {
       if (document.activeElement && typeof (document.activeElement as HTMLElement).blur === 'function') {
         (document.activeElement as HTMLElement).blur();
       }
-      await new Promise(resolve => setTimeout(resolve, 250)); // Increased delay for DOM to settle
+      await new Promise(resolve => setTimeout(resolve, 250)); 
 
       try {
         const canvas = await html2canvas(exportableElement, {
@@ -182,7 +194,7 @@ export default function AshgroundApp() {
           setNoteTitle('Untitled Note');
           setNoteContent('<p></p>');
           if (pageEditorComponentRef.current) {
-            pageEditorComponentRef.current.clearCanvas();
+            pageEditorComponentRef.current.clearCanvas(); // This will also reset drawing history
           }
           localStorage.removeItem('ashground_title');
           localStorage.removeItem('ashground_note');
@@ -211,7 +223,6 @@ export default function AshgroundApp() {
       if (pageEditorComponentRef.current) pageEditorComponentRef.current.clearCanvas();
       localStorage.removeItem('ashground_title');
       localStorage.removeItem('ashground_note');
-
     }
   };
 
@@ -294,6 +305,8 @@ export default function AshgroundApp() {
                 currentLineStyle={currentLineStyle}
                 onLineStyleChange={setCurrentLineStyle}
                 onClearCanvas={handleClearCanvas}
+                onUndoDrawing={handleUndoDrawing}
+                canUndoDrawing={canUndoDrawing}
               />
             )}
             {activeTab === 'view' && (
@@ -324,6 +337,7 @@ export default function AshgroundApp() {
           drawStrokeWidth={drawStrokeWidth}
           currentLineStyle={currentLineStyle}
           onDrawColorChange={setDrawColor}
+          onUndoStateChange={handleDrawingUndoStateChange}
         />
       </Tabs>
     </>

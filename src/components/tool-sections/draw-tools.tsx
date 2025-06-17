@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
   PenTool,
-  // Eraser, // Removed
+  Eraser, // Added Eraser icon
   Trash2,
   Palette,
-  // Pipette, // Icon for removed eyedropper
   ListFilter,
+  Undo2, // Added Undo icon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -19,7 +19,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu"
-import type { LineStyle } from '@/app/page';
+import type { LineStyle } from '@/app/ashground-app'; // Updated path
 
 interface DrawToolsProps {
   activeTool: string | null;
@@ -31,6 +31,8 @@ interface DrawToolsProps {
   currentLineStyle: LineStyle;
   onLineStyleChange: (style: LineStyle) => void;
   onClearCanvas: () => void;
+  onUndoDrawing: () => void; // Added prop for undo
+  canUndoDrawing: boolean; // Added prop to enable/disable undo
 }
 
 const presetDrawColors = ['#000000', '#EF4444', '#3B82F6', '#22C55E', '#F97316', '#A855F7', '#FFFFFF'];
@@ -51,12 +53,21 @@ const DrawTools: React.FC<DrawToolsProps> = ({
   onStrokeWidthChange,
   currentLineStyle,
   onLineStyleChange,
-  onClearCanvas
+  onClearCanvas,
+  onUndoDrawing,
+  canUndoDrawing,
 }) => {
 
   const handleToolClick = (toolName: string) => {
     if (toolName === 'clear') {
       onClearCanvas();
+      // Optionally deactivate current tool if clear is clicked
+      // onToolChange(null); 
+      return;
+    }
+    if (toolName === 'undo') {
+      onUndoDrawing();
+      // Undo should not change the active tool
       return;
     }
     onToolChange(activeTool === toolName ? null : toolName);
@@ -64,8 +75,7 @@ const DrawTools: React.FC<DrawToolsProps> = ({
 
   const drawingToolButtons = [
     { name: 'pen', icon: <PenTool />, label: 'Pen' },
-    // { name: 'eraser', icon: <Eraser />, label: 'Eraser' }, // Removed
-    // { name: 'eyedropper', icon: <Pipette />, label: 'Eyedropper Tool' }, // Removed Eyedropper
+    { name: 'eraser', icon: <Eraser />, label: 'Eraser' },
   ];
 
   return (
@@ -83,15 +93,28 @@ const DrawTools: React.FC<DrawToolsProps> = ({
             activeTool === tool.name ? 'bg-accent text-accent-foreground' : '',
           )}
         >
-          {tool.icon}
+          {React.cloneElement(tool.icon, { size: 20 })}
         </Button>
       ))}
       <Separator orientation="vertical" className="h-6 mx-1" />
+      
+      <Button
+        variant="ghost"
+        size="icon"
+        title="Undo Drawing"
+        onClick={() => handleToolClick('undo')}
+        disabled={!canUndoDrawing}
+        className="hover:bg-accent/50 disabled:opacity-50"
+      >
+        <Undo2 size={20} />
+      </Button>
+      <Separator orientation="vertical" className="h-6 mx-1" />
+
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" title="Select Draw Color" className="hover:bg-accent/50">
-            <Palette />
+            <Palette size={20}/>
             <div className="w-3 h-3 ml-1 rounded-sm border" style={{ backgroundColor: currentDrawColor }} />
           </Button>
         </DropdownMenuTrigger>
@@ -135,7 +158,7 @@ const DrawTools: React.FC<DrawToolsProps> = ({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" title="Select Line Style" className="hover:bg-accent/50">
-            <ListFilter />
+            <ListFilter size={20} />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
@@ -157,7 +180,7 @@ const DrawTools: React.FC<DrawToolsProps> = ({
         onClick={() => handleToolClick('clear')}
         className="hover:bg-destructive/20"
       >
-        <Trash2 />
+        <Trash2 size={20}/>
       </Button>
     </div>
   );

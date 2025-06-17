@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef, useCallback, useMemo } from 'react';
-import { useEditor, EditorContent, Editor, NodeViewProps, ReactNodeViewRenderer } from '@tiptap/react';
+import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import UnderlineExtension from '@tiptap/extension-underline';
 import PlaceholderExtension from '@tiptap/extension-placeholder';
@@ -10,7 +10,6 @@ import SubscriptExtension from '@tiptap/extension-subscript';
 import TextStyleExtension from '@tiptap/extension-text-style';
 import ColorExtension from '@tiptap/extension-color';
 import HighlightExtension from '@tiptap/extension-highlight';
-// import ImageExtension from '@tiptap/extension-image'; // Original
 import OriginalImageExtension from '@tiptap/extension-image';
 import { getResizableImageNodeView } from '@/components/resizable-image-node-view';
 
@@ -81,12 +80,16 @@ export interface PageEditorProps {
   currentLineStyle: LineStyle;
   onEditorReady?: (editor: Editor) => void;
   onDrawColorChange: (color: string) => void;
+  onUndoStateChange: (canUndo: boolean) => void; // Callback for undo availability
 }
 
 export interface PageEditorRef {
   clearCanvas: () => void;
   getExportableElement: () => HTMLDivElement | null;
+  undoDrawing: () => void; // Method to trigger undo
 }
+
+const MAX_CANVAS_HISTORY_SIZE = 20;
 
 const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
   noteTitle,
@@ -103,6 +106,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
   currentLineStyle,
   onEditorReady,
   onDrawColorChange,
+  onUndoStateChange,
 }, ref) => {
   const themeClassMap: Record<PageTheme, string> = {
     light: 'page-theme-light',
@@ -123,7 +127,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       heading: {
         levels: [1, 2, 3],
       },
-      gapcursor: false, // Consider disabling if it interferes with image interaction
+      gapcursor: false, 
     }),
     UnderlineExtension,
     PlaceholderExtension.configure({
@@ -167,27 +171,52 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
   const lastPositionRef = useRef<{ x: number; y: number } | null>(null);
   const canvasContextRef = useRef<CanvasRenderingContext2D | null>(null);
   const [canvasKey, setCanvasKey] = useState(Date.now());
-  const currentCanvasDataUrlRef = useRef<string | null>(null);
   const exportableAreaRef = useRef<HTMLDivElement>(null);
+
+  // Refs for drawing history
+  const canvasHistoryRef = useRef<string[]>([]);
+  const currentCanvasHistoryIndexRef = useRef<number>(-1); 
+  const currentCanvasDataUrlRef = useRef<string | null>(null); // Holds current visual state for resize
+
+  const updateUndoButtonState = useCallback(() => {
+    const canUndo = currentCanvasHistoryIndexRef.current > 0 && canvasHistoryRef.current.length > 0;
+    onUndoStateChange(canUndo);
+  }, [onUndoStateChange]);
+
+  const saveCanvasState = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || canvas.width === 0 || canvas.height === 0) return;
+
+    try {
+      const dataUrl = canvas.toDataURL();
+      
+      if (currentCanvasHistoryIndexRef.current < canvasHistoryRef.current.length - 1) {
+        canvasHistoryRef.current = canvasHistoryRef.current.slice(0, currentCanvasHistoryIndexRef.current + 1);
+      }
+
+      canvasHistoryRef.current.push(dataUrl);
+      currentCanvasHistoryIndexRef.current = canvasHistoryRef.current.length - 1;
+
+      if (canvasHistoryRef.current.length > MAX_CANVAS_HISTORY_SIZE) {
+        canvasHistoryRef.current.shift(); 
+        currentCanvasHistoryIndexRef.current--; 
+      }
+      currentCanvasDataUrlRef.current = dataUrl;
+      updateUndoButtonState();
+    } catch (e) {
+      console.error("Error saving canvas state:", e);
+    }
+  }, [updateUndoButtonState]);
 
 
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
-    if (canvas && exportableAreaRef.current) {
-        const parent = exportableAreaRef.current;
+    const container = exportableAreaRef.current;
+    if (canvas && container && canvas.parentElement) {
+        const parent = canvas.parentElement;
         const dpr = window.devicePixelRatio || 1;
         const newWidth = parent.clientWidth;
         const newHeight = parent.clientHeight;
-
-        let drawingDataUrlToRestore: string | null = null;
-        if (canvas.width > 0 && canvas.height > 0 && currentCanvasDataUrlRef.current !== "cleared") {
-          try {
-            drawingDataUrlToRestore = canvas.toDataURL();
-          } catch (e) {
-              console.error("Error capturing canvas data URL for resize:", e);
-          }
-        }
-
 
         if (canvas.width !== newWidth * dpr || canvas.height !== newHeight * dpr) {
             canvas.width = newWidth * dpr;
@@ -199,35 +228,70 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
             if (ctx) {
                 ctx.scale(dpr, dpr);
                 canvasContextRef.current = ctx;
-                ctx.clearRect(0, 0, newWidth, newHeight);
 
-                if (drawingDataUrlToRestore && drawingDataUrlToRestore !== "cleared") {
+                if (currentCanvasDataUrlRef.current && currentCanvasDataUrlRef.current !== "cleared") {
                     const img = new Image();
                     img.onload = () => {
+                        ctx.clearRect(0, 0, newWidth, newHeight); 
                         ctx.drawImage(img, 0, 0, newWidth, newHeight);
                     };
                     img.onerror = (e) => console.error("Error loading image data for canvas restore:", e);
-                    img.src = drawingDataUrlToRestore;
+                    img.src = currentCanvasDataUrlRef.current;
+                } else {
+                    ctx.clearRect(0, 0, newWidth, newHeight);
                 }
             }
         }
-        if (currentCanvasDataUrlRef.current === "cleared") {
-          currentCanvasDataUrlRef.current = null;
-        } else if (drawingDataUrlToRestore && drawingDataUrlToRestore !== "cleared") {
-           currentCanvasDataUrlRef.current = drawingDataUrlToRestore;
-        }
     }
-  }, []);
-
+  }, []); 
 
   useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas && exportableAreaRef.current && canvas.parentElement) {
+        const parent = canvas.parentElement;
+        const dpr = window.devicePixelRatio || 1;
+        
+        // Set initial dimensions based on parent
+        if (canvas.width === 0 || canvas.height === 0) { // Only if not already set
+            canvas.width = parent.clientWidth * dpr;
+            canvas.height = parent.clientHeight * dpr;
+            canvas.style.width = `${parent.clientWidth}px`;
+            canvas.style.height = `${parent.clientHeight}px`;
+        }
+
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+            if (!canvasContextRef.current) { // Scale only once
+                 ctx.scale(dpr, dpr);
+            }
+            canvasContextRef.current = ctx;
+            
+            if (canvasHistoryRef.current.length === 0) { 
+                const blankDataUrl = canvas.toDataURL();
+                canvasHistoryRef.current = [blankDataUrl];
+                currentCanvasHistoryIndexRef.current = 0;
+                currentCanvasDataUrlRef.current = blankDataUrl;
+                updateUndoButtonState();
+            } else if (currentCanvasDataUrlRef.current && currentCanvasDataUrlRef.current !== "cleared") {
+                // Restore if history exists (e.g. theme change)
+                const img = new Image();
+                img.onload = () => {
+                    ctx.clearRect(0,0, parent.clientWidth, parent.clientHeight);
+                    ctx.drawImage(img, 0, 0, parent.clientWidth, parent.clientHeight);
+                };
+                img.src = currentCanvasDataUrlRef.current;
+            }
+        }
+    }
+    
+    const timeoutId = setTimeout(resizeCanvas, 50); // Ensure dimensions are stable
     window.addEventListener('resize', resizeCanvas);
-    const timeoutId = setTimeout(resizeCanvas, 50);
     return () => {
-      window.removeEventListener('resize', resizeCanvas);
-      clearTimeout(timeoutId);
+        window.removeEventListener('resize', resizeCanvas);
+        clearTimeout(timeoutId);
     };
-  }, [resizeCanvas]);
+  }, [resizeCanvas, updateUndoButtonState, pageTheme, backgroundStyle]); // Rerun on theme/bg change for canvas redraw
+
 
   useImperativeHandle(ref, () => ({
     clearCanvas: () => {
@@ -237,12 +301,38 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
         const logicalWidth = canvas.width / (window.devicePixelRatio || 1);
         const logicalHeight = canvas.height / (window.devicePixelRatio || 1);
         ctx.clearRect(0, 0, logicalWidth, logicalHeight);
-        currentCanvasDataUrlRef.current = "cleared";
+        
+        currentCanvasDataUrlRef.current = canvas.toDataURL(); // Capture blank state
+        canvasHistoryRef.current = [currentCanvasDataUrlRef.current];
+        currentCanvasHistoryIndexRef.current = 0;
+        updateUndoButtonState();
         setCanvasKey(Date.now());
       }
     },
     getExportableElement: () => exportableAreaRef.current,
-  }), []);
+    undoDrawing: () => {
+      if (currentCanvasHistoryIndexRef.current > 0) {
+          currentCanvasHistoryIndexRef.current--;
+          const canvas = canvasRef.current;
+          const ctx = canvasContextRef.current;
+          const dataUrl = canvasHistoryRef.current[currentCanvasHistoryIndexRef.current];
+
+          if (canvas && ctx && dataUrl) {
+              const img = new Image();
+              img.onload = () => {
+                  const logicalWidth = canvas.width / (window.devicePixelRatio || 1);
+                  const logicalHeight = canvas.height / (window.devicePixelRatio || 1);
+                  ctx.clearRect(0, 0, logicalWidth, logicalHeight);
+                  ctx.drawImage(img, 0, 0, logicalWidth, logicalHeight);
+                  currentCanvasDataUrlRef.current = dataUrl;
+                  updateUndoButtonState();
+              };
+              img.onerror = (e) => console.error("Error loading image data for undo:", e);
+              img.src = dataUrl;
+          }
+      }
+    },
+  }), [saveCanvasState, updateUndoButtonState]); // Added saveCanvasState
 
   useEffect(() => {
     if (editor && !editor.isDestroyed && editorTiptapRef) {
@@ -259,6 +349,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
   useEffect(() => {
     if (editor && !editor.isDestroyed && editor.getHTML() !== noteContent) {
       const { from, to } = editor.state.selection;
+      // Do not check editor.isEditable here for programmatic updates
       editor.commands.setContent(noteContent, false);
       try {
         const docSize = editor.state.doc.content.size;
@@ -281,23 +372,13 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    resizeCanvas();
+    // resizeCanvas(); // Called from initial effect now
 
     if (!isDrawingMode || !currentDrawTool) {
       isPaintingRef.current = false;
       return;
     }
     
-    if (!canvasContextRef.current) {
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-            const dpr = window.devicePixelRatio || 1;
-            ctx.scale(dpr, dpr);
-            canvasContextRef.current = ctx;
-        } else {
-            return;
-        }
-    }
     const ctx = canvasContextRef.current;
     if (!ctx) return;
 
@@ -321,8 +402,11 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
     };
 
     let effectiveDrawColor = drawColor;
+    // Handle dark theme auto-color inversion more explicitly if needed for eraser
     if (pageTheme === 'dark' && (drawColor.toLowerCase() === '#000000' || drawColor.toLowerCase() === '#000')) {
+      if (currentDrawTool !== 'eraser') { // Eraser doesn't use color
         effectiveDrawColor = '#FFFFFF';
+      }
     }
 
 
@@ -342,19 +426,25 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       ctx.lineWidth = drawStrokeWidth;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-      ctx.strokeStyle = effectiveDrawColor;
-      ctx.globalCompositeOperation = 'source-over';
-
-
-      if (currentLineStyle === 'dashed') {
-          ctx.setLineDash([10, 5]);
-      } else if (currentLineStyle === 'dotted') {
-          ctx.setLineDash([drawStrokeWidth, drawStrokeWidth * 2]);
-      } else {
-          ctx.setLineDash([]);
-      }
       
       if (currentDrawTool === 'pen') {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = effectiveDrawColor;
+      } else if (currentDrawTool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        // Eraser doesn't use strokeStyle color, but might need to set lineWidth
+      }
+
+
+      if (currentLineStyle === 'dashed' && currentDrawTool === 'pen') {
+          ctx.setLineDash([10, 5]);
+      } else if (currentLineStyle === 'dotted' && currentDrawTool === 'pen') {
+          ctx.setLineDash([drawStrokeWidth, drawStrokeWidth * 2]);
+      } else {
+          ctx.setLineDash([]); // Solid line for pen, or default for eraser
+      }
+      
+      if (currentDrawTool === 'pen' || currentDrawTool === 'eraser') {
         ctx.beginPath();
         ctx.moveTo(lastPositionRef.current.x, lastPositionRef.current.y);
         ctx.lineTo(pos.x, pos.y);
@@ -373,10 +463,14 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       window.removeEventListener('touchend', handlePaintEnd);
       window.removeEventListener('touchcancel', handlePaintEnd);
 
-      if (canvas && canvas.width > 0 && canvas.height > 0) {
-        try { currentCanvasDataUrlRef.current = canvas.toDataURL(); } catch (e) { console.error("Error saving canvas state:", e); }
+      if (currentDrawTool === 'pen' || currentDrawTool === 'eraser') {
+         saveCanvasState();
       }
        ctx.setLineDash([]);
+       // Reset composite operation if it was changed by eraser
+       if (ctx.globalCompositeOperation === 'destination-out') {
+           ctx.globalCompositeOperation = 'source-over';
+       }
     };
     
     const handlePaintStart = (event: MouseEvent | TouchEvent) => {
@@ -386,30 +480,37 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       const pos = getEventPosition(event);
       if (!pos || !ctx) return;
       
-      resizeCanvas();
+      // resizeCanvas(); // Ensure canvas is sized before drawing. Called from initial effect.
       
       ctx.lineWidth = drawStrokeWidth;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-      ctx.strokeStyle = effectiveDrawColor;
-      ctx.fillStyle = effectiveDrawColor;
-      ctx.globalCompositeOperation = 'source-over';
 
-      if (currentLineStyle === 'dashed') {
+      if (currentDrawTool === 'pen') {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = effectiveDrawColor;
+        ctx.fillStyle = effectiveDrawColor; // For dot if drawing single points
+      } else if (currentDrawTool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        // No specific color for eraser, it "removes" content
+      }
+
+
+      if (currentLineStyle === 'dashed' && currentDrawTool === 'pen') {
           ctx.setLineDash([10, 5]);
-      } else if (currentLineStyle === 'dotted') {
+      } else if (currentLineStyle === 'dotted' && currentDrawTool === 'pen') {
           ctx.setLineDash([drawStrokeWidth, drawStrokeWidth * 2]);
       } else {
           ctx.setLineDash([]);
       }
 
-      if (currentDrawTool === 'pen') {
+      if (currentDrawTool === 'pen' || currentDrawTool === 'eraser') {
         isPaintingRef.current = true;
         lastPositionRef.current = pos;
         
         ctx.beginPath();
         ctx.moveTo(pos.x, pos.y);
-        ctx.lineTo(pos.x, pos.y);
+        ctx.lineTo(pos.x, pos.y); // Draw a dot for single clicks
         ctx.stroke();
 
         window.addEventListener('mousemove', handlePaintMove, { passive: false });
@@ -417,7 +518,6 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
         window.addEventListener('touchmove', handlePaintMove, { passive: false });
         window.addEventListener('touchend', handlePaintEnd);
         window.addEventListener('touchcancel', handlePaintEnd);
-
       } 
     };
 
@@ -433,14 +533,16 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       window.removeEventListener('touchmove', handlePaintMove);
       window.removeEventListener('touchend', handlePaintEnd);
       window.removeEventListener('touchcancel', handlePaintEnd);
-      if (isPaintingRef.current) { 
-        if (canvas && canvas.width > 0 && canvas.height > 0) {
-            try { currentCanvasDataUrlRef.current = canvas.toDataURL(); } catch (e) { /* ignore error during cleanup */ }
-        }
+
+      if (isPaintingRef.current && (currentDrawTool === 'pen' || currentDrawTool === 'eraser')) { 
+         saveCanvasState();
       }
       isPaintingRef.current = false;
+      if (ctx && ctx.globalCompositeOperation === 'destination-out') { // Reset on cleanup if tool was eraser
+         ctx.globalCompositeOperation = 'source-over';
+      }
     };
-  }, [isDrawingMode, currentDrawTool, drawColor, drawStrokeWidth, pageTheme, resizeCanvas, onDrawColorChange, currentLineStyle]);
+  }, [isDrawingMode, currentDrawTool, drawColor, drawStrokeWidth, pageTheme, onDrawColorChange, currentLineStyle, saveCanvasState]);
 
 
   const handlePaperClick = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -471,7 +573,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       />
       <div
         className={cn(
-          'flex-1 relative flex flex-col min-h-0', // Ensure this container can shrink if needed
+          'flex-1 relative flex flex-col min-h-0', 
           backgroundClassMap[backgroundStyle]
         )}
         onClick={handlePaperClick}
@@ -479,12 +581,12 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
         <EditorContent
           editor={editor}
           className={cn(
-            "flex-1 tiptap-editor", 
-            isDrawingMode ? 'pointer-events-none opacity-70 z-[1]' : 'relative z-[5]' 
+            "flex-1 tiptap-editor relative z-[5]", 
+            isDrawingMode ? 'pointer-events-none opacity-70' : ''
           )}
         />
         <canvas
-          key={canvasKey}
+          key={canvasKey} 
           ref={canvasRef}
           className={cn(
             "absolute top-0 left-0 w-full h-full",
@@ -499,4 +601,3 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
 
 PageEditor.displayName = 'PageEditor';
 export default PageEditor;
-
