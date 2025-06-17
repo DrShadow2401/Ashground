@@ -226,6 +226,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
     }
   }, [noteContent, editor]);
 
+
   useEffect(() => {
     if (editor && !editor.isDestroyed) {
       editor.setEditable(!isDrawingMode);
@@ -436,7 +437,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
           editor={editor}
           className={cn(
             "flex-1 tiptap-editor",
-            isDrawingMode ? 'pointer-events-none opacity-70' : ''
+            isDrawingMode ? 'pointer-events-none opacity-70' : 'relative z-[5]'
           )}
         />
         <canvas
@@ -444,7 +445,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
           ref={canvasRef}
           className={cn(
             "absolute top-0 left-0 w-full h-full",
-            isDrawingMode && currentDrawTool ? 'pointer-events-auto z-10' : 'pointer-events-none -z-10'
+            isDrawingMode && currentDrawTool ? 'pointer-events-auto z-[10]' : 'pointer-events-none z-[1]'
           )}
           style={{ touchAction: isDrawingMode && currentDrawTool ? 'none' : 'auto' }}
         />
