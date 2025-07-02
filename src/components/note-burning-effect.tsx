@@ -25,7 +25,7 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
   }
 
   const animationDurationSeconds = duration / 1000;
-  const flameCount = 40;
+  const flameCount = 80; // Increased for a wider, more intense flame front
   const numSmokeParticles = 50;
   const numEmberParticles = 40;
 
@@ -33,25 +33,27 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
 
   const flames = useMemo(() => {
     return Array.from({ length: flameCount }).map((_, i) => {
-      const size = Math.random() * 50 + 30; // height
-      const animDuration = Math.random() * 0.3 + 0.3; // faster flicker
-      const delay = Math.random() * 0.3;
-      const horizontalPosition = Math.random() * 100;
+      const size = Math.random() * 60 + 40; // height
+      const animDuration = Math.random() * 0.4 + 0.3; // faster, more erratic flicker
+      const delay = Math.random() * 0.4;
+      // Spread flames across a wide area to form a "wall"
+      const horizontalPosition = (Math.random() - 0.5) * 150; 
 
-      const colors = ['bg-orange-500/80', 'bg-yellow-400/70', 'bg-red-600/70'];
+      const colors = ['bg-orange-500/80', 'bg-yellow-400/70', 'bg-red-600/70', 'bg-orange-400/90'];
       const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
       return {
         id: `flame-${i}`,
         className: cn(
-          'absolute rounded-[50%_50%_50%_50%_/_60%_60%_40%_40%] filter blur-[4px]',
+          'absolute rounded-[50%_50%_20%_20%_/_60%_60%_40%_40%] filter blur-[5px]',
           randomColor
         ),
         style: {
-          width: `${size * 0.6}px`,
+          width: `${size * 0.7}px`,
           height: `${size}px`,
-          left: `${horizontalPosition}%`,
-          bottom: '0',
+          // Position along the x-axis of the rotated flame container
+          left: `calc(50% + ${horizontalPosition}px)`,
+          bottom: `${Math.random() * 20}px`, // Stagger vertical start
           animationName: 'flame-flicker-in-place',
           animationDuration: `${animDuration}s`,
           animationDelay: `${delay}s`,
@@ -71,7 +73,7 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
       id: `smoke-${i}`,
       type: 'smoke',
       style: {
-        left: `${Math.random() * 100}%`,
+        left: `${(Math.random() - 0.5) * 100}%`, // Emerge from along the flame front
         bottom: `${-10 + Math.random() * 15}%`,
         animationName: 'particle-rise-and-fade',
         animationDuration: `${1 + Math.random() * 2}s`,
@@ -86,7 +88,7 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
       id: `ember-${i}`,
       type: 'ember',
       style: {
-        left: `${Math.random() * 100}%`,
+        left: `${(Math.random() - 0.5) * 100}%`, // Emerge from along the flame front
         bottom: `${Math.random() * 100}%`,
         animationName: 'particle-rise-and-fade',
         animationDuration: `${1 + Math.random() * 1.5}s`,
@@ -118,22 +120,25 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
           backgroundImage: `url(${noteImageUri})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          '--radius': borderRadius,
-          animationName: 'paper-consume-by-fire',
+          borderRadius: borderRadius,
+          maskImage: 'linear-gradient(315deg, transparent 48%, black 52%)',
+          maskSize: '250% 250%',
+          maskRepeat: 'no-repeat',
+          animationName: 'diagonal-wipe',
           animationDuration: `${animationDurationSeconds}s`,
           animationFillMode: 'forwards',
-          animationTimingFunction: 'linear',
-          willChange: 'clip-path',
+          animationTimingFunction: 'ease-in-out',
+          willChange: 'mask-position',
         } as React.CSSProperties}
       />
       <div
-        className="flame-container absolute bottom-0 left-0 right-0 h-[15%]"
+        className="flame-container absolute bottom-0 left-0 w-[200%] h-[200px]"
         style={{
-          transform: 'translateY(15%)',
-          animationName: 'flame-front-rise',
-          animationDuration: `${animationDurationSeconds}s`,
+          transformOrigin: 'bottom left',
+          animationName: 'diagonal-flame-travel',
+          animationDuration: `${animationDurationSeconds * 1.2}s`, // travel slightly slower than wipe
           animationFillMode: 'forwards',
-          animationTimingFunction: 'ease-in',
+          animationTimingFunction: 'linear',
           willChange: 'transform',
         }}
       >
