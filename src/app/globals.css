@@ -357,21 +357,36 @@
 
 /* Burn Animation Styles */
 @layer utilities {
-  @keyframes burn-from-top {
+  @keyframes burn-hole-mask {
     from {
-      mask-position: 50% -10%;
+      mask-size: 0%;
     }
     to {
-      mask-position: 50% 110%;
+      mask-size: 250%; /* Grow larger than the note to consume it completely */
     }
   }
 
-  @keyframes glow-travel-down {
+  @keyframes burn-hole-ring {
     from {
-      transform: translateY(0);
+      transform: translate(-50%, -50%) scale(0);
     }
     to {
-      transform: translateY(calc(100% + 80px)); /* travel full height + glow height */
+      transform: translate(-50%, -50%) scale(2.5); /* Match mask-size growth */
+    }
+  }
+
+  @keyframes ember-float {
+    0% {
+      transform: rotate(var(--angle)) translateY(0px) scale(0);
+      opacity: 0;
+    }
+    20% {
+      transform: rotate(var(--angle)) translateY(calc(var(--radius) * -1)) scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: rotate(var(--angle)) translateY(-250px) scale(0.5);
+      opacity: 0;
     }
   }
 }
