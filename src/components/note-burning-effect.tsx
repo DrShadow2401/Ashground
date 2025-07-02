@@ -25,19 +25,19 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
   }
 
   const animationDurationSeconds = duration / 1000;
-  const flameCount = 80; // Increased for a wider, more intense flame front
-  const numSmokeParticles = 50;
-  const numEmberParticles = 40;
+  const flameCount = 50;
+  const numSmokeParticles = 60;
+  const numEmberParticles = 50;
 
   const borderRadius = getComputedStyle(sourceElement).borderRadius || '0.5rem';
 
   const flames = useMemo(() => {
     return Array.from({ length: flameCount }).map((_, i) => {
-      const size = Math.random() * 60 + 40; // height
+      const size = Math.random() * 50 + 20; // height
       const animDuration = Math.random() * 0.4 + 0.3; // faster, more erratic flicker
       const delay = Math.random() * 0.4;
       // Spread flames across a wide area to form a "wall"
-      const horizontalPosition = (Math.random() - 0.5) * 150; 
+      const horizontalPosition = (Math.random() - 0.5) * 100; 
 
       const colors = ['bg-orange-500/80', 'bg-yellow-400/70', 'bg-red-600/70', 'bg-orange-400/90'];
       const randomColor = colors[Math.floor(Math.random() * colors.length)];
@@ -51,9 +51,8 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
         style: {
           width: `${size * 0.7}px`,
           height: `${size}px`,
-          // Position along the x-axis of the rotated flame container
-          left: `calc(50% + ${horizontalPosition}px)`,
-          bottom: `${Math.random() * 20}px`, // Stagger vertical start
+          left: `calc(50% + ${horizontalPosition}%)`,
+          bottom: `${Math.random() * 20 - 10}px`,
           animationName: 'flame-flicker-in-place',
           animationDuration: `${animDuration}s`,
           animationDelay: `${delay}s`,
@@ -66,18 +65,17 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
   }, [flameCount]);
 
   const particles = useMemo(() => {
-    const sharedDelay = animationDurationSeconds * 0.1;
     const sharedDuration = animationDurationSeconds * 0.9;
     
     const smoke = Array.from({ length: numSmokeParticles }).map((_, i) => ({
       id: `smoke-${i}`,
       type: 'smoke',
       style: {
-        left: `${(Math.random() - 0.5) * 100}%`, // Emerge from along the flame front
-        bottom: `${-10 + Math.random() * 15}%`,
+        left: `${Math.random() * 100}%`,
+        bottom: `0%`,
         animationName: 'particle-rise-and-fade',
-        animationDuration: `${1 + Math.random() * 2}s`,
-        animationDelay: `${sharedDelay + (Math.random() * sharedDuration)}s`,
+        animationDuration: `${2 + Math.random() * 2}s`,
+        animationDelay: `${Math.random() * sharedDuration}s`,
         '--particle-rise-distance': `-${150 + Math.random() * 100}px`,
         '--particle-drift-x': `${(Math.random() - 0.5) * 100}px`,
         '--particle-scale': `${2 + Math.random() * 2}`,
@@ -88,11 +86,11 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
       id: `ember-${i}`,
       type: 'ember',
       style: {
-        left: `${(Math.random() - 0.5) * 100}%`, // Emerge from along the flame front
-        bottom: `${Math.random() * 100}%`,
+        left: `${Math.random() * 100}%`,
+        bottom: `0%`,
         animationName: 'particle-rise-and-fade',
-        animationDuration: `${1 + Math.random() * 1.5}s`,
-        animationDelay: `${sharedDelay + (Math.random() * sharedDuration)}s`,
+        animationDuration: `${1.5 + Math.random() * 1.5}s`,
+        animationDelay: `${Math.random() * sharedDuration}s`,
         '--particle-rise-distance': `-${80 + Math.random() * 50}px`,
         '--particle-drift-x': `${(Math.random() - 0.5) * 60}px`,
         '--particle-scale': '1',
@@ -100,6 +98,18 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
     }));
     return [...smoke, ...embers];
   }, [numSmokeParticles, numEmberParticles, animationDurationSeconds]);
+
+  const sharedStyles: React.CSSProperties = {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundImage: `url(${noteImageUri})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    borderRadius: borderRadius,
+  };
 
   return (
     <div
@@ -112,46 +122,62 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
         borderRadius: borderRadius,
       }}
     >
+      {/* Ash Layer */}
       <div
-        className="note-burn-image"
+        className="ash-layer"
         style={{
-          width: '100%',
-          height: '100%',
-          backgroundImage: `url(${noteImageUri})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          borderRadius: borderRadius,
-          maskImage: 'linear-gradient(315deg, transparent 48%, black 52%)',
-          maskSize: '250% 250%',
+          ...sharedStyles,
+          filter: 'grayscale(1) brightness(0.4) contrast(1.5)',
+          maskImage: 'linear-gradient(to top, transparent -10%, black 25%)',
+          maskSize: '100% 150%',
           maskRepeat: 'no-repeat',
-          animationName: 'diagonal-wipe',
+          animationName: 'ash-disintegrate',
           animationDuration: `${animationDurationSeconds}s`,
+          animationDelay: `${animationDurationSeconds * 0.15}s`,
+          animationTimingFunction: 'ease-in',
           animationFillMode: 'forwards',
-          animationTimingFunction: 'ease-in-out',
           willChange: 'mask-position',
-        } as React.CSSProperties}
+        }}
       />
+      {/* Paper Layer */}
       <div
-        className="flame-container absolute bottom-0 left-0 w-[200%] h-[200px]"
+        className="paper-layer"
         style={{
-          transformOrigin: 'bottom left',
-          animationName: 'diagonal-flame-travel',
-          animationDuration: `${animationDurationSeconds * 1.2}s`, // travel slightly slower than wipe
+          ...sharedStyles,
+          maskImage: 'linear-gradient(to top, transparent 2%, black 10%)',
+          maskSize: '100% 150%',
+          maskRepeat: 'no-repeat',
+          animationName: 'burn-up',
+          animationDuration: `${animationDurationSeconds}s`,
+          animationTimingFunction: 'ease-in',
+          animationFillMode: 'forwards',
+          willChange: 'mask-position',
+        }}
+      />
+      {/* Flame Container */}
+      <div
+        className="flame-container absolute bottom-0 left-0 w-full h-full"
+        style={{
+          transformOrigin: 'bottom center',
+          animationName: 'flame-rise',
+          animationDuration: `${animationDurationSeconds * 1.1}s`,
           animationFillMode: 'forwards',
           animationTimingFunction: 'linear',
           willChange: 'transform',
         }}
       >
-        {flames.map(f => (
-          <div key={f.id} className={f.className} style={f.style} />
-        ))}
-        {particles.map(p => (
-          <div
-            key={p.id}
-            className={p.type === 'smoke' ? 'note-smoke-particle' : 'note-ember-particle'}
-            style={p.style}
-          />
-        ))}
+        <div className="relative w-full h-[15%] bottom-[-5%]">
+            {flames.map(f => (
+              <div key={f.id} className={f.className} style={f.style} />
+            ))}
+            {particles.map(p => (
+              <div
+                key={p.id}
+                className={p.type === 'smoke' ? 'note-smoke-particle' : 'note-ember-particle'}
+                style={p.style}
+              />
+            ))}
+        </div>
       </div>
     </div>
   );

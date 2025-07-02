@@ -388,23 +388,30 @@
 
 /* Burn Animation Styles */
 @layer utilities {
-  @keyframes diagonal-wipe {
+  @keyframes burn-up {
     from {
-      mask-position: 100% 100%;
+      mask-position: 50% 100%;
     }
     to {
-      mask-position: 0% 0%;
+      mask-position: 50% 0%;
     }
   }
 
-  @keyframes diagonal-flame-travel {
+  @keyframes ash-disintegrate {
     from {
-      transform: translate(-100%, 50%) rotate(-45deg);
-      opacity: 1;
+      mask-position: 50% 100%;
     }
     to {
-      transform: translate(50%, -100%) rotate(-45deg);
-      opacity: 1;
+      mask-position: 50% 0%;
+    }
+  }
+
+  @keyframes flame-rise {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(-100%);
     }
   }
 
