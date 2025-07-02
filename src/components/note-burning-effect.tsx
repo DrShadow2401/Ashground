@@ -48,19 +48,22 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
     animationDuration: `${animationDurationSeconds}s`,
     animationTimingFunction: 'ease-in',
     animationFillMode: 'forwards',
-    maskImage: 'linear-gradient(to bottom, transparent 0%, black 10%)',
-    maskSize: '100% 200%',
-    maskPosition: '50% 0%',
+    // The mask makes the paper disappear. It's a gradient from transparent to black.
+    // Animating its position reveals the background.
+    maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%)',
+    maskSize: '100% 200%', // Twice the height to allow smooth animation
+    maskPosition: '50% -10%', // Starts with mask fully revealing the paper
   };
 
   const glowStyle: React.CSSProperties = {
     position: 'absolute',
-    top: '-30px', 
-    left: 0,
-    width: '100%',
-    height: '60px',
-    background: 'linear-gradient(to bottom, rgba(255, 150, 50, 0), rgba(255, 180, 50, 0.8), rgba(255, 80, 0, 0.7), rgba(255, 200, 80, 0.8), rgba(255, 150, 50, 0))',
-    filter: 'blur(20px)',
+    top: '-40px', // Start the glow just above the note
+    left: '-10%', // Extend glow past the edges for a softer look
+    width: '120%',
+    height: '80px', // The height of the glowing bar
+    // This gradient is designed to match the soft, peachy-orange glow from your image
+    background: 'linear-gradient(to bottom, rgba(234, 207, 170, 0), #FBE6D5, rgba(234, 207, 170, 0))',
+    filter: 'blur(25px)', // A strong blur creates the soft, hazy effect
     willChange: 'transform',
     animationName: 'glow-travel-down',
     animationDuration: `${animationDurationSeconds}s`,

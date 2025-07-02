@@ -359,10 +359,10 @@
 @layer utilities {
   @keyframes burn-from-top {
     from {
-      mask-position: 50% -10%; /* Start with the mask fully revealing the image */
+      mask-position: 50% -10%;
     }
     to {
-      mask-position: 50% 110%; /* End with the mask fully hiding the image */
+      mask-position: 50% 110%;
     }
   }
 
@@ -371,7 +371,7 @@
       transform: translateY(0);
     }
     to {
-      transform: translateY(calc(100% + 60px));
+      transform: translateY(calc(100% + 80px)); /* travel full height + glow height */
     }
   }
 }
