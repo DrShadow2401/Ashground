@@ -49,16 +49,6 @@
     --line-l: 0%;
     --line-a: 0.7;
 
-    /* Burn effect colors - Standardized for consistent fire appearance */
-    --note-initial-paper-color-for-burn: 40 33% 96%; /* Updated from 0 0% 100% */
-    --note-text-color-for-burn: 20 15% 30%; /* Not directly used in animation, but for reference */
-    --note-ignition-flash-color: 35 100% 70%; /* Bright orange-yellow flash */
-    --note-flame-main-color: 30 100% 60%;    /* Main flame color - orange */
-    --note-flame-accent-color: 45 100% 55%;   /* Flame accent - yellow */
-    --note-char-color: 20 10% 10%;          /* Deep char color for overlay bg transition */
-    --note-ash-color: 0 0% 70%;             /* Medium ash for overlay bg transition */
-    --note-ember-color: 25 100% 55%;        /* Glowing embers - deep orange/red */
-    --note-smoke-color: 0 0% 50%;           /* Smoke particles */
   }
 
   .dark {
@@ -104,16 +94,6 @@
     --line-l: 100%;
     --line-a: 0.7;
 
-    /* Burn effect colors - Standardized */
-    --note-initial-paper-color-for-burn: 40 33% 96%; /* Updated from 0 0% 100% */
-    --note-text-color-for-burn: 20 15% 30%;
-    --note-ignition-flash-color: 35 100% 70%;
-    --note-flame-main-color: 30 100% 60%;
-    --note-flame-accent-color: 45 100% 55%;
-    --note-char-color: 0 0% 5%; /* Darker char for dark theme */
-    --note-ash-color: 0 0% 35%; /* Darker ash for dark theme */
-    --note-ember-color: 25 100% 55%;
-    --note-smoke-color: 0 0% 25%;
   }
 
   .theme-pastel {
@@ -157,17 +137,6 @@
     --line-s: 25%;
     --line-l: 30%;
     --line-a: 0.7;
-
-    /* Burn effect colors - Standardized */
-    --note-initial-paper-color-for-burn: 40 33% 96%; /* Updated from 0 0% 100% */
-    --note-text-color-for-burn: 20 15% 30%;
-    --note-ignition-flash-color: 35 100% 70%;
-    --note-flame-main-color: 30 100% 60%;
-    --note-flame-accent-color: 45 100% 55%;
-    --note-char-color: 320 20% 20%; /* Char color for pastel theme */
-    --note-ash-color: 320 30% 75%; /* Ash color for pastel theme */
-    --note-ember-color: 15 100% 65%; /* Pastel ember slightly different for theme harmony */
-    --note-smoke-color: 320 20% 50%;
   }
 }
 
@@ -390,10 +359,10 @@
 @layer utilities {
   @keyframes burn-from-top {
     from {
-      mask-position: 50% 0%;
+      mask-position: 50% -10%; /* Start with the mask fully revealing the image */
     }
     to {
-      mask-position: 50% 100%;
+      mask-position: 50% 110%; /* End with the mask fully hiding the image */
     }
   }
 

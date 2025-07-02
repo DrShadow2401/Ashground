@@ -48,7 +48,7 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
     animationDuration: `${animationDurationSeconds}s`,
     animationTimingFunction: 'ease-in',
     animationFillMode: 'forwards',
-    maskImage: 'linear-gradient(to bottom, black 90%, transparent 100%)',
+    maskImage: 'linear-gradient(to bottom, transparent 0%, black 10%)',
     maskSize: '100% 200%',
     maskPosition: '50% 0%',
   };
@@ -68,21 +68,11 @@ const NoteBurningEffect: React.FC<NoteBurningEffectProps> = ({
     animationFillMode: 'forwards',
   };
 
-  const bottomGradientStyle: React.CSSProperties = {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    width: '100%',
-    height: '50px',
-    background: 'linear-gradient(to top, hsl(var(--card) / 0.5), transparent)',
-    borderRadius: '0 0 var(--radius) var(--radius)',
-  };
 
   return (
     <div style={effectContainerStyle}>
       <div style={paperStyle} />
       <div style={glowStyle} />
-      <div style={bottomGradientStyle} />
     </div>
   );
 };
