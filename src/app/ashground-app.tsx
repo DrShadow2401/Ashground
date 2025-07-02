@@ -44,6 +44,7 @@ export default function AshgroundApp() {
   const [isEditorInitialized, setIsEditorInitialized] = useState(false);
   const [isBurningAnimationActive, setIsBurningAnimationActive] = useState(false);
   const [animationTargetRect, setAnimationTargetRect] = useState<DOMRect | null>(null);
+  const [burnImageUri, setBurnImageUri] = useState<string | null>(null);
 
   const editorRef = useRef<Editor | null>(null);
   const pageEditorComponentRef = useRef<PageEditorRef>(null);
@@ -168,24 +169,41 @@ export default function AshgroundApp() {
   const handleBurnEverything = async () => {
     const exportableElement = pageEditorComponentRef.current?.getExportableElement();
     if (exportableElement) {
+      try {
+        const canvas = await html2canvas(exportableElement, {
+          scale: 1, // Use scale 1 for performance, can increase for quality
+          backgroundColor: null, // Capture with transparent background
+          useCORS: true,
+        });
+        const imageUri = canvas.toDataURL('image/png');
+        setBurnImageUri(imageUri);
+        setAnimationTargetRect(exportableElement.getBoundingClientRect());
+        setIsBurningAnimationActive(true);
 
-      setAnimationTargetRect(exportableElement.getBoundingClientRect());
-      setIsBurningAnimationActive(true);
+        setTimeout(() => {
+          setNoteTitle('Untitled Note');
+          setNoteContent('<p></p>');
+          if (pageEditorComponentRef.current) {
+            pageEditorComponentRef.current.clearCanvas();
+          }
+          localStorage.removeItem('ashground_title');
+          localStorage.removeItem('ashground_note');
 
-      setTimeout(() => {
+          // Reset animation states
+          setIsBurningAnimationActive(false);
+          setAnimationTargetRect(null);
+          setBurnImageUri(null);
+
+        }, ANIMATION_DURATION);
+      } catch (error) {
+        console.error("Failed to capture note for burning animation:", error);
+        // Fallback to clearing content without animation if canvas fails
         setNoteTitle('Untitled Note');
         setNoteContent('<p></p>');
-        if (pageEditorComponentRef.current) {
-          pageEditorComponentRef.current.clearCanvas(); // This will also reset drawing history
-        }
+        if (pageEditorComponentRef.current) pageEditorComponentRef.current.clearCanvas();
         localStorage.removeItem('ashground_title');
         localStorage.removeItem('ashground_note');
-
-        setIsBurningAnimationActive(false);
-        setAnimationTargetRect(null);
-
-      }, ANIMATION_DURATION);
-
+      }
     } else {
       // Fallback for when the element isn't found
       setNoteTitle('Untitled Note');
@@ -318,11 +336,12 @@ export default function AshgroundApp() {
     <main className="flex flex-col items-center min-h-screen py-6 px-4 overflow-x-hidden">
       <AshgroundHeader />
 
-      {isBurningAnimationActive && animationTargetRect && (
+      {isBurningAnimationActive && animationTargetRect && burnImageUri && (
         <NoteBurningEffect
           isActive={isBurningAnimationActive}
           targetRect={animationTargetRect}
           duration={ANIMATION_DURATION}
+          imageUri={burnImageUri}
         />
       )}
 
