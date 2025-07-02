@@ -388,20 +388,44 @@
 
 /* Burn Animation Styles */
 @layer utilities {
-  .note-burn-overlay {
-    /* Positioned by JS, background-image set by JS */
-    background-color: hsl(var(--note-initial-paper-color-for-burn)); /* Initial paper color, animated */
-    transform-origin: center center;
-    animation-name: note-ignite-and-burn;
-    animation-duration: var(--duration-seconds);
-    animation-fill-mode: forwards;
-    animation-timing-function: cubic-bezier(0.6, 0.04, 0.98, 0.335); /* Ease-in, sharp then slow */
-    will-change: transform, background-color, opacity, clip-path, box-shadow;
-    z-index: 1000;
-    overflow: hidden; /* Clip content to overlay boundaries */
+  @keyframes paper-consume-by-fire {
+    0% {
+      clip-path: inset(0 0 0% 0 round var(--radius));
+      opacity: 1;
+    }
+    85% {
+      opacity: 1;
+    }
+    100% {
+      clip-path: inset(0 0 100% 0 round var(--radius));
+      opacity: 0;
+    }
   }
 
+  @keyframes flame-front-rise {
+    0% {
+      transform: translateY(15%); /* Start just below */
+    }
+    100% {
+      transform: translateY(-100%); /* Rise all the way up and off-screen */
+    }
+  }
 
+  @keyframes flame-flicker-in-place {
+    0% {
+      transform: scaleY(1) scaleX(1);
+      opacity: 0.8;
+    }
+    50% {
+      transform: scaleY(1.2) scaleX(0.9) rotate(-2deg);
+      opacity: 1;
+    }
+    100% {
+      transform: scaleY(1) scaleX(1);
+      opacity: 0.8;
+    }
+  }
+  
   .note-ember-particle,
   .note-smoke-particle {
     position: absolute;
@@ -409,151 +433,30 @@
     pointer-events: none;
     animation-fill-mode: forwards;
     will-change: transform, opacity;
-    z-index: 1001; /* Above the note overlay */
   }
 
   .note-ember-particle {
     background-color: hsla(var(--note-ember-color) / 0.9);
     box-shadow: 0 0 6px 3px hsla(var(--note-ember-color) / 0.75);
-    animation-name: ember-sparkle-animation;
-    animation-timing-function: ease-out;
+    width: 4px;
+    height: 4px;
   }
 
   .note-smoke-particle {
-    background-color: hsla(var(--note-smoke-color) / 0.4); /* Slightly less dense smoke */
-    filter: blur(6px); /* Softer smoke */
-    animation-name: smoke-drift-animation;
-    animation-timing-function: cubic-bezier(0.25, 0.5, 0.5, 0.9); /* Smoother drift */
+    background-color: hsla(var(--note-smoke-color) / 0.4);
+    filter: blur(6px);
+    width: 20px;
+    height: 20px;
   }
 
- @keyframes note-ignite-and-burn {
-    0% { /* Initial state: pristine paper (via background-image) */
-      transform: scale(1);
-      background-color: hsl(var(--note-initial-paper-color-for-burn)); /* BG color of overlay */
-      opacity: 1;
-      clip-path: inset(0% 0% 0% 0% round var(--radius));
-      box-shadow: none;
-    }
-    2% { /* Ignition: bright flash, paper starts to react */
-      transform: scale(1.02) rotate(-0.5deg);
-      background-color: hsl(var(--note-initial-paper-color-for-burn));
-      box-shadow:
-        /* Intense INSET flame effects at the edge of the clip-path, on top of background-image */
-        inset 0 0 60px 25px hsla(var(--note-ignition-flash-color) / 0.95),
-        inset 0 0 50px 20px hsla(var(--note-flame-main-color) / 0.9),
-        inset 0 0 35px 15px hsla(var(--note-flame-accent-color) / 0.9),
-        inset 0 0 20px 8px hsla(var(--note-char-color) / 0.2); /* Subtle early charring shadow */
-      clip-path: inset(0% 0% 0% 0% round var(--radius));
-    }
-    5% { /* First charring: edges begin to darken and curl, small embers, flames appear */
-      transform: scale(1.01) rotate(0.5deg);
-      background-color: hsla(var(--note-char-color) / 0.05); /* Overlay background starts to char subtly */
-      box-shadow:
-        inset 0 0 80px 35px hsla(var(--note-flame-main-color) / 0.95),  /* INSET Main flame stronger & wider */
-        inset 0 0 60px 28px hsla(var(--note-flame-accent-color) / 0.9), /* INSET Accent flame wider */
-        inset 0 0 40px 18px hsla(var(--note-ember-color) / 0.8),        /* INSET Early embers */
-        inset 0 0 25px 10px hsla(var(--note-char-color) / 0.4); /* Charring shadow a bit deeper */
-      clip-path: inset(1% 2% 3% 1% round calc(var(--radius) + 2px));
-    }
-    15% { /* Spreading burn: char deepens, embers glow, paper consumed more, strong flames */
-      transform: scale(1) rotate(-0.8deg);
-      background-color: hsla(var(--note-char-color) / 0.2); /* Overlay BG charring more */
-      box-shadow:
-        inset 0 0 70px 30px hsla(var(--note-flame-main-color) / 0.9),   /* INSET Strong main flame, very wide */
-        inset 0 0 55px 25px hsla(var(--note-flame-accent-color) / 0.85),/* INSET Strong accent, very wide */
-        inset 0 0 45px 20px hsla(var(--note-ember-color) / 0.9),       /* INSET Stronger embers */
-        inset 0 0 30px 12px hsla(var(--note-char-color) / 0.6); /* Charring shadow */
-      clip-path: inset(5% 10% 12% 8% round calc(var(--radius) + 5px));
-    }
-    30% { /* Active, intense burn: large holes, bright core, significant char, sustained flames */
-      transform: scale(0.98) rotate(1deg);
-      background-color: hsla(var(--note-char-color) / 0.5); /* Overlay BG significantly charred */
-      box-shadow:
-        inset 0 0 65px 28px hsla(var(--note-flame-main-color) / 0.8),   /* INSET Sustained main flame */
-        inset 0 0 50px 22px hsla(var(--note-flame-accent-color) / 0.75),/* INSET Sustained accent */
-        inset 0 0 50px 22px hsla(var(--note-ember-color) / 0.95),      /* INSET Ember glow dominant */
-        inset 0 0 35px 15px hsla(var(--note-char-color) / 0.8); /* Deep charring shadow */
-      clip-path: polygon( /* More irregular consumption */
-        5% 2%, 93% 8%, 95% 92%, 8% 95%, /* Outer bounds, slightly varied */
-        /* Inner "eaten" area, also irregular */
-        15% 10%, 85% 15%, 90% 80%, 10% 88%
-      );
-    }
-    50% { /* Peak destruction: mostly consumed, glowing ash and embers, flames dying */
-      transform: scale(0.95) rotate(-1.2deg);
-      background-color: hsla(var(--note-ash-color) / 0.3); /* Ash background color visible through clipped image */
-      opacity: 0.9;
-      box-shadow:
-        inset 0 0 45px 20px hsla(var(--note-ember-color) / 0.9),      /* INSET Embers dominant */
-        inset 0 0 30px 12px hsla(var(--note-flame-main-color) / 0.5), /* INSET Fading flame */
-        inset 0 0 25px 10px hsla(var(--note-ash-color) / 0.6),        /* INSET Ashy glow */
-        inset 0 0 30px 12px hsla(var(--note-char-color) / 0.7);
-      clip-path: inset(40% 45% 50% 35% round calc(var(--radius) + 15px));
-    }
-    70% { /* Cooling down: ash is prominent, embers are dying, structure crumbles */
-      transform: scale(0.92) translateY(3px) rotate(0.8deg);
-      background-color: hsla(var(--note-ash-color) / 0.6);
-      opacity: 0.75;
-      box-shadow:
-        inset 0 0 35px 15px hsla(var(--note-ember-color) / 0.5), /* INSET Fading embers */
-        inset 0 0 20px 10px hsla(var(--note-ash-color) / 0.4);   /* INSET Ash */
-      clip-path: inset(65% 70% 75% 60% round calc(var(--radius) + 20px));
-    }
-    90% { /* Final ashes: very little left, faint glow, about to dissipate */
-      transform: scale(0.9) translateY(8px) rotate(-0.5deg);
-      background-color: hsla(var(--note-ash-color) / 0.3);
-      opacity: 0.3;
-      box-shadow: inset 0 0 20px 10px hsla(var(--note-ember-color) / 0.2); /* INSET Faintest embers */
-      clip-path: inset(85% 90% 92% 88% round calc(var(--radius) + 25px));
-    }
-    100% { /* Completely gone: faded to nothing */
-      transform: scale(0.88) translateY(15px);
-      background-color: transparent; /* Final overlay BG is transparent */
-      opacity: 0;
-      clip-path: inset(100% 100% 100% 100% round var(--radius));
-      box-shadow: none;
-    }
-  }
-
-
-  @keyframes ember-sparkle-animation {
-    0% {
-      transform: translateY(0) translateX(-50%) scale(0.8); /* Start slightly smaller */
-      opacity: 0;
-    }
-    10% { /* Initial appearance, slight delay */
-        transform: translateY(calc(var(--ember-initial-y-offset, -2px))) translateX(calc(-50% + var(--ember-initial-x-offset, 0px))) scale(0.9);
+  @keyframes particle-rise-and-fade {
+    from {
+        transform: translateY(0) translateX(-50%) scale(var(--particle-scale, 1));
         opacity: 0.7;
     }
-    20% { /* Bright ignition of ember */
-      transform: translateY(calc(var(--ember-initial-y-offset, -5px) - 5px)) translateX(calc(-50% + var(--ember-initial-x-offset, 0px))) scale(1.3);
-      opacity: 1;
-    }
-    100% { /* Fall, fade, and drift out */
-      transform: translateY(calc(var(--ember-fall-distance, 80px))) translateX(calc(-50% + var(--ember-drift-x, 0px))) scale(0);
-      opacity: 0;
-    }
-  }
-
-  @keyframes smoke-drift-animation {
-    0% {
-      transform: translateY(0px) translateX(-50%) scale(0.3); /* Start smaller */
-      opacity: 0;
-    }
-    10% { /* Smoke becomes visible slightly after burn starts */
-        opacity: 0.3;
-        transform: translateY(-10px) translateX(calc(-50% + var(--smoke-drift-x, 0px) * 0.1)) scale(0.5);
-    }
-    30% { /* Smoke intensifies */
-      opacity: 0.6; /* Max opacity slightly lower for softer smoke */
-      transform: translateY(-50px) translateX(calc(-50% + var(--smoke-drift-x, 0px) * 0.3)) scale(1.5);
-    }
-    100% { /* Rise, drift, expand, and fade completely */
-      transform: translateY(calc(var(--smoke-rise-distance, -200px))) translateX(calc(-50% + var(--smoke-drift-x, 0px))) scale(4);
-      opacity: 0;
+    to {
+        transform: translateY(var(--particle-rise-distance)) translateX(calc(-50% + var(--particle-drift-x))) scale(var(--particle-scale, 1));
+        opacity: 0;
     }
   }
 }
-
-
-    
