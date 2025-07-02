@@ -359,12 +359,17 @@
 @layer utilities {
   @keyframes burn-hole-mask {
     0% {
-      -webkit-mask-image: radial-gradient(circle at center, transparent 0%, black 1%);
-      mask-image: radial-gradient(circle at center, transparent 0%, black 1%);
+      -webkit-mask-image: radial-gradient(circle at center, transparent 0%, black 5%);
+      mask-image: radial-gradient(circle at center, transparent 0%, black 5%);
+      opacity: 1;
+    }
+    90% {
+        opacity: 1;
     }
     100% {
-      -webkit-mask-image: radial-gradient(circle at center, transparent 100%, black 100%);
-      mask-image: radial-gradient(circle at center, transparent 100%, black 100%);
+      -webkit-mask-image: radial-gradient(circle at center, transparent 150%, black 150%);
+      mask-image: radial-gradient(circle at center, transparent 150%, black 150%);
+      opacity: 0;
     }
   }
 
@@ -373,29 +378,42 @@
       width: 0%;
       height: 0%;
       transform: translate(-50%, -50%);
-      box-shadow: 0 0 20px 10px #4a004a, 0 0 30px 15px #8c004b, 0 0 40px 20px #c70039;
+      /* Brighter, more intense core */
+      box-shadow: 0 0 5px 2px #fff, 0 0 15px 8px #ff00ff, 0 0 30px 15px #4a004a, 0 0 50px 25px #c70039;
       opacity: 1;
     }
-    90% {
+    80% {
         opacity: 1;
     }
     100% {
-      width: 200%;
-      height: 200%;
+      width: 250%; /* Larger expansion */
+      height: 250%;
       transform: translate(-50%, -50%);
-      box-shadow: 0 0 60px 30px #4a004a, 0 0 80px 45px #8c004b, 0 0 100px 60px #c70039;
+      box-shadow: 0 0 80px 40px #fff, 0 0 120px 60px #ff00ff, 0 0 150px 75px #4a004a, 0 0 200px 100px #c70039;
       opacity: 0;
     }
   }
 
   @keyframes ember-float {
     0% {
-      transform: translateY(0) scale(1);
+      transform: translateY(0) translateX(0) scale(1) rotate(0deg);
       opacity: 1;
     }
     100% {
-      transform: translateY(-200px) scale(0);
+      /* More dramatic travel path */
+      transform: translateY(-400px) translateX(calc(var(--drift) * 100px)) scale(0) rotate(360deg);
       opacity: 0;
+    }
+  }
+
+  @keyframes smoke-float {
+    0% {
+        transform: translateY(0) scale(1);
+        opacity: var(--start-opacity);
+    }
+    100% {
+        transform: translateY(-300px) scale(3);
+        opacity: 0;
     }
   }
 }
