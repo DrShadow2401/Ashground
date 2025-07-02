@@ -44,9 +44,6 @@ export default function AshgroundApp() {
   const [isEditorInitialized, setIsEditorInitialized] = useState(false);
   const [isBurningAnimationActive, setIsBurningAnimationActive] = useState(false);
   const [animationTargetRect, setAnimationTargetRect] = useState<DOMRect | null>(null);
-  const [animationSourceElement, setAnimationSourceElement] = useState<HTMLElement | null>(null);
-  const [contentForBurn, setContentForBurn] = useState<string>('');
-
 
   const editorRef = useRef<Editor | null>(null);
   const pageEditorComponentRef = useRef<PageEditorRef>(null);
@@ -172,52 +169,25 @@ export default function AshgroundApp() {
     const exportableElement = pageEditorComponentRef.current?.getExportableElement();
     if (exportableElement) {
 
-      if (document.activeElement && typeof (document.activeElement as HTMLElement).blur === 'function') {
-        (document.activeElement as HTMLElement).blur();
-      }
-      await new Promise(resolve => setTimeout(resolve, 250)); 
+      setAnimationTargetRect(exportableElement.getBoundingClientRect());
+      setIsBurningAnimationActive(true);
 
-      try {
-        const canvas = await html2canvas(exportableElement, {
-          scale: 1.5,
-          useCORS: true,
-          backgroundColor: null,
-        });
-        const imageDataUri = canvas.toDataURL('image/png');
-
-        setContentForBurn(imageDataUri);
-        setAnimationTargetRect(exportableElement.getBoundingClientRect());
-        setAnimationSourceElement(exportableElement);
-        setIsBurningAnimationActive(true);
-
-        setTimeout(() => {
-          setNoteTitle('Untitled Note');
-          setNoteContent('<p></p>');
-          if (pageEditorComponentRef.current) {
-            pageEditorComponentRef.current.clearCanvas(); // This will also reset drawing history
-          }
-          localStorage.removeItem('ashground_title');
-          localStorage.removeItem('ashground_note');
-
-          setIsBurningAnimationActive(false);
-          setAnimationTargetRect(null);
-          setAnimationSourceElement(null);
-          setContentForBurn('');
-
-
-        }, ANIMATION_DURATION);
-
-      } catch (error) {
-        console.error("Error capturing note for burning:", error);
-
+      setTimeout(() => {
         setNoteTitle('Untitled Note');
         setNoteContent('<p></p>');
-        if (pageEditorComponentRef.current) pageEditorComponentRef.current.clearCanvas();
+        if (pageEditorComponentRef.current) {
+          pageEditorComponentRef.current.clearCanvas(); // This will also reset drawing history
+        }
         localStorage.removeItem('ashground_title');
         localStorage.removeItem('ashground_note');
-      }
-    } else {
 
+        setIsBurningAnimationActive(false);
+        setAnimationTargetRect(null);
+
+      }, ANIMATION_DURATION);
+
+    } else {
+      // Fallback for when the element isn't found
       setNoteTitle('Untitled Note');
       setNoteContent('<p></p>');
       if (pageEditorComponentRef.current) pageEditorComponentRef.current.clearCanvas();
@@ -348,13 +318,11 @@ export default function AshgroundApp() {
     <main className="flex flex-col items-center min-h-screen py-6 px-4 overflow-x-hidden">
       <AshgroundHeader />
 
-      {isBurningAnimationActive && animationTargetRect && animationSourceElement && contentForBurn && (
+      {isBurningAnimationActive && animationTargetRect && (
         <NoteBurningEffect
           isActive={isBurningAnimationActive}
           targetRect={animationTargetRect}
           duration={ANIMATION_DURATION}
-          sourceElement={animationSourceElement}
-          noteImageUri={contentForBurn}
         />
       )}
 
