@@ -2,6 +2,7 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
+import Favicon from '@/components/favicon';
 
 export const metadata: Metadata = {
   title: 'Ashground by Asto Eterna',
@@ -16,6 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <Favicon />
         <meta name="google-site-verification" content="h5IEqiYJLm4c8QTMM1esOLS6DUPkPqYDCtPQ-fZ-KH0" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
