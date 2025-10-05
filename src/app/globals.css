@@ -162,7 +162,7 @@
 
   .ProseMirror {
     @apply font-body leading-relaxed p-0 m-0 w-full;
-    padding-top: 21px; /* Adjust to align with lines if using page-bg-lined */
+    padding-top: 24px; /* Adjust to align with lines if using page-bg-lined */
     color: inherit;
     background-color: transparent;
     caret-color: currentColor;
@@ -345,7 +345,7 @@
       transparent var(--text-line-height)
     );
     background-size: 100% var(--text-line-height);
-    background-position-y: 21px;
+    background-position-y: 24px;
   }
   .page-bg-grid {
     background-image:
@@ -427,3 +427,5 @@
     }
   }
 }
+
+    
