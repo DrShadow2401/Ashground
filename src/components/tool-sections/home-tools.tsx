@@ -36,6 +36,7 @@ import {
   ImageUp,
   Highlighter,
   Palette,
+  Feather,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -173,7 +174,19 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     }
   }, [editorRef]);
 
-  // Removed handleApplyImageWidth as the input field is gone
+  const handleLetterInsert = useCallback(() => {
+    const editor = editorRef.current;
+    if (!editor || editor.isDestroyed) return;
+    
+    const letterTemplate = `
+      <p>Dear [Recipient],</p>
+      <p></p>
+      <p>Sincerely,</p>
+      <p>[Your Name]</p>
+    `;
+    
+    editor.chain().focus().insertContent(letterTemplate).run();
+  }, [editorRef]);
 
   const editor = editorRef.current;
   if (!editor || editor.isDestroyed) {
@@ -242,6 +255,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     [
       { type: 'button', icon: <Minus />, label: 'Horizontal Rule', action: () => editor.chain().focus().setHorizontalRule().run(), isActive: () => false },
       { type: 'button', icon: <ImageUp />, label: 'Insert Image', action: handleImageInsert, isActive: () => false },
+      { type: 'button', icon: <Feather />, label: 'Write a Letter', action: handleLetterInsert, isActive: () => false },
     ],
     [
       { type: 'button', icon: <Undo2 />, label: 'Undo', action: () => editor.chain().focus().undo().run(), isActive: () => false, disabled: !canUndo },
@@ -345,3 +359,5 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
 };
 
 export default HomeTools;
+
+    
