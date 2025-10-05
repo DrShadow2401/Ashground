@@ -179,8 +179,14 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     if (!editor || editor.isDestroyed) return;
     
     const letterTemplate = `
-      <p>Dear [Recipient],</p>
-      <p></p>
+      <p style="text-align: left">[Your Name]<br>[Your Address]<br>[City, Postal Code]<br>[Email Address]</p>
+      <p style="text-align: left">[Date]</p>
+      <p style="text-align: left">[Recipient's Name]<br>[Recipient's Title]<br>[Recipient's Address]<br>[City, Postal Code]</p>
+      <p><strong>Subject: [Subject of the Letter]</strong></p>
+      <p>Dear [Recipient's Name],</p>
+      <p>I am writing to you today to...</p>
+      <p>[Body of the letter continues here. You can add multiple paragraphs.]</p>
+      <p>Thank you for your time and consideration.</p>
       <p>Sincerely,<br>[Your Name]</p>
     `;
     

@@ -567,7 +567,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
         type="text"
         value={noteTitle}
         onChange={(e) => onNoteTitleChange(e.target.value)}
-        className="font-headline text-3xl md:text-4xl mb-6 pb-2 border-b border-[hsl(var(--line-h,0),var(--line-s,0%),var(--line-l,0%),var(--line-a,0.7))] bg-transparent focus:outline-none w-full placeholder-muted-foreground"
+        className="font-headline text-3xl md:text-4xl mb-2 pb-2 border-b border-[hsl(var(--line-h,0),var(--line-s,0%),var(--line-l,0%),var(--line-a,0.7))] bg-transparent focus:outline-none w-full placeholder-muted-foreground"
         placeholder="Untitled Note"
         disabled={isDrawingMode}
       />
