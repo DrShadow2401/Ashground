@@ -179,11 +179,12 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     if (!editor || editor.isDestroyed) return;
     
     const letterTemplate = `
-      <p>[Date]</p>
-      <p>To,</p>
-      <p>[Recipient Name/Address]</p>
-      <p>Subject: [Subject of Letter]</p>
-      <p>Dear [Recipient's Name],</p>
+      <p>
+        [Date]<br><br>
+        To, [Recipient's Name]<br>
+        Subject: [Subject of Letter]<br><br>
+        Dear [Recipient's Name],
+      </p>
       <p></p>
       <p>[Body of the letter starts here...]</p>
       <p></p>
