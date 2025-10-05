@@ -179,7 +179,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     if (!editor || editor.isDestroyed) return;
     
     const letterTemplate = `
-      <p style="text-align: right;">[Date]</p>
+      <p>[Date]</p>
       <p>To,</p>
       <p>[Recipient Name/Address]</p>
       <p>Subject: [Subject of Letter]</p>
