@@ -181,8 +181,7 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     const letterTemplate = `
       <p>Dear [Recipient],</p>
       <p></p>
-      <p>Sincerely,</p>
-      <p>[Your Name]</p>
+      <p>Sincerely,<br>[Your Name]</p>
     `;
     
     editor.chain().focus().insertContent(letterTemplate).run();
@@ -359,5 +358,3 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
 };
 
 export default HomeTools;
-
-    
