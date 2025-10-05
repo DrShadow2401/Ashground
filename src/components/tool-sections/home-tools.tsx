@@ -180,10 +180,14 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     
     const letterTemplate = `
       <p style="text-align: right;">[Date]</p>
+      <p>To,</p>
+      <p>[Recipient Name/Address]</p>
+      <p>Subject: [Subject of Letter]</p>
       <p>Dear [Recipient's Name],</p>
-      <p>I am writing to you today to...</p>
-      <p>[Body of the letter continues here.]</p>
-      <p>Sincerely,<br>[Your Name]</p>
+      <p></p>
+      <p>[Body of the letter starts here...]</p>
+      <p></p>
+      <p>[Closing],<br>[Your Name]</p>
     `;
     
     editor.chain().focus().insertContent(letterTemplate).run();
