@@ -9,12 +9,12 @@ const AshgroundHeader: React.FC = () => {
       </h1>
       <p className="font-body italic text-base md:text-lg text-foreground/70 mt-2">
         <a
-          href="https://astoeterna.com"
+          href="https://questonin.com"
           target="_blank"
           rel="noopener noreferrer"
           className="underline hover:underline focus:underline focus:outline-none"
         >
-          By Asto Eterna
+          By Questonin
         </a>
       </p>
     </header>

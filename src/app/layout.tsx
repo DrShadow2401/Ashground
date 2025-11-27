@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import Favicon from '@/components/favicon';
 
 export const metadata: Metadata = {
-  title: 'Ashground by Asto Eterna',
+  title: 'Ashground by Questonin',
   description: 'A note-taking application with a focus on elegance and simplicity.',
 };
 
