@@ -30,10 +30,10 @@ class Flame {
         this.y = rand(this.cy - 5, this.cy + 5);
         this.lx = this.x;
         this.ly = this.y;
-        this.vy = rand(1, 3); // Reduced velocity
-        this.vx = rand(-1, 1); // Reduced velocity
-        this.r = rand(30, 40); // Reduced radius
-        this.life = rand(2, 7); // Reduced life
+        this.vy = rand(1, 4); // Increased velocity
+        this.vx = rand(-2, 2); // Increased velocity
+        this.r = rand(30, 50); // Increased radius
+        this.life = rand(4, 9); // Increased life
         this.alive = true;
         this.c = {
             h: Math.floor(rand(2, 40)),
@@ -119,8 +119,8 @@ class Spark {
         this.y = rand(this.cy, this.cy + 5);
         this.lx = this.x;
         this.ly = this.y;
-        this.vy = rand(1, 3); // Reduced velocity
-        this.vx = rand(-4, 4); // Reduced spread
+        this.vy = rand(1, 3);
+        this.vx = rand(-8, 8); // Increased spread
         this.r = rand(0, 1);
         this.life = rand(4, 8);
         this.alive = true;
@@ -258,8 +258,7 @@ const NewNoteBurningEffect: React.FC<NewNoteBurningEffectProps> = ({ bgImageUri,
 
 
         const update = () => {
-            // Reduced particle generation for smoother performance
-            for (let k = 0; k < 1; k++) {
+            for (let k = 0; k < 3; k++) { // Moderately increased particle generation
                 aFires.push(new Flame(mouse));
                 aSpark.push(new Spark(mouse));
                 aSpark2.push(new Spark(mouse));
@@ -342,4 +341,5 @@ const NewNoteBurningEffect: React.FC<NewNoteBurningEffectProps> = ({ bgImageUri,
 
 export default NewNoteBurningEffect;
 
+    
     
