@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { Editor } from '@tiptap/react';
 import AshgroundHeader from '@/components/ashground-header';
 import PageEditor, { type PageEditorRef } from '@/components/page-editor';
-import NoteBurningEffect from '@/components/note-burning-effect';
+import NewNoteBurningEffect from '@/components/new-note-burning-effect';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,7 +33,7 @@ type PageBackground = 'plain' | 'lined' | 'grid';
 type PageTheme = 'light' | 'dark' | 'pastel';
 export type LineStyle = 'solid' | 'dashed' | 'dotted';
 
-const ANIMATION_DURATION = 3000;
+const ANIMATION_DURATION = 5000; // Increased duration for new animation
 
 export default function AshgroundApp() {
   const [noteTitle, setNoteTitle] = useState<string>('Untitled Note');
@@ -44,7 +44,6 @@ export default function AshgroundApp() {
   const [isMounted, setIsMounted] = useState(false);
   const [isEditorInitialized, setIsEditorInitialized] = useState(false);
   const [isBurningAnimationActive, setIsBurningAnimationActive] = useState(false);
-  const [animationTargetRect, setAnimationTargetRect] = useState<DOMRect | null>(null);
   const [burnImageUri, setBurnImageUri] = useState<string | null>(null);
 
   const editorRef = useRef<Editor | null>(null);
@@ -172,13 +171,12 @@ export default function AshgroundApp() {
     if (exportableElement) {
       try {
         const canvas = await html2canvas(exportableElement, {
-          scale: 1, // Use scale 1 for performance, can increase for quality
-          backgroundColor: null, // Capture with transparent background
+          scale: 1, 
+          backgroundColor: '#F8F5F0', // Match light paper bg for consistency
           useCORS: true,
         });
         const imageUri = canvas.toDataURL('image/png');
         setBurnImageUri(imageUri);
-        setAnimationTargetRect(exportableElement.getBoundingClientRect());
         setIsBurningAnimationActive(true);
 
         setTimeout(() => {
@@ -190,9 +188,7 @@ export default function AshgroundApp() {
           localStorage.removeItem('ashground_title');
           localStorage.removeItem('ashground_note');
 
-          // Reset animation states
           setIsBurningAnimationActive(false);
-          setAnimationTargetRect(null);
           setBurnImageUri(null);
 
         }, ANIMATION_DURATION);
@@ -345,12 +341,10 @@ export default function AshgroundApp() {
 
       <AshgroundHeader />
 
-      {isBurningAnimationActive && animationTargetRect && burnImageUri && (
-        <NoteBurningEffect
-          isActive={isBurningAnimationActive}
-          targetRect={animationTargetRect}
-          duration={ANIMATION_DURATION}
-          imageUri={burnImageUri}
+      {isBurningAnimationActive && burnImageUri && (
+        <NewNoteBurningEffect
+          bgImageUri={burnImageUri}
+          onComplete={() => setIsBurningAnimationActive(false)}
         />
       )}
 
