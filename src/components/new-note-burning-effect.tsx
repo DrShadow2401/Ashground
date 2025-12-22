@@ -241,7 +241,7 @@ const NewNoteBurningEffect: React.FC<NewNoteBurningEffectProps> = ({ bgImageUri,
 
             ctx.globalCompositeOperation = "source-over";
             ctx.save();
-            ctx.font = "15em Amatic SC";
+            ctx.font = "12em Amatic SC";
             ctx.textAlign = "center";
             ctx.strokeStyle = "rgb(50, 50, 0)";
             ctx.fillStyle = "rgb(100, 10, 0)";
@@ -250,8 +250,8 @@ const NewNoteBurningEffect: React.FC<NewNoteBurningEffectProps> = ({ bgImageUri,
             ctx.shadowOffsetX = rand(mousePCx - 2, mousePCx + 2);
             ctx.shadowOffsetY = rand(mousePCy - 2, mousePCy + 2);
             ctx.shadowBlur = rand(7, 10);
-            ctx.strokeText("Fire", canvas.width / 2, canvas.height * .72);
-            ctx.fillText("Fire", canvas.width / 2, canvas.height * .72);
+            ctx.strokeText("burn it", canvas.width / 2, canvas.height * .72);
+            ctx.fillText("burn it", canvas.width / 2, canvas.height * .72);
             ctx.restore();
         };
 
