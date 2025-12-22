@@ -122,10 +122,10 @@ export default function AshgroundApp() {
   }, [pageTheme, isMounted]);
 
   useEffect(() => {
-    if (activeTab !== 'draw') {
+    if (activeTab !== 'draw' && currentDrawTool !== null) {
       setCurrentDrawTool(null);
     }
-  }, [activeTab]);
+  }, [activeTab, currentDrawTool]);
 
   const handleEditorReady = useCallback(() => {
     setIsEditorInitialized(true);
