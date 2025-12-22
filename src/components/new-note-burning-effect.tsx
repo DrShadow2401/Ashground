@@ -30,10 +30,10 @@ class Flame {
         this.y = rand(this.cy - 5, this.cy + 5);
         this.lx = this.x;
         this.ly = this.y;
-        this.vy = rand(1, 3);
-        this.vx = rand(-1, 1);
-        this.r = rand(30, 40);
-        this.life = rand(2, 7);
+        this.vy = rand(1, 4); // Increased velocity
+        this.vx = rand(-2, 2); // Increased velocity
+        this.r = rand(40, 60); // Increased radius
+        this.life = rand(3, 8); // Increased life
         this.alive = true;
         this.c = {
             h: Math.floor(rand(2, 40)),
@@ -48,16 +48,16 @@ class Flame {
         this.lx = this.x;
         this.ly = this.y;
         this.y -= this.vy;
-        this.vy += 0.08;
+        this.vy += 0.09; // Slightly increased gravity
         this.x += this.vx;
 
-        if (this.x < this.cx) this.vx += 0.2;
-        else this.vx -= 0.2;
+        if (this.x < this.cx) this.vx += 0.3;
+        else this.vx -= 0.3;
 
-        if (this.r > 0) this.r -= 0.3;
+        if (this.r > 0) this.r -= 0.4; // Faster shrink
         if (this.r <= 0) this.r = 0;
 
-        this.life -= 0.12;
+        this.life -= 0.1; // Faster decay
 
         if (this.life <= 0) {
             this.c.a -= 0.05;
@@ -91,7 +91,7 @@ class Flame {
         ctx.moveTo(this.lx, this.ly);
         ctx.lineTo(this.x, this.y);
         ctx.strokeStyle = `hsla(${this.c.h}, ${this.c.s}%, ${this.c.l}%, 1)`;
-        ctx.lineWidth = rand(1, 2);
+        ctx.lineWidth = rand(1, 3); // Thicker trail
         ctx.stroke();
         ctx.closePath();
     }
@@ -114,14 +114,14 @@ class Spark {
     constructor(mouse: { x: number, y: number }) {
         this.cx = mouse.x;
         this.cy = mouse.y;
-        this.x = rand(this.cx - 40, this.cx + 40);
-        this.y = rand(this.cy, this.cy + 5);
+        this.x = rand(this.cx - 50, this.cx + 50); // Wider spawn
+        this.y = rand(this.cy, this.cy + 10);
         this.lx = this.x;
         this.ly = this.y;
-        this.vy = rand(1, 3);
-        this.vx = rand(-4, 4);
-        this.r = rand(0, 1);
-        this.life = rand(4, 8);
+        this.vy = rand(2, 5); // Faster
+        this.vx = rand(-8, 8); // Much wider spread
+        this.r = rand(0.5, 2); // Bigger sparks
+        this.life = rand(5, 10); // Longer life
         this.alive = true;
         this.c = {
             h: Math.floor(rand(2, 40)),
@@ -137,10 +137,10 @@ class Spark {
         this.y -= this.vy;
         this.x += this.vx;
 
-        if (this.x < this.cx) this.vx += 0.2;
-        else this.vx -= 0.2;
+        if (this.x < this.cx) this.vx += 0.25;
+        else this.vx -= 0.25;
 
-        this.vy += 0.08;
+        this.vy += 0.1;
         this.life -= 0.1;
 
         if (this.life <= 0) {
@@ -257,9 +257,13 @@ const NewNoteBurningEffect: React.FC<NewNoteBurningEffectProps> = ({ bgImageUri,
 
 
         const update = () => {
-            aFires.push(new Flame(mouse));
-            aSpark.push(new Spark(mouse));
-            aSpark2.push(new Spark(mouse));
+            // Generate 10x particles for intensity
+            for (let i = 0; i < 10; i++) {
+                aFires.push(new Flame(mouse));
+                aSpark.push(new Spark(mouse));
+                aSpark2.push(new Spark(mouse));
+            }
+
 
             for (let i = aFires.length - 1; i >= 0; i--) {
                 if (aFires[i].alive) aFires[i].update();
