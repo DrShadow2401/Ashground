@@ -257,10 +257,12 @@ const NewNoteBurningEffect: React.FC<NewNoteBurningEffectProps> = ({ bgImageUri,
 
 
         const update = () => {
-            // Reduced particle generation for performance
-            aFires.push(new Flame(mouse));
-            aSpark.push(new Spark(mouse));
-            aSpark2.push(new Spark(mouse));
+            // Increased particle generation for more intensity, but balanced for performance
+            for (let k = 0; k < 2; k++) {
+                aFires.push(new Flame(mouse));
+                aSpark.push(new Spark(mouse));
+                aSpark2.push(new Spark(mouse));
+            }
 
             for (let i = aFires.length - 1; i >= 0; i--) {
                 if (aFires[i].alive) aFires[i].update();
