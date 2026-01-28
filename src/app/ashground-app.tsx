@@ -8,6 +8,7 @@ import PageEditor, { type PageEditorRef } from '@/components/page-editor';
 import NewNoteBurningEffect from '@/components/new-note-burning-effect';
 import { LimelightNav } from '@/components/ui/limelight-nav';
 import { Button } from '@/components/ui/button';
+import { Tabs } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
