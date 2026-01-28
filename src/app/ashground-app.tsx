@@ -15,21 +15,21 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import HomeTools from '@/components/tool-sections/home-tools';
 import DrawTools from '@/components/tool-sections/draw-tools';
 import ViewTools from '@/components/tool-sections/view-tools';
 import ExportTools from '@/components/tool-sections/export-tools';
 import UnsentLetter from '@/components/unsent-letter';
-import { Flame, Home, Brush, Eye, Upload, Feather } from 'lucide-react';
+import { Flame, Home, Brush, Eye, Upload, Feather, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import html2canvas from 'html2canvas';
 import { CelestialSphere } from '@/components/ui/celestial-sphere';
-
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LimelightNav } from '@/components/ui/limelight-nav';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 
 type PageBackground = 'plain' | 'lined' | 'grid';
@@ -52,6 +52,8 @@ export default function AshgroundApp() {
   const editorRef = useRef<Editor | null>(null);
   const pageEditorComponentRef = useRef<PageEditorRef>(null);
 
+  const isMobile = useIsMobile();
+  const [isMobileSheetOpen, setMobileSheetOpen] = useState(false);
 
   const [currentDrawTool, setCurrentDrawTool] = useState<string | null>(null);
   const [drawColor, setDrawColor] = useState<string>('#000000');
@@ -157,7 +159,7 @@ export default function AshgroundApp() {
     if (pageEditorComponentRef.current) {
       pageEditorComponentRef.current.clearCanvas();
     }
-    setCurrentDrawTool(null); // Optionally deactivate tool after clearing
+    setCurrentDrawTool(null);
   };
   
   const handleUndoDrawing = () => {
@@ -184,7 +186,7 @@ export default function AshgroundApp() {
       try {
         const canvas = await html2canvas(exportableElement, {
           scale: 1, 
-          backgroundColor: '#F8F5F0', // Match light paper bg for consistency
+          backgroundColor: '#F8F5F0',
           useCORS: true,
         });
         const imageUri = canvas.toDataURL('image/png');
@@ -206,7 +208,6 @@ export default function AshgroundApp() {
         }, ANIMATION_DURATION);
       } catch (error) {
         console.error("Failed to capture note for burning animation:", error);
-        // Fallback to clearing content without animation if canvas fails
         setNoteTitle('Untitled Note');
         setNoteContent('<p></p>');
         if (pageEditorComponentRef.current) pageEditorComponentRef.current.clearCanvas();
@@ -214,7 +215,6 @@ export default function AshgroundApp() {
         localStorage.removeItem('ashground_note');
       }
     } else {
-      // Fallback for when the element isn't found
       setNoteTitle('Untitled Note');
       setNoteContent('<p></p>');
       if (pageEditorComponentRef.current) pageEditorComponentRef.current.clearCanvas();
@@ -222,6 +222,38 @@ export default function AshgroundApp() {
       localStorage.removeItem('ashground_note');
     }
   };
+
+  const ToolPanelsContent = (
+    <ScrollArea className="h-full p-4">
+        {activeToolPanel === 'home' && (isEditorInitialized ? <HomeTools editorRef={editorRef} /> : <p className="text-muted-foreground text-sm px-4">Editor loading...</p>)}
+        {activeToolPanel === 'draw' && (
+            <DrawTools
+                activeTool={currentDrawTool}
+                onToolChange={setCurrentDrawTool}
+                currentDrawColor={drawColor}
+                onDrawColorChange={setDrawColor}
+                currentStrokeWidth={drawStrokeWidth}
+                onStrokeWidthChange={setDrawStrokeWidth}
+                currentLineStyle={currentLineStyle}
+                onLineStyleChange={setCurrentLineStyle}
+                onClearCanvas={handleClearCanvas}
+                onUndoDrawing={handleUndoDrawing}
+                canUndoDrawing={canUndoDrawing}
+            />
+        )}
+        {activeToolPanel === 'view' && (
+            <ViewTools
+                selectedBackground={pageBackground}
+                onBackgroundChange={setPageBackground}
+                selectedTheme={pageTheme}
+                onThemeChange={setPageTheme}
+            />
+        )}
+         {activeToolPanel === 'export' && (
+            <ExportTools noteTitle={noteTitle} getExportableElement={getExportableElementForPdf} />
+        )}
+    </ScrollArea>
+  );
 
   return (
     <div className="main-app-container">
@@ -247,90 +279,82 @@ export default function AshgroundApp() {
                 <div className="flex-shrink-0 mb-4">
                   <div className="flex justify-between items-center mb-4">
                     <h1 className="font-headline text-2xl font-bold text-foreground">ASHGROUND</h1>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="rounded-full h-10 w-10 border-2 border-amber-500 dark:border-amber-400 bg-transparent text-amber-500 dark:text-amber-400 shadow-md hover:shadow-lg hover:bg-amber-500/10 dark:hover:bg-amber-400/10 hover:text-amber-600 dark:hover:text-amber-300"
-                          title="Burn it Down"
-                          disabled={!isEditorInitialized || isBurningAnimationActive || activeToolPanel === 'letter'}
-                        >
-                          <Flame className="w-5 h-5" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle> Burn it down like my GPA </AlertDialogTitle>
-                          <AlertDialogDescription>
-                            No more EmOtIoNaL DaMaGe
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={handleBurnEverything}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    
+                    <div className="flex items-center gap-2">
+                      {isMobile && (
+                        <Sheet open={isMobileSheetOpen} onOpenChange={setMobileSheetOpen}>
+                          <SheetTrigger asChild>
+                            <Button variant="outline" size="icon" className="h-10 w-10">
+                              <Menu className="h-5 w-5"/>
+                            </Button>
+                          </SheetTrigger>
+                          <SheetContent side="left" className="p-0 w-[300px]">
+                            <div className="flex flex-col h-full">
+                              <div className="p-4 flex justify-center border-b">
+                                <LimelightNav
+                                    items={navItems}
+                                    defaultActiveIndex={navItems.findIndex(item => item.id === activeToolPanel)}
+                                    onTabChange={(index) => setActiveToolPanel(navItems[index].id)}
+                                />
+                              </div>
+                              <div className="flex-grow">
+                                {ToolPanelsContent}
+                              </div>
+                            </div>
+                          </SheetContent>
+                        </Sheet>
+                      )}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            className="rounded-full h-10 w-10 border-2 border-amber-500 dark:border-amber-400 bg-transparent text-amber-500 dark:text-amber-400 shadow-md hover:shadow-lg hover:bg-amber-500/10 dark:hover:bg-amber-400/10 hover:text-amber-600 dark:hover:text-amber-300"
+                            title="Burn it Down"
+                            disabled={!isEditorInitialized || isBurningAnimationActive || activeToolPanel === 'letter'}
                           >
-                            Burn
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                            <Flame className="w-5 h-5" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle> Burn it down like my GPA </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              No more EmOtIoNaL DaMaGe
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={handleBurnEverything}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Burn
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </div>
-                  <div className="flex justify-center">
-                     <LimelightNav
-                        items={navItems}
-                        defaultActiveIndex={0}
-                        onTabChange={(index) => {
-                            setActiveToolPanel(navItems[index].id);
-                        }}
-                        className="mx-auto"
-                        />
-                  </div>
+                  {!isMobile && (
+                    <div className="flex justify-center">
+                       <LimelightNav
+                          items={navItems}
+                          defaultActiveIndex={0}
+                          onTabChange={(index) => setActiveToolPanel(navItems[index].id)}
+                          className="mx-auto"
+                          />
+                    </div>
+                  )}
                 </div>
                 
                 {activeToolPanel === 'letter' ? (
                   <UnsentLetter />
                 ) : (
-                  <ResizablePanelGroup direction="horizontal" className="flex-grow rounded-lg border bg-card/50 backdrop-blur-sm">
-                      <ResizablePanel defaultSize={25} minSize={20} className="!overflow-y-auto p-0">
-                          <ScrollArea className="h-full p-4">
-                              {activeToolPanel === 'home' && (isEditorInitialized ? <HomeTools editorRef={editorRef} /> : <p className="text-muted-foreground text-sm px-4">Editor loading...</p>)}
-                              {activeToolPanel === 'draw' && (
-                                  <DrawTools
-                                      activeTool={currentDrawTool}
-                                      onToolChange={setCurrentDrawTool}
-                                      currentDrawColor={drawColor}
-                                      onDrawColorChange={setDrawColor}
-                                      currentStrokeWidth={drawStrokeWidth}
-                                      onStrokeWidthChange={setDrawStrokeWidth}
-                                      currentLineStyle={currentLineStyle}
-                                      onLineStyleChange={setCurrentLineStyle}
-                                      onClearCanvas={handleClearCanvas}
-                                      onUndoDrawing={handleUndoDrawing}
-                                      canUndoDrawing={canUndoDrawing}
-                                  />
-                              )}
-                              {activeToolPanel === 'view' && (
-                                  <ViewTools
-                                      selectedBackground={pageBackground}
-                                      onBackgroundChange={setPageBackground}
-                                      selectedTheme={pageTheme}
-                                      onThemeChange={setPageTheme}
-                                  />
-                              )}
-                               {activeToolPanel === 'export' && (
-                                  <ExportTools noteTitle={noteTitle} getExportableElement={getExportableElementForPdf} />
-                              )}
-                          </ScrollArea>
-                      </ResizablePanel>
-
-                      <ResizableHandle withHandle />
-
-                      <ResizablePanel defaultSize={75} className="bg-transparent p-0">
+                  isMobile ? (
+                     <div className="flex-grow rounded-lg border bg-card/50 backdrop-blur-sm">
                         <ScrollArea className="h-full">
-                           <div className="p-4">
+                          <div className="p-4 sm:p-6 md:p-8">
                               <PageEditor
                                   ref={pageEditorComponentRef}
                                   editorTiptapRef={editorRef}
@@ -341,7 +365,7 @@ export default function AshgroundApp() {
                                   onNoteChange={handleNoteContentChange}
                                   backgroundStyle={pageBackground}
                                   pageTheme={pageTheme}
-                                  isDrawingMode={activeToolPanel === 'draw'}
+                                  isDrawingMode={isDrawingMode}
                                   currentDrawTool={currentDrawTool}
                                   drawColor={drawColor}
                                   drawStrokeWidth={drawStrokeWidth}
@@ -351,8 +375,41 @@ export default function AshgroundApp() {
                               />
                             </div>
                         </ScrollArea>
-                      </ResizablePanel>
-                  </ResizablePanelGroup>
+                      </div>
+                  ) : (
+                    <ResizablePanelGroup direction="horizontal" className="flex-grow rounded-lg border bg-card/50 backdrop-blur-sm">
+                        <ResizablePanel defaultSize={25} minSize={20} className="!overflow-y-auto p-0">
+                           {ToolPanelsContent}
+                        </ResizablePanel>
+
+                        <ResizableHandle withHandle />
+
+                        <ResizablePanel defaultSize={75} className="bg-transparent p-0">
+                          <ScrollArea className="h-full">
+                             <div className="p-4">
+                                <PageEditor
+                                    ref={pageEditorComponentRef}
+                                    editorTiptapRef={editorRef}
+                                    onEditorReady={handleEditorReady}
+                                    noteTitle={noteTitle}
+                                    onNoteTitleChange={setNoteTitle}
+                                    noteContent={noteContent}
+                                    onNoteChange={handleNoteContentChange}
+                                    backgroundStyle={pageBackground}
+                                    pageTheme={pageTheme}
+                                    isDrawingMode={isDrawingMode}
+                                    currentDrawTool={currentDrawTool}
+                                    drawColor={drawColor}
+                                    drawStrokeWidth={drawStrokeWidth}
+                                    currentLineStyle={currentLineStyle}
+                                    onDrawColorChange={setDrawColor}
+                                    onUndoStateChange={handleDrawingUndoStateChange}
+                                />
+                              </div>
+                          </ScrollArea>
+                        </ResizablePanel>
+                    </ResizablePanelGroup>
+                  )
                 )}
               </>
             ) : null}
