@@ -261,7 +261,7 @@ export default function AshgroundApp() {
     <div className="main-app-container">
       <div className={cn(
         "relative w-full",
-        !isLetterView && "h-screen overflow-hidden"
+        isLetterView ? "min-h-screen" : "h-screen overflow-hidden"
       )}>
         <CelestialSphere
           hue={250}
@@ -280,7 +280,7 @@ export default function AshgroundApp() {
         
         <div className={cn(
           "w-full transition-opacity duration-300 z-10 p-4 flex flex-col",
-          isLetterView ? "min-h-screen" : "h-full",
+          "h-full",
           isBurningAnimationActive ? "opacity-0 pointer-events-none" : "opacity-100"
         )}>
             {isMounted ? (
@@ -363,7 +363,7 @@ export default function AshgroundApp() {
                   isMobile ? (
                      <div className="flex-grow rounded-lg border bg-card/50 backdrop-blur-sm">
                         <ScrollArea className="h-full">
-                          <div className="p-2 sm:p-3 h-full">
+                          <div className="p-2 sm:p-3 min-h-full">
                               <PageEditor
                                   ref={pageEditorComponentRef}
                                   editorTiptapRef={editorRef}
@@ -386,7 +386,7 @@ export default function AshgroundApp() {
                         </ScrollArea>
                       </div>
                   ) : (
-                    <ResizablePanelGroup direction="horizontal" className="flex-grow rounded-lg border bg-card/50 backdrop-blur-sm">
+                    <ResizablePanelGroup direction="horizontal" className="flex-grow min-h-0 rounded-lg border bg-card/50 backdrop-blur-sm">
                         <ResizablePanel defaultSize={20} minSize={15} className="!overflow-y-auto p-0">
                            {ToolPanelsContent}
                         </ResizablePanel>
@@ -395,7 +395,7 @@ export default function AshgroundApp() {
 
                         <ResizablePanel defaultSize={80} className="bg-transparent p-0">
                           <ScrollArea className="h-full">
-                             <div className="p-2 md:p-4 h-full">
+                             <div className="p-2 md:p-4 min-h-full">
                                 <PageEditor
                                     ref={pageEditorComponentRef}
                                     editorTiptapRef={editorRef}
