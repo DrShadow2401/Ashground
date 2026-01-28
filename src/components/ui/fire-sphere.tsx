@@ -165,6 +165,9 @@ function FireSphere({
     const material = new THREE.ShaderMaterial({
       uniforms,
       transparent: true,
+      depthWrite: false,
+      depthTest: false,
+      blending: THREE.AdditiveBlending,
       vertexShader: vert,
       fragmentShader: frag,
     });
