@@ -131,14 +131,27 @@ function FireSphere({
     const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
     camera.position.z = 5;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      premultipliedAlpha: false,
+    });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(width, height);
+    renderer.setClearColor(0x000000, 0); // transparent
     mountRef.current.appendChild(renderer.domElement);
 
     const composer = new EffectComposer(renderer);
+    composer.renderTarget1.texture.format = THREE.RGBAFormat;
+    composer.renderTarget2.texture.format = THREE.RGBAFormat;
     composer.addPass(new RenderPass(scene, camera));
-    const bloomPass = new UnrealBloomPass(new THREE.Vector2(width, height), 1.5, 0.4, 0.85);
+
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(width, height),
+      1.5,
+      0.4,
+      0.85
+    );
     composer.addPass(bloomPass);
 
     const uniforms = {
