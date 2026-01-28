@@ -33,16 +33,18 @@ export default function UnsentLetter() {
   const [isBurningAnimationActive, setIsBurningAnimationActive] = useState(false);
   const [burnImageUri, setBurnImageUri] = useState<string | null>(null);
 
-  const letterRef = useRef<HTMLDivElement>(null);
+  const letterContentRef = useRef<HTMLDivElement>(null);
 
   const handleBurnLetter = async () => {
-    const letterElement = letterRef.current;
+    const letterElement = letterContentRef.current;
     if (letterElement) {
       try {
         const canvas = await html2canvas(letterElement, {
           scale: 1,
           backgroundColor: null, // Transparent background for capture
           useCORS: true,
+          // Capture full scroll height
+          windowHeight: letterElement.scrollHeight
         });
         const imageUri = canvas.toDataURL('image/png');
         setBurnImageUri(imageUri);
@@ -81,7 +83,7 @@ export default function UnsentLetter() {
   };
 
   return (
-    <div className="relative flex-grow flex flex-col">
+    <div className="relative flex-grow flex flex-col overflow-hidden">
         {isBurningAnimationActive && burnImageUri && (
           <NewNoteBurningEffect
             bgImageUri={burnImageUri}
@@ -89,89 +91,90 @@ export default function UnsentLetter() {
           />
         )}
         
-        <div 
-          className={cn(
-            "w-full max-w-2xl mx-auto transition-opacity duration-300 p-4 pt-8 md:pt-12 pb-8",
+        <div className={cn(
+            "flex-grow overflow-y-auto",
             isBurningAnimationActive ? "opacity-0 pointer-events-none" : "opacity-100"
           )}
         >
-            <div ref={letterRef} className="bg-card/50 backdrop-blur-sm p-8 md:p-12 rounded-lg shadow-lg font-body text-foreground">
-                <div className="flex items-baseline gap-2 mb-4">
-                    <span className="text-lg text-muted-foreground">To:</span>
-                    <Input
-                        value={to}
-                        onChange={(e) => setTo(e.target.value)}
-                        placeholder="Mom, my past self, the void..."
-                        className="text-lg p-1 h-auto flex-1 bg-transparent border-0 border-b rounded-none border-border/50 focus-visible:ring-0 focus:border-primary"
+            <div ref={letterContentRef} className="w-full max-w-2xl mx-auto transition-opacity duration-300 p-4 pt-8 md:pt-12 pb-8">
+                <div className="bg-card/50 backdrop-blur-sm p-8 md:p-12 rounded-lg shadow-lg font-body text-foreground">
+                    <div className="flex items-baseline gap-2 mb-4">
+                        <span className="text-lg text-muted-foreground">To:</span>
+                        <Input
+                            value={to}
+                            onChange={(e) => setTo(e.target.value)}
+                            placeholder="Mom, my past self, the void..."
+                            className="text-lg p-1 h-auto flex-1 bg-transparent border-0 border-b rounded-none border-border/50 focus-visible:ring-0 focus:border-primary"
+                        />
+                    </div>
+                    
+                    <Textarea
+                        value={opening}
+                        onChange={(e) => setOpening(e.target.value)}
+                        placeholder="I never got to say this..."
+                        className="text-lg p-1 mb-6 bg-transparent border-0 border-b rounded-none border-border/50 focus-visible:ring-0 focus:border-primary resize-none"
+                        rows={1}
                     />
-                </div>
-                
-                <Textarea
-                    value={opening}
-                    onChange={(e) => setOpening(e.target.value)}
-                    placeholder="I never got to say this..."
-                    className="text-lg p-1 mb-6 bg-transparent border-0 border-b rounded-none border-border/50 focus-visible:ring-0 focus:border-primary resize-none"
-                    rows={1}
-                />
 
-                <Textarea
-                    value={body}
-                    onChange={(e) => setBody(e.target.value)}
-                    placeholder="This is where I let it all out. The unfiltered thoughts, the unspoken words, the weight I'm ready to release. Nothing written here is stored or sent."
-                    className="text-lg p-2 min-h-[250px] mb-6 bg-transparent border rounded-md border-border/30 focus-visible:ring-1 focus-visible:ring-primary/50 resize-y overflow-y-auto"
-                />
-
-                <Textarea
-                    value={closing}
-                    onChange={(e) => setClosing(e.target.value)}
-                    placeholder="This is where I stop carrying this."
-                    className="text-lg p-1 mb-8 bg-transparent border-0 border-b rounded-none border-border/50 focus-visible:ring-0 focus:border-primary resize-none"
-                    rows={1}
-                />
-
-                <div className="flex items-baseline gap-2">
-                    <span className="text-lg text-muted-foreground">From:</span>
-                    <Input
-                        value={from}
-                        onChange={(e) => setFrom(e.target.value)}
-                        placeholder="Anonymous"
-                        className="text-lg p-1 h-auto flex-1 bg-transparent border-0 border-b rounded-none border-border/50 focus-visible:ring-0 focus:border-primary"
+                    <Textarea
+                        value={body}
+                        onChange={(e) => setBody(e.target.value)}
+                        placeholder="This is where I let it all out. The unfiltered thoughts, the unspoken words, the weight I'm ready to release. Nothing written here is stored or sent."
+                        className="text-lg p-2 min-h-[250px] mb-6 bg-transparent border rounded-md border-border/30 focus-visible:ring-1 focus-visible:ring-primary/50 resize-y overflow-y-auto"
                     />
-                </div>
-            </div>
 
-            <div className="mt-8 text-center">
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                    <Button
-                        variant="outline"
-                        className="rounded-full h-14 w-14 p-0 border-2 border-amber-500 dark:border-amber-400 bg-transparent text-amber-500 dark:text-amber-400 shadow-md hover:shadow-lg hover:bg-amber-500/10 dark:hover:bg-amber-400/10 hover:text-amber-600 dark:hover:text-amber-300"
-                        title="Burn this letter"
-                    >
-                        <Flame className="w-6 h-6" />
-                    </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you ready to let this go?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                        This letter will be permanently destroyed. It will not be saved or sent. This action cannot be undone.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                        onClick={handleBurnLetter}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    <Textarea
+                        value={closing}
+                        onChange={(e) => setClosing(e.target.value)}
+                        placeholder="This is where I stop carrying this."
+                        className="text-lg p-1 mb-8 bg-transparent border-0 border-b rounded-none border-border/50 focus-visible:ring-0 focus:border-primary resize-none"
+                        rows={1}
+                    />
+
+                    <div className="flex items-baseline gap-2">
+                        <span className="text-lg text-muted-foreground">From:</span>
+                        <Input
+                            value={from}
+                            onChange={(e) => setFrom(e.target.value)}
+                            placeholder="Anonymous"
+                            className="text-lg p-1 h-auto flex-1 bg-transparent border-0 border-b rounded-none border-border/50 focus-visible:ring-0 focus:border-primary"
+                        />
+                    </div>
+                </div>
+
+                <div className="mt-8 text-center">
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                        <Button
+                            variant="outline"
+                            className="rounded-full h-14 w-14 p-0 border-2 border-amber-500 dark:border-amber-400 bg-transparent text-amber-500 dark:text-amber-400 shadow-md hover:shadow-lg hover:bg-amber-500/10 dark:hover:bg-amber-400/10 hover:text-amber-600 dark:hover:text-amber-300"
+                            title="Burn this letter"
                         >
-                        Burn
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-                <p className="text-muted-foreground text-sm mt-4">
-                    This letter will never be delivered.
-                </p>
+                            <Flame className="w-6 h-6" />
+                        </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you ready to let this go?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                            This letter will be permanently destroyed. It will not be saved or sent. This action cannot be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                            onClick={handleBurnLetter}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                            Burn
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                    <p className="text-muted-foreground text-sm mt-4">
+                        This letter will never be delivered.
+                    </p>
+                </div>
             </div>
         </div>
     </div>
