@@ -119,7 +119,7 @@ export default function UnsentLetter() {
                       value={body}
                       onChange={(e) => setBody(e.target.value)}
                       placeholder="This is where I let it all out. The unfiltered thoughts, the unspoken words, the weight I'm ready to release. Nothing written here is stored or sent."
-                      className="text-lg p-2 min-h-[250px] mb-6 bg-transparent border rounded-md border-border/30 focus-visible:ring-1 focus-visible:ring-primary/50 resize-y"
+                      className="text-lg p-2 min-h-[250px] mb-6 bg-transparent border rounded-md border-border/30 focus-visible:ring-1 focus-visible:ring-primary/50 resize-y overflow-y-auto"
                   />
 
                   <Textarea
