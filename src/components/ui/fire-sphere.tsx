@@ -129,7 +129,7 @@ function FireSphere({
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-    camera.position.z = 4.8;
+;
 
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
