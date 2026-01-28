@@ -21,7 +21,8 @@ import HomeTools from '@/components/tool-sections/home-tools';
 import DrawTools from '@/components/tool-sections/draw-tools';
 import ViewTools from '@/components/tool-sections/view-tools';
 import ExportTools from '@/components/tool-sections/export-tools';
-import { Flame, Home, Brush, Eye, Upload } from 'lucide-react';
+import LetterTools from '@/components/tool-sections/letter-tools';
+import { Flame, Home, Brush, Eye, Upload, Feather } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import html2canvas from 'html2canvas';
 import { CelestialSphere } from '@/components/ui/celestial-sphere';
@@ -58,6 +59,29 @@ export default function AshgroundApp() {
   const [currentLineStyle, setCurrentLineStyle] = useState<LineStyle>('solid');
   const [canUndoDrawing, setCanUndoDrawing] = useState<boolean>(false);
 
+  const handleLetterInsert = useCallback(() => {
+    const editor = editorRef.current;
+    if (!editor || editor.isDestroyed) return;
+    
+    const letterTemplate = `
+      <p>
+        [Date]<br>
+        To: [Recipient's Name]<br>
+        Subject: [Subject of Letter]<br>
+        Dear [Recipient's Name],
+      </p>
+      <p></p>
+      <p>[Body of the letter starts here...]</p>
+      <p></p>
+      <p>
+        [Closing],<br>
+        [Your Name]
+      </p>
+    `;
+    
+    editor.chain().focus().insertContent(letterTemplate).run();
+  }, [editorRef]);
+
   const isDrawingMode = activeToolPanel === 'draw';
 
   const navItems = [
@@ -65,6 +89,7 @@ export default function AshgroundApp() {
     { id: 'draw', icon: <Brush />, label: 'Draw' },
     { id: 'view', icon: <Eye />, label: 'View' },
     { id: 'export', icon: <Upload />, label: 'Export' },
+    { id: 'letter', icon: <Feather />, label: 'Letter' },
   ];
 
   useEffect(() => {
@@ -317,6 +342,9 @@ export default function AshgroundApp() {
                             )}
                              {activeToolPanel === 'export' && (
                                 <ExportTools noteTitle={noteTitle} getExportableElement={getExportableElementForPdf} />
+                            )}
+                            {activeToolPanel === 'letter' && (
+                                <LetterTools onInsertTemplate={handleLetterInsert} />
                             )}
                         </ScrollArea>
                     </ResizablePanel>

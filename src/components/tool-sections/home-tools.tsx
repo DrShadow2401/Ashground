@@ -36,7 +36,6 @@ import {
   ImageUp,
   Highlighter,
   Palette,
-  Feather,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -174,29 +173,6 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     }
   }, [editorRef]);
 
-  const handleLetterInsert = useCallback(() => {
-    const editor = editorRef.current;
-    if (!editor || editor.isDestroyed) return;
-    
-    const letterTemplate = `
-      <p>
-        [Date]<br>
-        To: [Recipient's Name]<br>
-        Subject: [Subject of Letter]<br>
-        Dear [Recipient's Name],
-      </p>
-      <p></p>
-      <p>[Body of the letter starts here...]</p>
-      <p></p>
-      <p>
-        [Closing],<br>
-        [Your Name]
-      </p>
-    `;
-    
-    editor.chain().focus().insertContent(letterTemplate).run();
-  }, [editorRef]);
-
   const editor = editorRef.current;
   if (!editor || editor.isDestroyed) {
     return (
@@ -264,7 +240,6 @@ const HomeTools: React.FC<HomeToolsProps> = ({ editorRef }) => {
     [
       { type: 'button', icon: <Minus />, label: 'Horizontal Rule', action: () => editor.chain().focus().setHorizontalRule().run(), isActive: () => false },
       { type: 'button', icon: <ImageUp />, label: 'Insert Image', action: handleImageInsert, isActive: () => false },
-      { type: 'button', icon: <Feather />, label: 'Write a Letter', action: handleLetterInsert, isActive: () => false },
     ],
     [
       { type: 'button', icon: <Undo2 />, label: 'Undo', action: () => editor.chain().focus().undo().run(), isActive: () => false, disabled: !canUndo },
