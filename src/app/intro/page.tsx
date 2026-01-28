@@ -1,8 +1,7 @@
-
 'use client';
 
 import React from 'react';
-import LiquidGradient from '@/components/ui/flow-gradient-hero-section';
+import NeuralBackground from '@/components/ui/neural-background';
 import { useRouter } from 'next/navigation';
 
 export default function IntroPage() {
@@ -15,7 +14,7 @@ export default function IntroPage() {
 
   return (
     <div className="relative w-full h-screen overflow-hidden flex flex-col justify-center items-center text-center p-4">
-      <LiquidGradient showPauseButton={false} />
+      <NeuralBackground className="absolute inset-0" />
       <div className="absolute inset-0 flex flex-col justify-center items-center z-10 text-white">
         <h1 className="title-main">
           ASHGROUND
