@@ -83,7 +83,7 @@ export default function UnsentLetter() {
   return (
     <div className="relative flex-grow flex flex-col overflow-hidden">
         {isBurningAnimationActive && burnImageUri && (
-          <BurnAnimation bgImageUri={burnImageUri} />
+          <BurnAnimation bgImageUri={burnImageUri} isLightMode={true} />
         )}
         
         <div className={cn(

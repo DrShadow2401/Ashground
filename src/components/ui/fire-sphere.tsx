@@ -91,6 +91,7 @@ export type FireSphereProps = {
   animate?: boolean;
   /** Optional extra classes for the wrapper */
   className?: string;
+  isLightMode?: boolean;
 };
 
 function FireSphere({
@@ -101,6 +102,7 @@ function FireSphere({
   color1 = [201, 158, 72],
   animate = true,
   className = '',
+  isLightMode = false,
 }: FireSphereProps) {
   const mountRef = useRef<HTMLDivElement | null>(null);
   // keep refs to update when props change
@@ -129,7 +131,7 @@ function FireSphere({
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-;
+    camera.position.z = 3.5;
 
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -167,7 +169,7 @@ function FireSphere({
       transparent: true,
       depthWrite: false,
       depthTest: false,
-      blending: THREE.AdditiveBlending,
+      blending: isLightMode ? THREE.NormalBlending : THREE.AdditiveBlending,
       vertexShader: vert,
       fragmentShader: frag,
     });
@@ -214,7 +216,7 @@ function FireSphere({
 
     return cleanup;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // mount once
+  }, [isLightMode]); // Re-init if light mode changes
 
   // push prop changes to GPU/PP without re-creating scene
   useEffect(() => {

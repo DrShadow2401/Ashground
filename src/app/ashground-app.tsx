@@ -28,7 +28,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LimelightNav } from '@/components/ui/limelight-nav';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '@/components/ui/sheet';
 import BurnAnimation from '@/components/ui/burn-animation';
 import html2canvas from 'html2canvas';
 
@@ -291,6 +291,10 @@ export default function AshgroundApp() {
                             </Button>
                           </SheetTrigger>
                           <SheetContent side="left" className="p-0 w-[300px]">
+                             <SheetHeader className="p-4 border-b sr-only">
+                               <SheetTitle>Tool Panel</SheetTitle>
+                               <SheetDescription>Select a tool to use.</SheetDescription>
+                             </SheetHeader>
                             <div className="flex flex-col h-full">
                               <div className="p-4 flex justify-center border-b">
                                 <LimelightNav
