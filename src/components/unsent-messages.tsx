@@ -96,46 +96,51 @@ const UnsentMessages = () => {
     inputBg: string;
     inputText: string;
     placeholderText: string;
+    toPlaceholder: string;
   }> = {
     minimal: {
       name: 'Minimalist',
       bg: 'bg-white dark:bg-black',
-      bubbleBg: 'bg-blue-500',
+      bubbleBg: 'bg-blue-600',
       bubbleText: 'text-white',
       inputIcon: <Send size={20} />,
       inputBg: 'bg-gray-100 dark:bg-gray-900',
       inputText: 'text-foreground',
       placeholderText: 'This message will never be delivered.',
+      toPlaceholder: "A person, a memory, the void...",
     },
     classic: {
       name: 'Classic',
       bg: 'bg-white dark:bg-gray-900',
-      bubbleBg: 'bg-sky-700',
-      bubbleText: 'text-white',
+      bubbleBg: 'bg-gray-200 dark:bg-gray-700',
+      bubbleText: 'text-foreground',
       inputIcon: <ThumbsUp size={20} />,
-      inputBg: 'bg-gray-200 dark:bg-gray-800',
+      inputBg: 'bg-gray-100 dark:bg-gray-800',
       inputText: 'text-foreground',
       placeholderText: 'This layout is a visual simulation only.',
+      toPlaceholder: "A person, a memory, the void...",
     },
     green: {
       name: 'Verdant',
-      bg: 'bg-gray-200 dark:bg-slate-800',
-      bubbleBg: 'bg-teal-700',
+      bg: 'bg-gray-100 dark:bg-slate-800',
+      bubbleBg: 'bg-green-700',
       bubbleText: 'text-white',
       inputIcon: <Send size={20} />,
       inputBg: 'bg-white dark:bg-slate-900',
       inputText: 'text-foreground',
       placeholderText: 'Nothing written here is stored.',
+      toPlaceholder: "A person, a memory, the void...",
     },
     photo: {
       name: 'Vivid',
       bg: 'bg-gradient-to-br from-yellow-200 via-pink-300 to-purple-400',
-      bubbleBg: 'bg-black/25 backdrop-blur-sm',
+      bubbleBg: 'bg-black/30 backdrop-blur-sm',
       bubbleText: 'text-white',
       inputIcon: <Camera size={20} />,
-      inputBg: 'bg-white/30',
-      inputText: 'text-white',
+      inputBg: 'bg-white/40 backdrop-blur-sm',
+      inputText: 'text-white dark:text-white',
       placeholderText: 'This layout is for visual simulation only.',
+      toPlaceholder: "A person, a memory, the void...",
     },
   };
 
@@ -147,9 +152,9 @@ const UnsentMessages = () => {
           "flex-grow flex flex-col h-full w-full transition-opacity duration-300",
            isBurningAnimationActive ? "opacity-0 pointer-events-none" : "opacity-100"
       )}>
-        <div className="flex-shrink-0 p-4 border-b bg-card/60 backdrop-blur-sm rounded-t-lg">
-          <h2 className="text-xl font-bold text-foreground">Unsent Messages</h2>
-          <p className="text-sm text-muted-foreground/80 mt-1">
+        <div className="flex-shrink-0 p-6">
+          <h2 className="text-2xl font-normal tracking-tight text-foreground">Unsent Messages</h2>
+          <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
             Choose a familiar layout. Nothing here is sent or saved.
           </p>
           <div className="flex flex-wrap gap-2 mt-4">
@@ -168,16 +173,16 @@ const UnsentMessages = () => {
         </div>
 
         <div className={cn("flex-grow flex flex-col transition-colors duration-300", currentLayout.bg)} ref={messageAreaRef}>
-          <div className="flex items-center gap-2 px-4 pt-4 pb-2">
-              <span className="text-sm text-muted-foreground/90 font-medium">To:</span>
+          <div className="flex items-center gap-2 px-4 pt-6 pb-4">
+              <span className="text-sm text-muted-foreground font-medium">To:</span>
               <Input
                   value={to}
                   onChange={(e) => setTo(e.target.value)}
-                  placeholder="A person, a memory, the void..."
+                  placeholder={currentLayout.toPlaceholder}
                   className={cn(
-                    "text-sm h-auto p-1 flex-1 bg-transparent border-0 rounded-none focus-visible:ring-0",
+                    "text-sm h-auto p-1 flex-1 bg-transparent border-0 border-b border-border/30 rounded-none focus-visible:ring-0 focus:border-primary",
                     currentLayout.inputText,
-                    `placeholder:text-muted-foreground placeholder:opacity-60 placeholder:italic`
+                    `placeholder:text-muted-foreground/80 placeholder:italic`
                   )}
               />
               <TooltipProvider>
@@ -204,7 +209,7 @@ const UnsentMessages = () => {
             {messagesToShow.map((msg, index) => (
               <div key={index} className="flex justify-end animate-in fade-in-20 slide-in-from-bottom-2">
                 <div className={cn(
-                    "py-2.5 px-4 rounded-2xl max-w-[80%] break-words shadow-sm",
+                    "py-3 px-4 rounded-2xl max-w-[80%] break-words shadow-sm",
                     currentLayout.bubbleBg,
                     currentLayout.bubbleText,
                   )}>
@@ -225,7 +230,7 @@ const UnsentMessages = () => {
                 className={cn(
                   "flex-grow bg-transparent border-0 resize-none focus-visible:ring-0 p-2 text-sm",
                   currentLayout.inputText,
-                  `placeholder:text-muted-foreground placeholder:opacity-80`
+                  `placeholder:text-muted-foreground/60`
                 )}
                 rows={1}
               />
