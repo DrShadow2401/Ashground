@@ -175,11 +175,13 @@ class App {
   animationId: number | null = null; container: HTMLElement;
   constructor(container: HTMLElement) {
     this.container = container;
+    const width = container.clientWidth;
+    const height = container.clientHeight;
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-    this.renderer.setSize(container.clientWidth, container.clientHeight);
+    this.renderer.setSize(width, height);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(this.renderer.domElement);
-    this.camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 10000);
+    this.camera = new THREE.PerspectiveCamera(45, width / (height || 1), 0.1, 10000);
     this.camera.position.z = 50;
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x0a0e27);
@@ -206,10 +208,13 @@ class App {
       onMove(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
     });
     window.addEventListener("resize", () => {
-      this.camera.aspect = c.clientWidth / c.clientHeight;
+      const width = c.clientWidth;
+      const height = c.clientHeight;
+      if (width === 0 || height === 0) return;
+      this.camera.aspect = width / height;
       this.camera.updateProjectionMatrix();
-      this.renderer.setSize(c.clientWidth, c.clientHeight);
-      this.gradientBackground.onResize(c.clientWidth, c.clientHeight);
+      this.renderer.setSize(width, height);
+      this.gradientBackground.onResize(width, height);
     });
     this.tick();
   }
