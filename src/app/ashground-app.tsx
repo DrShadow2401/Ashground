@@ -290,9 +290,9 @@ export default function AshgroundApp() {
                             </Button>
                           </SheetTrigger>
                           <SheetContent side="left" className="p-0 w-[300px]">
-                             <SheetHeader className="p-4 border-b sr-only">
-                               <SheetTitle>Tool Panel</SheetTitle>
-                               <SheetDescription>Select a tool to use.</SheetDescription>
+                             <SheetHeader className="p-4 border-b">
+                               <SheetTitle className="sr-only">Tool Panel</SheetTitle>
+                               <SheetDescription className="sr-only">Select a tool to use.</SheetDescription>
                              </SheetHeader>
                             <div className="flex flex-col h-full">
                               <div className="p-4 flex justify-center border-b">
