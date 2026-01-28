@@ -89,7 +89,7 @@ export default function UnsentLetter() {
           />
         )}
         
-        <ScrollArea className="flex-grow">
+        <div className="flex-grow overflow-y-auto">
           <div 
             className={cn(
               "w-full max-w-2xl mx-auto transition-opacity duration-300 p-4 pt-8 md:pt-12",
@@ -175,7 +175,7 @@ export default function UnsentLetter() {
                   </p>
               </div>
           </div>
-        </ScrollArea>
+        </div>
     </div>
   );
 }
