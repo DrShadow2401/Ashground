@@ -2,10 +2,10 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { FileText, ListChecks, LayoutGrid, Sun, Moon, Palette } from 'lucide-react';
+import { FileText, ListChecks, LayoutGrid, Sun, Moon } from 'lucide-react';
 
 type PageBackground = 'plain' | 'lined' | 'grid';
-type PageTheme = 'light' | 'dark' | 'pastel';
+type PageTheme = 'light' | 'dark';
 
 interface ViewToolsProps {
   selectedBackground: PageBackground;
@@ -29,7 +29,6 @@ const ViewTools: React.FC<ViewToolsProps> = ({
   const themeOptions: { value: PageTheme; label: string; icon: React.ReactNode }[] = [
     { value: 'light', label: 'Light', icon: <Sun className="w-4 h-4 mr-2" /> },
     { value: 'dark', label: 'Dark', icon: <Moon className="w-4 h-4 mr-2" /> },
-    { value: 'pastel', label: 'Pastel', icon: <Palette className="w-4 h-4 mr-2" /> },
   ];
 
   return (

@@ -34,7 +34,7 @@ import html2canvas from 'html2canvas';
 
 
 type PageBackground = 'plain' | 'lined' | 'grid';
-type PageTheme = 'light' | 'dark' | 'pastel';
+type PageTheme = 'light' | 'dark';
 export type LineStyle = 'solid' | 'dashed' | 'dotted';
 
 const ANIMATION_DURATION = 5000;
@@ -90,13 +90,11 @@ export default function AshgroundApp() {
       if (savedBg) setPageBackground(savedBg);
 
       const htmlClasses = document.documentElement.classList;
-      htmlClasses.remove('dark', 'theme-pastel');
+      htmlClasses.remove('dark');
 
       if (savedTheme) {
         if (savedTheme === 'dark') {
           htmlClasses.add('dark');
-        } else if (savedTheme === 'pastel') {
-          htmlClasses.add('theme-pastel');
         }
         setPageTheme(savedTheme);
       } else {
@@ -128,11 +126,9 @@ export default function AshgroundApp() {
     if(isMounted) {
       localStorage.setItem('ashground_theme', pageTheme);
       const htmlClasses = document.documentElement.classList;
-      htmlClasses.remove('dark', 'theme-pastel');
+      htmlClasses.remove('dark');
       if (pageTheme === 'dark') {
         htmlClasses.add('dark');
-      } else if (pageTheme === 'pastel') {
-        htmlClasses.add('theme-pastel');
       }
     }
   }, [pageTheme, isMounted]);
@@ -191,7 +187,6 @@ export default function AshgroundApp() {
     const solidBgColor = {
       'light': '#F8F5F0',
       'dark': '#18181b', // Approximation from dark theme vars
-      'pastel': '#FDF4F9', // Approximation from pastel theme vars
     }[pageTheme] || computedStyle.backgroundColor;
 
     exportableElement.style.backgroundColor = solidBgColor;
@@ -273,7 +268,7 @@ export default function AshgroundApp() {
         />
 
         {isBurningAnimationActive && burnImageUri && (
-          <BurnAnimation bgImageUri={burnImageUri} />
+          <BurnAnimation bgImageUri={burnImageUri} isLightMode={pageTheme === 'light'} />
         )}
         
         <div className={cn(

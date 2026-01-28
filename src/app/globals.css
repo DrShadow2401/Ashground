@@ -38,8 +38,6 @@
     --paper-light-fg: 20 15% 30%;
     --paper-dark-bg: 240 5% 12%;
     --paper-dark-fg: 0 0% 95%;
-    --paper-pastel-bg: 320 70% 96%;
-    --paper-pastel-fg: 320 30% 35%;
 
     --text-line-height: 1.625rem; /* 26px */
 
@@ -85,8 +83,6 @@
     --paper-light-fg: 0 0% 95%;
     --paper-dark-bg: 240 5% 12%;
     --paper-dark-fg: 0 0% 95%;
-    --paper-pastel-bg: 320 30% 25%; /* Dark theme's "pastel" paper */
-    --paper-pastel-fg: 320 50% 90%;
 
     /* Line color components for dark theme */
     --line-h: 0;
@@ -94,49 +90,6 @@
     --line-l: 100%;
     --line-a: 0.7;
 
-  }
-
-  .theme-pastel {
-    --background: 320 70% 97%;
-    --background-end: 320 70% 94%;
-    --foreground: 320 30% 35%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 320 30% 35%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 320 30% 35%;
-
-    --primary: 280 50% 88%;
-    --primary-foreground: 280 25% 25%;
-
-    --secondary: 320 60% 95%;
-    --secondary-foreground: 320 30% 35%;
-
-    --muted: 320 50% 93%;
-    --muted-foreground: 320 25% 50%;
-
-    --accent: 280 60% 85%;
-    --accent-foreground: 280 30% 20%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 320 50% 90%;
-    --input: 320 50% 90%;
-    --ring: 280 50% 80%;
-
-    --paper-light-bg: 40 33% 96%; /* Pastel theme's "light" paper, Updated for #F8F5F0 */
-    --paper-light-fg: 320 30% 35%;
-    --paper-dark-bg: 320 30% 25%; /* Pastel theme's "dark" paper */
-    --paper-dark-fg:  320 50% 90%;
-    /* paper-pastel-bg is defined in :root for consistency, used by pastel theme */
-
-    /* Line color components for pastel theme */
-    --line-h: 280;
-    --line-s: 25%;
-    --line-l: 30%;
-    --line-a: 0.7;
   }
 }
 
@@ -520,10 +473,6 @@
   .page-theme-dark {
     background-color: hsl(var(--paper-dark-bg));
     color: hsl(var(--paper-dark-fg));
-  }
-  .page-theme-pastel {
-    background-color: hsl(var(--paper-pastel-bg));
-    color: hsl(var(--paper-pastel-fg));
   }
 
   .page-bg-lined {

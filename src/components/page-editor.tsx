@@ -20,7 +20,7 @@ import type { LineStyle } from '@/app/ashground-app';
 import { cn } from '@/lib/utils';
 
 type PageBackground = 'plain' | 'lined' | 'grid';
-type PageTheme = 'light' | 'dark' | 'pastel';
+type PageTheme = 'light' | 'dark';
 
 
 const CustomImageExtension = OriginalImageExtension.extend({
@@ -111,7 +111,6 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
   const themeClassMap: Record<PageTheme, string> = {
     light: 'page-theme-light',
     dark: 'page-theme-dark',
-    pastel: 'page-theme-pastel',
   };
 
   const backgroundClassMap: Record<PageBackground, string> = {
