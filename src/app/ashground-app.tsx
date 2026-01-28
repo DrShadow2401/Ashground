@@ -328,25 +328,29 @@ export default function AshgroundApp() {
 
                       <ResizableHandle withHandle />
 
-                      <ResizablePanel defaultSize={75} className="bg-transparent p-4">
-                          <PageEditor
-                              ref={pageEditorComponentRef}
-                              editorTiptapRef={editorRef}
-                              onEditorReady={handleEditorReady}
-                              noteTitle={noteTitle}
-                              onNoteTitleChange={setNoteTitle}
-                              noteContent={noteContent}
-                              onNoteChange={handleNoteContentChange}
-                              backgroundStyle={pageBackground}
-                              pageTheme={pageTheme}
-                              isDrawingMode={activeToolPanel === 'draw'}
-                              currentDrawTool={currentDrawTool}
-                              drawColor={drawColor}
-                              drawStrokeWidth={drawStrokeWidth}
-                              currentLineStyle={currentLineStyle}
-                              onDrawColorChange={setDrawColor}
-                              onUndoStateChange={handleDrawingUndoStateChange}
-                          />
+                      <ResizablePanel defaultSize={75} className="bg-transparent p-0">
+                        <ScrollArea className="h-full">
+                           <div className="p-4">
+                              <PageEditor
+                                  ref={pageEditorComponentRef}
+                                  editorTiptapRef={editorRef}
+                                  onEditorReady={handleEditorReady}
+                                  noteTitle={noteTitle}
+                                  onNoteTitleChange={setNoteTitle}
+                                  noteContent={noteContent}
+                                  onNoteChange={handleNoteContentChange}
+                                  backgroundStyle={pageBackground}
+                                  pageTheme={pageTheme}
+                                  isDrawingMode={activeToolPanel === 'draw'}
+                                  currentDrawTool={currentDrawTool}
+                                  drawColor={drawColor}
+                                  drawStrokeWidth={drawStrokeWidth}
+                                  currentLineStyle={currentLineStyle}
+                                  onDrawColorChange={setDrawColor}
+                                  onUndoStateChange={handleDrawingUndoStateChange}
+                              />
+                            </div>
+                        </ScrollArea>
                       </ResizablePanel>
                   </ResizablePanelGroup>
                 )}
