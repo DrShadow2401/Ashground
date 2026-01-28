@@ -89,7 +89,7 @@ export default function UnsentLetter() {
           />
         )}
         
-        <ScrollArea className="h-full">
+        <ScrollArea className="flex-grow">
           <div 
             className={cn(
               "w-full max-w-2xl mx-auto transition-opacity duration-300 p-4 pt-8 md:pt-12",
