@@ -260,8 +260,8 @@ export default function AshgroundApp() {
   return (
     <div className="main-app-container">
       <div className={cn(
-        "relative w-full",
-        isLetterView ? "min-h-screen" : "h-screen overflow-hidden"
+        "relative w-full min-h-screen",
+        !isLetterView && "overflow-hidden"
       )}>
         <CelestialSphere
           hue={250}
@@ -280,7 +280,7 @@ export default function AshgroundApp() {
         
         <div className={cn(
           "w-full transition-opacity duration-300 z-10 p-4 flex flex-col",
-          "h-full",
+          !isLetterView && "h-screen",
           isBurningAnimationActive ? "opacity-0 pointer-events-none" : "opacity-100"
         )}>
             {isMounted ? (
@@ -313,36 +313,38 @@ export default function AshgroundApp() {
                           </SheetContent>
                         </Sheet>
                       )}
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="rounded-full h-10 w-10 border-2 border-amber-500 dark:border-amber-400 bg-transparent text-amber-500 dark:text-amber-400 shadow-md hover:shadow-lg hover:bg-amber-500/10 dark:hover:bg-amber-400/10 hover:text-amber-600 dark:hover:text-amber-300"
-                            title="Burn it Down"
-                            disabled={!isEditorInitialized || isBurningAnimationActive || activeToolPanel === 'letter'}
-                          >
-                            <Flame className="w-5 h-5" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle> Burn it down like my GPA </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              No more EmOtIoNaL DaMaGe
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={handleBurnEverything}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      {!isLetterView && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              className="rounded-full h-10 w-10 border-2 border-amber-500 dark:border-amber-400 bg-transparent text-amber-500 dark:text-amber-400 shadow-md hover:shadow-lg hover:bg-amber-500/10 dark:hover:bg-amber-400/10 hover:text-amber-600 dark:hover:text-amber-300"
+                              title="Burn it Down"
+                              disabled={!isEditorInitialized || isBurningAnimationActive}
                             >
-                              Burn
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                              <Flame className="w-5 h-5" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle> Burn it down like my GPA </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                No more EmOtIoNaL DaMaGe
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={handleBurnEverything}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Burn
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                     </div>
                   </div>
                   {!isMobile && (
@@ -361,7 +363,7 @@ export default function AshgroundApp() {
                   <UnsentLetter />
                 ) : (
                   isMobile ? (
-                     <div className="flex-grow rounded-lg border bg-card/50 backdrop-blur-sm">
+                     <div className="flex-grow rounded-lg border bg-card/50 backdrop-blur-sm min-h-0">
                         <ScrollArea className="h-full">
                           <div className="p-2 sm:p-3 min-h-full">
                               <PageEditor
