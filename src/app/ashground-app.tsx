@@ -27,7 +27,6 @@ import { Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import html2canvas from 'html2canvas';
 import { CelestialSphere } from '@/components/ui/celestial-sphere';
-import LiquidGradient from '@/components/ui/flow-gradient-hero-section';
 
 
 type PageBackground = 'plain' | 'lined' | 'grid';
@@ -331,8 +330,7 @@ export default function AshgroundApp() {
 
 
   return (
-    <div>
-      <LiquidGradient showPauseButton={false} />
+    <div className="main-app-container">
       <div className="flex flex-col items-center py-6 px-4 overflow-x-hidden relative">
         <CelestialSphere
           hue={250}

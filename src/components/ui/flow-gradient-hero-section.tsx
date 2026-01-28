@@ -196,6 +196,7 @@ class App {
   getViewSize() {
     const fov = (this.camera.fov * Math.PI) / 180;
     const height = Math.abs(this.camera.position.z * Math.tan(fov / 2) * 2);
+    if(isNaN(height)) return {width: 0, height: 0};
     return { width: height * this.camera.aspect, height };
   }
   init() {
@@ -222,7 +223,9 @@ class App {
     const delta = Math.min(this.clock.getDelta(), 0.1);
     this.touchTexture.update();
     this.gradientBackground.update(delta);
-    this.renderer.render(this.scene, this.camera);
+    if(this.renderer.domElement.height > 0) {
+      this.renderer.render(this.scene, this.camera);
+    }
     this.animationId = requestAnimationFrame(() => this.tick());
   }
   cleanup() { 
@@ -326,16 +329,6 @@ export default function LiquidGradient({
         className={`cursor-dot-element ${isDarkMode ? 'dark' : ''}`}
         style={{ opacity: showCursor ? 1 : 0 }} 
       />
-      
-      <footer className={`footer-main ${isDarkMode ? 'dark' : ''}`}>
-          <a
-            href="https://questonin.com"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By Questonin
-          </a>
-      </footer>
 
       {showPauseButton && (
         <button
