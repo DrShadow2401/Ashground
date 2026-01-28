@@ -18,7 +18,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { cn } from '@/lib/utils';
-import { FireSphere } from './ui/fire-sphere';
+import NewNoteBurningEffect from './new-note-burning-effect';
+import html2canvas from 'html2canvas';
 
 const ANIMATION_DURATION = 5000;
 
@@ -30,11 +31,41 @@ export default function UnsentLetter() {
   const [from, setFrom] = useState('');
 
   const [isBurningAnimationActive, setIsBurningAnimationActive] = useState(false);
+  const [burnImageUri, setBurnImageUri] = useState<string | null>(null);
 
   const letterContentRef = useRef<HTMLDivElement>(null);
 
   const handleBurnLetter = async () => {
-    setIsBurningAnimationActive(true);
+    if (!letterContentRef.current) return;
+    
+    const elementToCapture = letterContentRef.current.querySelector('.bg-card\\/50') as HTMLElement;
+    if (!elementToCapture) return;
+
+    const originalBackgroundColor = elementToCapture.style.backgroundColor;
+    const originalBackdropFilter = elementToCapture.style.backdropFilter;
+
+    // Use a solid color that matches the light theme paper for consistency during capture
+    elementToCapture.style.backgroundColor = '#F8F5F0';
+    elementToCapture.style.backdropFilter = 'none';
+
+    try {
+        const canvas = await html2canvas(elementToCapture, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: null,
+            removeContainer: true,
+        });
+        const imageUri = canvas.toDataURL('image/png');
+        setBurnImageUri(imageUri);
+        setIsBurningAnimationActive(true);
+    } catch (error) {
+        console.error("Failed to capture letter for burning:", error);
+    } finally {
+        elementToCapture.style.backgroundColor = originalBackgroundColor;
+        elementToCapture.style.backdropFilter = originalBackdropFilter;
+    }
+
+
     setTimeout(() => {
       // Clear all fields
       setTo('');
@@ -45,13 +76,17 @@ export default function UnsentLetter() {
 
       // Reset animation state
       setIsBurningAnimationActive(false);
+      setBurnImageUri(null);
     }, ANIMATION_DURATION);
   };
 
   return (
     <div className="relative flex-grow flex flex-col overflow-hidden">
-        {isBurningAnimationActive && (
-          <FireSphere className="fixed top-0 left-0 w-full h-full z-[1000]" />
+        {isBurningAnimationActive && burnImageUri && (
+          <NewNoteBurningEffect bgImageUri={burnImageUri} onComplete={() => {
+              setIsBurningAnimationActive(false);
+              setBurnImageUri(null);
+          }} />
         )}
         
         <div className={cn(

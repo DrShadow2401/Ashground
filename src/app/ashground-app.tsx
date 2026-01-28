@@ -29,7 +29,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { LimelightNav } from '@/components/ui/limelight-nav';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { FireSphere } from '@/components/ui/fire-sphere';
+import NewNoteBurningEffect from '@/components/new-note-burning-effect';
+import html2canvas from 'html2canvas';
 
 
 type PageBackground = 'plain' | 'lined' | 'grid';
@@ -47,6 +48,7 @@ export default function AshgroundApp() {
   const [isMounted, setIsMounted] = useState(false);
   const [isEditorInitialized, setIsEditorInitialized] = useState(false);
   const [isBurningAnimationActive, setIsBurningAnimationActive] = useState(false);
+  const [burnImageUri, setBurnImageUri] = useState<string | null>(null);
 
   const editorRef = useRef<Editor | null>(null);
   const pageEditorComponentRef = useRef<PageEditorRef>(null);
@@ -181,7 +183,34 @@ export default function AshgroundApp() {
   };
 
   const handleBurnEverything = async () => {
-    setIsBurningAnimationActive(true);
+    const exportableElement = getExportableElementForPdf();
+    if (!exportableElement) return;
+
+    const originalBackgroundColor = exportableElement.style.backgroundColor;
+    const computedStyle = window.getComputedStyle(exportableElement);
+    const solidBgColor = {
+      'light': '#F8F5F0',
+      'dark': '#18181b', // Approximation from dark theme vars
+      'pastel': '#FDF4F9', // Approximation from pastel theme vars
+    }[pageTheme] || computedStyle.backgroundColor;
+
+    exportableElement.style.backgroundColor = solidBgColor;
+
+    try {
+      const canvas = await html2canvas(exportableElement, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: null, 
+        removeContainer: true,
+      });
+      const imageUri = canvas.toDataURL('image/png');
+      setBurnImageUri(imageUri);
+      setIsBurningAnimationActive(true);
+    } catch (error) {
+      console.error("Failed to capture note for burning:", error);
+    } finally {
+      exportableElement.style.backgroundColor = originalBackgroundColor;
+    }
 
     setTimeout(() => {
       setNoteTitle('Untitled Note');
@@ -193,6 +222,7 @@ export default function AshgroundApp() {
       localStorage.removeItem('ashground_note');
 
       setIsBurningAnimationActive(false);
+      setBurnImageUri(null);
     }, ANIMATION_DURATION);
   };
 
@@ -242,13 +272,16 @@ export default function AshgroundApp() {
           className="fixed top-0 left-0 w-full h-full -z-10 hidden dark:block"
         />
 
-        {isBurningAnimationActive && (
-          <FireSphere className="fixed top-0 left-0 w-full h-full z-[1000]" />
+        {isBurningAnimationActive && burnImageUri && (
+          <NewNoteBurningEffect bgImageUri={burnImageUri} onComplete={() => {
+              setIsBurningAnimationActive(false);
+              setBurnImageUri(null);
+          }} />
         )}
         
         <div className={cn(
           "w-full transition-opacity duration-300 z-10 p-4 flex flex-col",
-          !isLetterView && "h-screen",
+          !isLetterView ? "h-screen" : "",
           isBurningAnimationActive ? "opacity-0 pointer-events-none" : "opacity-100"
         )}>
             {isMounted ? (
