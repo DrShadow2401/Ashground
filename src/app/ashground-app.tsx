@@ -6,7 +6,7 @@ import type { Editor } from '@tiptap/react';
 import AshgroundHeader from '@/components/ashground-header';
 import PageEditor, { type PageEditorRef } from '@/components/page-editor';
 import NewNoteBurningEffect from '@/components/new-note-burning-effect';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LimelightNav } from '@/components/ui/limelight-nav';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -23,7 +23,7 @@ import HomeTools from '@/components/tool-sections/home-tools';
 import DrawTools from '@/components/tool-sections/draw-tools';
 import ViewTools from '@/components/tool-sections/view-tools';
 import ExportTools from '@/components/tool-sections/export-tools';
-import { Flame } from 'lucide-react';
+import { Flame, Home, Pencil, Eye, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import html2canvas from 'html2canvas';
 import { CelestialSphere } from '@/components/ui/celestial-sphere';
@@ -55,6 +55,20 @@ export default function AshgroundApp() {
   const [drawStrokeWidth, setDrawStrokeWidth] = useState<number>(2);
   const [currentLineStyle, setCurrentLineStyle] = useState<LineStyle>('solid');
   const [canUndoDrawing, setCanUndoDrawing] = useState<boolean>(false);
+
+
+  const navItems = [
+    { id: 'home', icon: <Home />, label: 'Home' },
+    { id: 'draw', icon: <Pencil />, label: 'Draw' },
+    { id: 'view', icon: <Eye />, label: 'View' },
+    { id: 'export', icon: <Share2 />, label: 'Export' },
+  ];
+
+  const tabValues = ['home', 'draw', 'view', 'export'];
+
+  const handleTabChange = (index: number) => {
+    setActiveTab(tabValues[index]);
+  };
 
 
   useEffect(() => {
@@ -211,29 +225,14 @@ export default function AshgroundApp() {
     }
   };
 
-  const tabItems = [
-    { value: 'home', label: 'Home' },
-    { value: 'draw', label: 'Draw' },
-    { value: 'view', label: 'View' },
-    { value: 'export', label: 'Export' },
-  ];
-
   const appContent = (
     <>
       <div className="flex flex-col items-center gap-4 px-2 sm:flex-row sm:justify-center sm:gap-6 w-full max-w-4xl mx-auto mb-8">
-        <Tabs defaultValue="home" value={activeTab} onValueChange={setActiveTab} className="w-full sm:w-auto sm:flex-grow sm:max-w-lg">
-          <TabsList className="mx-auto w-full bg-card rounded-xl shadow-lg p-1.5 flex justify-around">
-            {tabItems.map(tab => (
-              <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                className="flex-1 sm:flex-initial px-2 py-1.5 text-xs data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none text-muted-foreground hover:text-foreground/80 transition-colors rounded-md sm:text-sm"
-              >
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+        <LimelightNav
+          items={navItems}
+          onTabChange={handleTabChange}
+          defaultActiveIndex={tabValues.indexOf(activeTab)}
+        />
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
