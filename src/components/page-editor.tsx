@@ -573,7 +573,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       />
       <div
         className={cn(
-          'flex-1 relative flex flex-col min-h-0', 
+          'flex-1 relative flex flex-col min-h-[60vh]', 
           backgroundClassMap[backgroundStyle]
         )}
         onClick={handlePaperClick}
