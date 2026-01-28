@@ -363,7 +363,7 @@ export default function AshgroundApp() {
                   isMobile ? (
                      <div className="flex-grow rounded-lg border bg-card/50 backdrop-blur-sm">
                         <ScrollArea className="h-full">
-                          <div className="p-4 sm:p-6 md:p-8">
+                          <div className="p-4 sm:p-6 md:p-8 h-full">
                               <PageEditor
                                   ref={pageEditorComponentRef}
                                   editorTiptapRef={editorRef}
@@ -395,7 +395,7 @@ export default function AshgroundApp() {
 
                         <ResizablePanel defaultSize={75} className="bg-transparent p-0">
                           <ScrollArea className="h-full">
-                             <div className="p-4">
+                             <div className="p-4 h-full">
                                 <PageEditor
                                     ref={pageEditorComponentRef}
                                     editorTiptapRef={editorRef}
