@@ -21,7 +21,7 @@ import HomeTools from '@/components/tool-sections/home-tools';
 import DrawTools from '@/components/tool-sections/draw-tools';
 import ViewTools from '@/components/tool-sections/view-tools';
 import ExportTools from '@/components/tool-sections/export-tools';
-import LetterTools from '@/components/tool-sections/letter-tools';
+import UnsentLetter from '@/components/unsent-letter';
 import { Flame, Home, Brush, Eye, Upload, Feather } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import html2canvas from 'html2canvas';
@@ -58,29 +58,6 @@ export default function AshgroundApp() {
   const [drawStrokeWidth, setDrawStrokeWidth] = useState<number>(2);
   const [currentLineStyle, setCurrentLineStyle] = useState<LineStyle>('solid');
   const [canUndoDrawing, setCanUndoDrawing] = useState<boolean>(false);
-
-  const handleLetterInsert = useCallback(() => {
-    const editor = editorRef.current;
-    if (!editor || editor.isDestroyed) return;
-    
-    const letterTemplate = `
-      <p>
-        [Date]<br>
-        To: [Recipient's Name]<br>
-        Subject: [Subject of Letter]<br>
-        Dear [Recipient's Name],
-      </p>
-      <p></p>
-      <p>[Body of the letter starts here...]</p>
-      <p></p>
-      <p>
-        [Closing],<br>
-        [Your Name]
-      </p>
-    `;
-    
-    editor.chain().focus().insertContent(letterTemplate).run();
-  }, [editorRef]);
 
   const isDrawingMode = activeToolPanel === 'draw';
 
@@ -277,7 +254,7 @@ export default function AshgroundApp() {
                           variant="outline"
                           className="rounded-full h-10 w-10 border-2 border-amber-500 dark:border-amber-400 bg-transparent text-amber-500 dark:text-amber-400 shadow-md hover:shadow-lg hover:bg-amber-500/10 dark:hover:bg-amber-400/10 hover:text-amber-600 dark:hover:text-amber-300"
                           title="Burn it Down"
-                          disabled={!isEditorInitialized || isBurningAnimationActive}
+                          disabled={!isEditorInitialized || isBurningAnimationActive || activeToolPanel === 'letter'}
                         >
                           <Flame className="w-5 h-5" />
                         </Button>
@@ -312,66 +289,67 @@ export default function AshgroundApp() {
                         />
                   </div>
                 </div>
+                
+                {activeToolPanel === 'letter' ? (
+                  <UnsentLetter />
+                ) : (
+                  <ResizablePanelGroup direction="horizontal" className="flex-grow rounded-lg border bg-card/50 backdrop-blur-sm">
+                      <ResizablePanel defaultSize={25} minSize={20} className="!overflow-y-auto p-0">
+                          <ScrollArea className="h-full p-4">
+                              {activeToolPanel === 'home' && (isEditorInitialized ? <HomeTools editorRef={editorRef} /> : <p className="text-muted-foreground text-sm px-4">Editor loading...</p>)}
+                              {activeToolPanel === 'draw' && (
+                                  <DrawTools
+                                      activeTool={currentDrawTool}
+                                      onToolChange={setCurrentDrawTool}
+                                      currentDrawColor={drawColor}
+                                      onDrawColorChange={setDrawColor}
+                                      currentStrokeWidth={drawStrokeWidth}
+                                      onStrokeWidthChange={setDrawStrokeWidth}
+                                      currentLineStyle={currentLineStyle}
+                                      onLineStyleChange={setCurrentLineStyle}
+                                      onClearCanvas={handleClearCanvas}
+                                      onUndoDrawing={handleUndoDrawing}
+                                      canUndoDrawing={canUndoDrawing}
+                                  />
+                              )}
+                              {activeToolPanel === 'view' && (
+                                  <ViewTools
+                                      selectedBackground={pageBackground}
+                                      onBackgroundChange={setPageBackground}
+                                      selectedTheme={pageTheme}
+                                      onThemeChange={setPageTheme}
+                                  />
+                              )}
+                               {activeToolPanel === 'export' && (
+                                  <ExportTools noteTitle={noteTitle} getExportableElement={getExportableElementForPdf} />
+                              )}
+                          </ScrollArea>
+                      </ResizablePanel>
 
-                <ResizablePanelGroup direction="horizontal" className="flex-grow rounded-lg border bg-card/50 backdrop-blur-sm">
-                    <ResizablePanel defaultSize={25} minSize={20} className="!overflow-y-auto p-0">
-                        <ScrollArea className="h-full p-4">
-                            {activeToolPanel === 'home' && (isEditorInitialized ? <HomeTools editorRef={editorRef} /> : <p className="text-muted-foreground text-sm px-4">Editor loading...</p>)}
-                            {activeToolPanel === 'draw' && (
-                                <DrawTools
-                                    activeTool={currentDrawTool}
-                                    onToolChange={setCurrentDrawTool}
-                                    currentDrawColor={drawColor}
-                                    onDrawColorChange={setDrawColor}
-                                    currentStrokeWidth={drawStrokeWidth}
-                                    onStrokeWidthChange={setDrawStrokeWidth}
-                                    currentLineStyle={currentLineStyle}
-                                    onLineStyleChange={setCurrentLineStyle}
-                                    onClearCanvas={handleClearCanvas}
-                                    onUndoDrawing={handleUndoDrawing}
-                                    canUndoDrawing={canUndoDrawing}
-                                />
-                            )}
-                            {activeToolPanel === 'view' && (
-                                <ViewTools
-                                    selectedBackground={pageBackground}
-                                    onBackgroundChange={setPageBackground}
-                                    selectedTheme={pageTheme}
-                                    onThemeChange={setPageTheme}
-                                />
-                            )}
-                             {activeToolPanel === 'export' && (
-                                <ExportTools noteTitle={noteTitle} getExportableElement={getExportableElementForPdf} />
-                            )}
-                            {activeToolPanel === 'letter' && (
-                                <LetterTools onInsertTemplate={handleLetterInsert} />
-                            )}
-                        </ScrollArea>
-                    </ResizablePanel>
+                      <ResizableHandle withHandle />
 
-                    <ResizableHandle withHandle />
-
-                    <ResizablePanel defaultSize={75} className="bg-transparent p-4">
-                        <PageEditor
-                            ref={pageEditorComponentRef}
-                            editorTiptapRef={editorRef}
-                            onEditorReady={handleEditorReady}
-                            noteTitle={noteTitle}
-                            onNoteTitleChange={setNoteTitle}
-                            noteContent={noteContent}
-                            onNoteChange={handleNoteContentChange}
-                            backgroundStyle={pageBackground}
-                            pageTheme={pageTheme}
-                            isDrawingMode={activeToolPanel === 'draw'}
-                            currentDrawTool={currentDrawTool}
-                            drawColor={drawColor}
-                            drawStrokeWidth={drawStrokeWidth}
-                            currentLineStyle={currentLineStyle}
-                            onDrawColorChange={setDrawColor}
-                            onUndoStateChange={handleDrawingUndoStateChange}
-                        />
-                    </ResizablePanel>
-                </ResizablePanelGroup>
+                      <ResizablePanel defaultSize={75} className="bg-transparent p-4">
+                          <PageEditor
+                              ref={pageEditorComponentRef}
+                              editorTiptapRef={editorRef}
+                              onEditorReady={handleEditorReady}
+                              noteTitle={noteTitle}
+                              onNoteTitleChange={setNoteTitle}
+                              noteContent={noteContent}
+                              onNoteChange={handleNoteContentChange}
+                              backgroundStyle={pageBackground}
+                              pageTheme={pageTheme}
+                              isDrawingMode={activeToolPanel === 'draw'}
+                              currentDrawTool={currentDrawTool}
+                              drawColor={drawColor}
+                              drawStrokeWidth={drawStrokeWidth}
+                              currentLineStyle={currentLineStyle}
+                              onDrawColorChange={setDrawColor}
+                              onUndoStateChange={handleDrawingUndoStateChange}
+                          />
+                      </ResizablePanel>
+                  </ResizablePanelGroup>
+                )}
               </>
             ) : null}
         </div>
