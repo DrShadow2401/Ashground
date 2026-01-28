@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -19,7 +20,7 @@ export default function IntroPage() {
         <h1 className="title-main">
           ASHGROUND
         </h1>
-        <div className="max-w-2xl mx-auto mb-8 text-white/80 text-lg md:text-xl space-y-2">
+        <div className="max-w-2xl mx-auto my-8 text-white/80 text-lg md:text-xl space-y-2">
           <p>Ashground is a minimalist writing space designed for release, not storage.</p>
           <p>Write freely, without accounts, history, or permanence.</p>
           <p>When you’re done, everything burns.</p>

@@ -4,7 +4,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 
 interface LiquidGradientProps {
+  title?: string;
   showPauseButton?: boolean;
+  ctaText?: string;
+  onCtaClick?: () => void;
 }
 
 class TouchTexture {
@@ -84,6 +87,7 @@ class GradientBackground {
   }
   init() {
     const viewSize = this.sceneManager.getViewSize();
+    if (viewSize.width === 0 || viewSize.height === 0) return;
     const geometry = new THREE.PlaneGeometry(viewSize.width, viewSize.height, 1, 1);
     const material = new THREE.ShaderMaterial({
       uniforms: this.uniforms,
@@ -164,7 +168,7 @@ class GradientBackground {
   }
   onResize(w: number, h: number) {
     const viewSize = this.sceneManager.getViewSize();
-    if (this.mesh) { this.mesh.geometry.dispose(); this.mesh.geometry = new THREE.PlaneGeometry(viewSize.width, viewSize.height, 1, 1); }
+    if (this.mesh && viewSize.width > 0 && viewSize.height > 0) { this.mesh.geometry.dispose(); this.mesh.geometry = new THREE.PlaneGeometry(viewSize.width, viewSize.height, 1, 1); }
     this.uniforms.uResolution.value.set(w, h);
   }
 }
@@ -175,13 +179,11 @@ class App {
   animationId: number | null = null; container: HTMLElement;
   constructor(container: HTMLElement) {
     this.container = container;
-    const width = container.clientWidth;
-    const height = container.clientHeight;
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-    this.renderer.setSize(width, height);
+    this.renderer.setSize(container.clientWidth, container.clientHeight);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(this.renderer.domElement);
-    this.camera = new THREE.PerspectiveCamera(45, width / (height || 1), 0.1, 10000);
+    this.camera = new THREE.PerspectiveCamera(45, container.clientWidth / (container.clientHeight || 1), 0.1, 10000);
     this.camera.position.z = 50;
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x0a0e27);
@@ -238,7 +240,10 @@ class App {
 }
 
 export default function LiquidGradient({ 
+  title,
   showPauseButton = true,
+  ctaText,
+  onCtaClick
 }: LiquidGradientProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
@@ -330,6 +335,7 @@ export default function LiquidGradient({
         style={{ opacity: showCursor ? 1 : 0 }} 
       />
 
+      {/* Pause/Play Button */}
       {showPauseButton && (
         <button
           onClick={() => setIsPlaying(!isPlaying)}
