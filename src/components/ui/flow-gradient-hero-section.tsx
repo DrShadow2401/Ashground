@@ -4,10 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 
 interface LiquidGradientProps {
-  title?: string;
   showPauseButton?: boolean;
-  ctaText?: string;
-  onCtaClick?: () => void;
 }
 
 class TouchTexture {
@@ -233,10 +230,7 @@ class App {
 }
 
 export default function LiquidGradient({ 
-  title = "Liquid Gradient",
   showPauseButton = true,
-  ctaText = "Explore More",
-  onCtaClick
 }: LiquidGradientProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
@@ -328,17 +322,15 @@ export default function LiquidGradient({
         style={{ opacity: showCursor ? 1 : 0 }} 
       />
       
-      <h1 className={`title-main ${isDarkMode ? 'dark' : ''}`}>
-        {title}
-      </h1>
-
-      {/* CTA Button */}
-      <button 
-        className={`cta-btn ${isDarkMode ? 'dark' : ''}`}
-        onClick={onCtaClick}
-      >
-        {ctaText}
-      </button>
+      <footer className={`footer-main ${isDarkMode ? 'dark' : ''}`}>
+          <a
+            href="https://questonin.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            By Questonin
+          </a>
+      </footer>
 
       {showPauseButton && (
         <button
@@ -358,16 +350,6 @@ export default function LiquidGradient({
           )}
         </button>
       )}
-
-      <footer className={`footer-main ${isDarkMode ? 'dark' : ''}`}>
-          <a
-            href="https://questonin.com"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By Questonin
-          </a>
-      </footer>
     </div>
   );
 }

@@ -1,9 +1,7 @@
-
 'use client';
 
 import dynamic from 'next/dynamic';
-import React, { useRef } from 'react';
-import LiquidGradient from '@/components/ui/flow-gradient-hero-section';
+import React from 'react';
 
 function AppLoadingFallback() {
   return (
@@ -19,23 +17,9 @@ const AshgroundApp = dynamic(() => import('@/app/ashground-app'), {
 });
 
 export default function Page() {
-  const appContainerRef = useRef<HTMLDivElement>(null);
-
-  const handleEnter = () => {
-    appContainerRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   return (
     <main>
-      <LiquidGradient 
-        title="ASHGROUND"
-        ctaText="Enter"
-        onCtaClick={handleEnter}
-        showPauseButton={false}
-      />
-      <div ref={appContainerRef} className="main-app-container">
-        <AshgroundApp />
-      </div>
+      <AshgroundApp />
     </main>
   );
 }

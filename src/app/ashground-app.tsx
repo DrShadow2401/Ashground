@@ -27,6 +27,7 @@ import { Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import html2canvas from 'html2canvas';
 import { CelestialSphere } from '@/components/ui/celestial-sphere';
+import LiquidGradient from '@/components/ui/flow-gradient-hero-section';
 
 
 type PageBackground = 'plain' | 'lined' | 'grid';
@@ -330,27 +331,30 @@ export default function AshgroundApp() {
 
 
   return (
-    <main className="flex flex-col items-center min-h-screen py-6 px-4 overflow-x-hidden relative">
-       <CelestialSphere
-        hue={250}
-        speed={0.2}
-        zoom={1.1}
-        particleSize={3.0}
-        className="fixed top-0 left-0 w-full h-full -z-10 hidden dark:block"
-      />
-
-      <AshgroundHeader />
-
-      {isBurningAnimationActive && burnImageUri && (
-        <NewNoteBurningEffect
-          bgImageUri={burnImageUri}
-          onComplete={() => setIsBurningAnimationActive(false)}
+    <div>
+      <LiquidGradient showPauseButton={false} />
+      <div className="flex flex-col items-center py-6 px-4 overflow-x-hidden relative">
+        <CelestialSphere
+          hue={250}
+          speed={0.2}
+          zoom={1.1}
+          particleSize={3.0}
+          className="fixed top-0 left-0 w-full h-full -z-10 hidden dark:block"
         />
-      )}
 
-      <div className={cn("w-full transition-opacity duration-300 z-10", isBurningAnimationActive ? "opacity-0 pointer-events-none" : "opacity-100")}>
-        {isMounted ? appContent : null}
+        <AshgroundHeader />
+
+        {isBurningAnimationActive && burnImageUri && (
+          <NewNoteBurningEffect
+            bgImageUri={burnImageUri}
+            onComplete={() => setIsBurningAnimationActive(false)}
+          />
+        )}
+
+        <div className={cn("w-full transition-opacity duration-300 z-10", isBurningAnimationActive ? "opacity-0 pointer-events-none" : "opacity-100")}>
+          {isMounted ? appContent : null}
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
