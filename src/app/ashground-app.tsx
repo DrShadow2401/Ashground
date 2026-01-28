@@ -4,7 +4,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { Editor } from '@tiptap/react';
 import PageEditor, { type PageEditorRef } from '@/components/page-editor';
-import NewNoteBurningEffect from '@/components/new-note-burning-effect';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -24,13 +23,13 @@ import ExportTools from '@/components/tool-sections/export-tools';
 import UnsentLetter from '@/components/unsent-letter';
 import { Flame, Home, Brush, Eye, Upload, Feather, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import html2canvas from 'html2canvas';
 import { CelestialSphere } from '@/components/ui/celestial-sphere';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LimelightNav } from '@/components/ui/limelight-nav';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { FireSphere } from '@/components/ui/fire-sphere';
 
 
 type PageBackground = 'plain' | 'lined' | 'grid';
@@ -48,7 +47,6 @@ export default function AshgroundApp() {
   const [isMounted, setIsMounted] = useState(false);
   const [isEditorInitialized, setIsEditorInitialized] = useState(false);
   const [isBurningAnimationActive, setIsBurningAnimationActive] = useState(false);
-  const [burnImageUri, setBurnImageUri] = useState<string | null>(null);
 
   const editorRef = useRef<Editor | null>(null);
   const pageEditorComponentRef = useRef<PageEditorRef>(null);
@@ -183,46 +181,19 @@ export default function AshgroundApp() {
   };
 
   const handleBurnEverything = async () => {
-    const exportableElement = pageEditorComponentRef.current?.getExportableElement();
-    if (exportableElement) {
-      try {
-        const canvas = await html2canvas(exportableElement, {
-          scale: 1, 
-          backgroundColor: '#F8F5F0',
-          useCORS: true,
-        });
-        const imageUri = canvas.toDataURL('image/png');
-        setBurnImageUri(imageUri);
-        setIsBurningAnimationActive(true);
+    setIsBurningAnimationActive(true);
 
-        setTimeout(() => {
-          setNoteTitle('Untitled Note');
-          setNoteContent('<p></p>');
-          if (pageEditorComponentRef.current) {
-            pageEditorComponentRef.current.clearCanvas();
-          }
-          localStorage.removeItem('ashground_title');
-          localStorage.removeItem('ashground_note');
-
-          setIsBurningAnimationActive(false);
-          setBurnImageUri(null);
-
-        }, ANIMATION_DURATION);
-      } catch (error) {
-        console.error("Failed to capture note for burning animation:", error);
-        setNoteTitle('Untitled Note');
-        setNoteContent('<p></p>');
-        if (pageEditorComponentRef.current) pageEditorComponentRef.current.clearCanvas();
-        localStorage.removeItem('ashground_title');
-        localStorage.removeItem('ashground_note');
-      }
-    } else {
+    setTimeout(() => {
       setNoteTitle('Untitled Note');
       setNoteContent('<p></p>');
-      if (pageEditorComponentRef.current) pageEditorComponentRef.current.clearCanvas();
+      if (pageEditorComponentRef.current) {
+        pageEditorComponentRef.current.clearCanvas();
+      }
       localStorage.removeItem('ashground_title');
       localStorage.removeItem('ashground_note');
-    }
+
+      setIsBurningAnimationActive(false);
+    }, ANIMATION_DURATION);
   };
 
   const ToolPanelsContent = (
@@ -271,11 +242,8 @@ export default function AshgroundApp() {
           className="fixed top-0 left-0 w-full h-full -z-10 hidden dark:block"
         />
 
-        {isBurningAnimationActive && burnImageUri && (
-          <NewNoteBurningEffect
-            bgImageUri={burnImageUri}
-            onComplete={() => setIsBurningAnimationActive(false)}
-          />
+        {isBurningAnimationActive && (
+          <FireSphere className="fixed top-0 left-0 w-full h-full z-[1000]" />
         )}
         
         <div className={cn(

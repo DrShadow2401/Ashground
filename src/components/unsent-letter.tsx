@@ -2,7 +2,6 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import html2canvas from 'html2canvas';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -18,8 +17,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import NewNoteBurningEffect from '@/components/new-note-burning-effect';
 import { cn } from '@/lib/utils';
+import { FireSphere } from './ui/fire-sphere';
 
 const ANIMATION_DURATION = 5000;
 
@@ -31,64 +30,28 @@ export default function UnsentLetter() {
   const [from, setFrom] = useState('');
 
   const [isBurningAnimationActive, setIsBurningAnimationActive] = useState(false);
-  const [burnImageUri, setBurnImageUri] = useState<string | null>(null);
 
   const letterContentRef = useRef<HTMLDivElement>(null);
 
   const handleBurnLetter = async () => {
-    const letterElement = letterContentRef.current;
-    if (letterElement) {
-      try {
-        const canvas = await html2canvas(letterElement, {
-          scale: 1,
-          backgroundColor: null, // Transparent background for capture
-          useCORS: true,
-          // Capture full scroll height
-          windowHeight: letterElement.scrollHeight
-        });
-        const imageUri = canvas.toDataURL('image/png');
-        setBurnImageUri(imageUri);
-        setIsBurningAnimationActive(true);
-
-        setTimeout(() => {
-          // Clear all fields
-          setTo('');
-          setOpening('');
-          setBody('');
-          setClosing('');
-          setFrom('');
-
-          // Reset animation state
-          setIsBurningAnimationActive(false);
-          setBurnImageUri(null);
-
-        }, ANIMATION_DURATION);
-      } catch (error) {
-        console.error("Failed to capture letter for burning animation:", error);
-        // Fallback to clearing content without animation
-        setTo('');
-        setOpening('');
-        setBody('');
-        setClosing('');
-        setFrom('');
-      }
-    } else {
-      // Fallback for when the element isn't found
+    setIsBurningAnimationActive(true);
+    setTimeout(() => {
+      // Clear all fields
       setTo('');
       setOpening('');
       setBody('');
       setClosing('');
       setFrom('');
-    }
+
+      // Reset animation state
+      setIsBurningAnimationActive(false);
+    }, ANIMATION_DURATION);
   };
 
   return (
     <div className="relative flex-grow flex flex-col overflow-hidden">
-        {isBurningAnimationActive && burnImageUri && (
-          <NewNoteBurningEffect
-            bgImageUri={burnImageUri}
-            onComplete={() => setIsBurningAnimationActive(false)}
-          />
+        {isBurningAnimationActive && (
+          <FireSphere className="fixed top-0 left-0 w-full h-full z-[1000]" />
         )}
         
         <div className={cn(
