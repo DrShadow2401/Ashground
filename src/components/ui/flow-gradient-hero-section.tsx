@@ -1,3 +1,4 @@
+
 "use client";
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
@@ -339,7 +340,6 @@ export default function LiquidGradient({
         {ctaText}
       </button>
 
-      {/* Pause/Play Button */}
       {showPauseButton && (
         <button
           onClick={() => setIsPlaying(!isPlaying)}
@@ -360,9 +360,13 @@ export default function LiquidGradient({
       )}
 
       <footer className={`footer-main ${isDarkMode ? 'dark' : ''}`}>
-        <a href="https://haikkashiyani.kesug.com/?i=1" target="_blank" rel="noopener noreferrer">
-          Made By Haik
-        </a>
+          <a
+            href="https://questonin.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            By Questonin
+          </a>
       </footer>
     </div>
   );
