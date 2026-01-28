@@ -63,6 +63,7 @@ export default function AshgroundApp() {
   const [canUndoDrawing, setCanUndoDrawing] = useState<boolean>(false);
 
   const isDrawingMode = activeToolPanel === 'draw';
+  const isLetterView = activeToolPanel === 'letter';
 
   const navItems = [
     { id: 'home', icon: <Home />, label: 'Home' },
@@ -258,7 +259,10 @@ export default function AshgroundApp() {
 
   return (
     <div className="main-app-container">
-      <div className="h-screen w-screen overflow-hidden relative">
+      <div className={cn(
+        "relative w-full",
+        !isLetterView && "h-screen overflow-hidden"
+      )}>
         <CelestialSphere
           hue={250}
           speed={0.2}
@@ -274,7 +278,11 @@ export default function AshgroundApp() {
           />
         )}
         
-        <div className={cn("w-full h-full transition-opacity duration-300 z-10 p-4 flex flex-col", isBurningAnimationActive ? "opacity-0 pointer-events-none" : "opacity-100")}>
+        <div className={cn(
+          "w-full transition-opacity duration-300 z-10 p-4 flex flex-col",
+          isLetterView ? "min-h-screen" : "h-full",
+          isBurningAnimationActive ? "opacity-0 pointer-events-none" : "opacity-100"
+        )}>
             {isMounted ? (
               <>
                 <div className="flex-shrink-0 mb-4">
@@ -349,7 +357,7 @@ export default function AshgroundApp() {
                   )}
                 </div>
                 
-                {activeToolPanel === 'letter' ? (
+                {isLetterView ? (
                   <UnsentLetter />
                 ) : (
                   isMobile ? (
