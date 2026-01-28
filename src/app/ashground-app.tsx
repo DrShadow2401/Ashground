@@ -3,12 +3,9 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { Editor } from '@tiptap/react';
-import AshgroundHeader from '@/components/ashground-header';
 import PageEditor, { type PageEditorRef } from '@/components/page-editor';
 import NewNoteBurningEffect from '@/components/new-note-burning-effect';
-import { LimelightNav } from '@/components/ui/limelight-nav';
 import { Button } from '@/components/ui/button';
-import { Tabs } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,22 +21,26 @@ import HomeTools from '@/components/tool-sections/home-tools';
 import DrawTools from '@/components/tool-sections/draw-tools';
 import ViewTools from '@/components/tool-sections/view-tools';
 import ExportTools from '@/components/tool-sections/export-tools';
-import { Flame, Home, Pencil, Eye, Share2 } from 'lucide-react';
+import { Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import html2canvas from 'html2canvas';
 import { CelestialSphere } from '@/components/ui/celestial-sphere';
+
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 
 type PageBackground = 'plain' | 'lined' | 'grid';
 type PageTheme = 'light' | 'dark' | 'pastel';
 export type LineStyle = 'solid' | 'dashed' | 'dotted';
 
-const ANIMATION_DURATION = 5000; // Increased duration for new animation
+const ANIMATION_DURATION = 5000;
 
 export default function AshgroundApp() {
   const [noteTitle, setNoteTitle] = useState<string>('Untitled Note');
   const [noteContent, setNoteContent] = useState<string>('<p></p>');
-  const [activeTab, setActiveTab] = useState<string>('home');
+  const [activeToolPanel, setActiveToolPanel] = useState<string | undefined>('home');
   const [pageBackground, setPageBackground] = useState<PageBackground>('plain');
   const [pageTheme, setPageTheme] = useState<PageTheme>('light');
   const [isMounted, setIsMounted] = useState(false);
@@ -57,20 +58,7 @@ export default function AshgroundApp() {
   const [currentLineStyle, setCurrentLineStyle] = useState<LineStyle>('solid');
   const [canUndoDrawing, setCanUndoDrawing] = useState<boolean>(false);
 
-
-  const navItems = [
-    { id: 'home', icon: <Home />, label: 'Home' },
-    { id: 'draw', icon: <Pencil />, label: 'Draw' },
-    { id: 'view', icon: <Eye />, label: 'View' },
-    { id: 'export', icon: <Share2 />, label: 'Export' },
-  ];
-
-  const tabValues = ['home', 'draw', 'view', 'export'];
-
-  const handleTabChange = (index: number) => {
-    setActiveTab(tabValues[index]);
-  };
-
+  const isDrawingMode = activeToolPanel === 'draw';
 
   useEffect(() => {
     setIsMounted(true);
@@ -137,10 +125,10 @@ export default function AshgroundApp() {
   }, [pageTheme, isMounted]);
 
   useEffect(() => {
-    if (activeTab !== 'draw' && currentDrawTool !== null) {
+    if (!isDrawingMode && currentDrawTool !== null) {
       setCurrentDrawTool(null);
     }
-  }, [activeTab, currentDrawTool]);
+  }, [isDrawingMode, currentDrawTool]);
 
   const handleEditorReady = useCallback(() => {
     setIsEditorInitialized(true);
@@ -226,112 +214,9 @@ export default function AshgroundApp() {
     }
   };
 
-  const appContent = (
-    <>
-      <div className="flex flex-col items-center gap-4 px-2 sm:flex-row sm:justify-center sm:gap-6 w-full max-w-4xl mx-auto mb-8">
-        <LimelightNav
-          items={navItems}
-          onTabChange={handleTabChange}
-          defaultActiveIndex={tabValues.indexOf(activeTab)}
-        />
-
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button
-              size="icon"
-              variant="outline"
-              className="rounded-full h-10 w-10
-                         border-2 border-amber-500 dark:border-amber-400
-                         bg-muted/30 dark:bg-muted/20
-                         text-amber-500 dark:text-amber-400
-                         shadow-md hover:shadow-lg
-                         hover:bg-amber-500/10 dark:hover:bg-amber-400/10
-                         hover:text-amber-600 dark:hover:text-amber-300
-                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 dark:focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
-                         transition-all duration-150 ease-in-out flex items-center justify-center"
-              title="Burn it Down"
-              disabled={!isEditorInitialized || isBurningAnimationActive}
-            >
-              <Flame className="w-5 h-5" />
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle> Burn it down like my GPA </AlertDialogTitle>
-              <AlertDialogDescription>
-                No more EmOtIoNaL DaMaGe
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleBurnEverything}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                Burn
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
-
-      <Tabs value={activeTab} className="w-full max-w-4xl mx-auto">
-        <div className="max-w-3xl mx-auto mb-6">
-          <div className="bg-muted p-3 rounded-lg shadow-inner min-h-[52px] flex justify-center items-start">
-            {activeTab === 'home' && (isEditorInitialized ? <HomeTools editorRef={editorRef} /> : <p className="text-muted-foreground text-sm">Editor loading...</p>)}
-            {activeTab === 'draw' && (
-              <DrawTools
-                activeTool={currentDrawTool}
-                onToolChange={setCurrentDrawTool}
-                currentDrawColor={drawColor}
-                onDrawColorChange={setDrawColor}
-                currentStrokeWidth={drawStrokeWidth}
-                onStrokeWidthChange={setDrawStrokeWidth}
-                currentLineStyle={currentLineStyle}
-                onLineStyleChange={setCurrentLineStyle}
-                onClearCanvas={handleClearCanvas}
-                onUndoDrawing={handleUndoDrawing}
-                canUndoDrawing={canUndoDrawing}
-              />
-            )}
-            {activeTab === 'view' && (
-              <ViewTools
-                selectedBackground={pageBackground}
-                onBackgroundChange={setPageBackground}
-                selectedTheme={pageTheme}
-                onThemeChange={setPageTheme}
-              />
-            )}
-            {activeTab === 'export' && <ExportTools noteTitle={noteTitle} getExportableElement={getExportableElementForPdf} />}
-          </div>
-        </div>
-
-        <PageEditor
-          ref={pageEditorComponentRef}
-          editorTiptapRef={editorRef}
-          onEditorReady={handleEditorReady}
-          noteTitle={noteTitle}
-          onNoteTitleChange={setNoteTitle}
-          noteContent={noteContent}
-          onNoteChange={handleNoteContentChange}
-          backgroundStyle={pageBackground}
-          pageTheme={pageTheme}
-          isDrawingMode={activeTab === 'draw'}
-          currentDrawTool={currentDrawTool}
-          drawColor={drawColor}
-          drawStrokeWidth={drawStrokeWidth}
-          currentLineStyle={currentLineStyle}
-          onDrawColorChange={setDrawColor}
-          onUndoStateChange={handleDrawingUndoStateChange}
-        />
-      </Tabs>
-    </>
-  );
-
-
   return (
     <div className="main-app-container">
-      <div className="flex flex-col items-center py-6 px-4 overflow-x-hidden relative">
+      <div className="h-screen w-screen overflow-hidden relative">
         <CelestialSphere
           hue={250}
           speed={0.2}
@@ -340,17 +225,127 @@ export default function AshgroundApp() {
           className="fixed top-0 left-0 w-full h-full -z-10 hidden dark:block"
         />
 
-        <AshgroundHeader />
-
         {isBurningAnimationActive && burnImageUri && (
           <NewNoteBurningEffect
             bgImageUri={burnImageUri}
             onComplete={() => setIsBurningAnimationActive(false)}
           />
         )}
+        
+        <div className={cn("w-full h-full transition-opacity duration-300 z-10 p-4", isBurningAnimationActive ? "opacity-0 pointer-events-none" : "opacity-100")}>
+            {isMounted ? (
+                <ResizablePanelGroup direction="horizontal" className="h-full w-full rounded-none border-none bg-transparent shadow-none">
+                    <ResizablePanel defaultSize={25} minSize={20} className="!overflow-y-auto bg-card/80 backdrop-blur-sm rounded-lg border p-0">
+                        <div className="flex flex-col h-full">
+                            <div className="p-4 border-b flex justify-between items-center">
+                                <h1 className="font-headline text-2xl font-bold text-foreground">ASHGROUND</h1>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      size="icon"
+                                      variant="outline"
+                                      className="rounded-full h-10 w-10 border-2 border-amber-500 dark:border-amber-400 bg-transparent text-amber-500 dark:text-amber-400 shadow-md hover:shadow-lg hover:bg-amber-500/10 dark:hover:bg-amber-400/10 hover:text-amber-600 dark:hover:text-amber-300"
+                                      title="Burn it Down"
+                                      disabled={!isEditorInitialized || isBurningAnimationActive}
+                                    >
+                                      <Flame className="w-5 h-5" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle> Burn it down like my GPA </AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        No more EmOtIoNaL DaMaGe
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={handleBurnEverything}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      >
+                                        Burn
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                            </div>
+                            
+                            <ScrollArea className="flex-1">
+                                <Accordion type="single" collapsible className="w-full" defaultValue="home" onValueChange={(value) => setActiveToolPanel(value || undefined)}>
+                                    <AccordionItem value="home">
+                                        <AccordionTrigger className="px-4 text-base font-medium">Home</AccordionTrigger>
+                                        <AccordionContent className="p-4 pt-0">
+                                            {isEditorInitialized ? <HomeTools editorRef={editorRef} /> : <p className="text-muted-foreground text-sm px-4">Editor loading...</p>}
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                    
+                                    <AccordionItem value="draw">
+                                        <AccordionTrigger className="px-4 text-base font-medium">Draw</AccordionTrigger>
+                                        <AccordionContent className="p-4 pt-0">
+                                            <DrawTools
+                                                activeTool={currentDrawTool}
+                                                onToolChange={setCurrentDrawTool}
+                                                currentDrawColor={drawColor}
+                                                onDrawColorChange={setDrawColor}
+                                                currentStrokeWidth={drawStrokeWidth}
+                                                onStrokeWidthChange={setDrawStrokeWidth}
+                                                currentLineStyle={currentLineStyle}
+                                                onLineStyleChange={setCurrentLineStyle}
+                                                onClearCanvas={handleClearCanvas}
+                                                onUndoDrawing={handleUndoDrawing}
+                                                canUndoDrawing={canUndoDrawing}
+                                            />
+                                        </AccordionContent>
+                                    </AccordionItem>
 
-        <div className={cn("w-full transition-opacity duration-300 z-10", isBurningAnimationActive ? "opacity-0 pointer-events-none" : "opacity-100")}>
-          {isMounted ? appContent : null}
+                                    <AccordionItem value="view">
+                                        <AccordionTrigger className="px-4 text-base font-medium">View</AccordionTrigger>
+                                        <AccordionContent className="p-4 pt-0">
+                                            <ViewTools
+                                                selectedBackground={pageBackground}
+                                                onBackgroundChange={setPageBackground}
+                                                selectedTheme={pageTheme}
+                                                onThemeChange={setPageTheme}
+                                            />
+                                        </AccordionContent>
+                                    </AccordionItem>
+
+                                    <AccordionItem value="export">
+                                        <AccordionTrigger className="px-4 text-base font-medium">Export</AccordionTrigger>
+                                        <AccordionContent className="p-4 pt-0">
+                                            <ExportTools noteTitle={noteTitle} getExportableElement={getExportableElementForPdf} />
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                </Accordion>
+                            </ScrollArea>
+                        </div>
+                    </ResizablePanel>
+
+                    <ResizableHandle withHandle />
+
+                    <ResizablePanel defaultSize={75} className="bg-transparent border-none p-0 pl-4">
+                        <PageEditor
+                            ref={pageEditorComponentRef}
+                            editorTiptapRef={editorRef}
+                            onEditorReady={handleEditorReady}
+                            noteTitle={noteTitle}
+                            onNoteTitleChange={setNoteTitle}
+                            noteContent={noteContent}
+                            onNoteChange={handleNoteContentChange}
+                            backgroundStyle={pageBackground}
+                            pageTheme={pageTheme}
+                            isDrawingMode={isDrawingMode}
+                            currentDrawTool={currentDrawTool}
+                            drawColor={drawColor}
+                            drawStrokeWidth={drawStrokeWidth}
+                            currentLineStyle={currentLineStyle}
+                            onDrawColorChange={setDrawColor}
+                            onUndoStateChange={handleDrawingUndoStateChange}
+                        />
+                    </ResizablePanel>
+                </ResizablePanelGroup>
+            ) : null}
         </div>
       </div>
     </div>

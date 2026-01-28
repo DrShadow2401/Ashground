@@ -559,7 +559,7 @@ const PageEditor = forwardRef<PageEditorRef, PageEditorProps>(({
       id="page-editor-export-area"
       ref={exportableAreaRef}
       className={cn(
-        'w-full max-w-3xl mx-auto p-8 md:p-12 rounded-xl shadow-xl min-h-[60vh] flex flex-col transition-colors duration-300 relative',
+        'w-full h-full p-8 md:p-12 rounded-xl shadow-xl flex flex-col transition-colors duration-300 relative',
         themeClassMap[pageTheme]
       )}
     >
