@@ -29,7 +29,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { LimelightNav } from '@/components/ui/limelight-nav';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import NewNoteBurningEffect from '@/components/new-note-burning-effect';
+import BurnAnimation from '@/components/ui/burn-animation';
 import html2canvas from 'html2canvas';
 
 
@@ -273,10 +273,7 @@ export default function AshgroundApp() {
         />
 
         {isBurningAnimationActive && burnImageUri && (
-          <NewNoteBurningEffect bgImageUri={burnImageUri} onComplete={() => {
-              setIsBurningAnimationActive(false);
-              setBurnImageUri(null);
-          }} />
+          <BurnAnimation bgImageUri={burnImageUri} />
         )}
         
         <div className={cn(

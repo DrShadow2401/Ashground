@@ -18,7 +18,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { cn } from '@/lib/utils';
-import NewNoteBurningEffect from './new-note-burning-effect';
+import BurnAnimation from '@/components/ui/burn-animation';
 import html2canvas from 'html2canvas';
 
 const ANIMATION_DURATION = 5000;
@@ -83,10 +83,7 @@ export default function UnsentLetter() {
   return (
     <div className="relative flex-grow flex flex-col overflow-hidden">
         {isBurningAnimationActive && burnImageUri && (
-          <NewNoteBurningEffect bgImageUri={burnImageUri} onComplete={() => {
-              setIsBurningAnimationActive(false);
-              setBurnImageUri(null);
-          }} />
+          <BurnAnimation bgImageUri={burnImageUri} />
         )}
         
         <div className={cn(
