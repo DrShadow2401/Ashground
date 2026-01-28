@@ -19,7 +19,7 @@ import HomeTools from '@/components/tool-sections/home-tools';
 import DrawTools from '@/components/tool-sections/draw-tools';
 import ViewTools from '@/components/tool-sections/view-tools';
 import ExportTools from '@/components/tool-sections/export-tools';
-import UnsentMessages from '@/components/unsent-messages';
+import UnsentPanel from '@/components/unsent-panel';
 import { Flame, Home, Brush, Eye, Upload, MessageSquare, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CelestialSphere } from '@/components/ui/celestial-sphere';
@@ -357,7 +357,7 @@ export default function AshgroundApp() {
                 
                 {isUnsentView ? (
                   <div className="flex-grow flex justify-center items-start min-h-0">
-                    <UnsentMessages />
+                    <UnsentPanel />
                   </div>
                 ) : (
                   isMobile ? (
