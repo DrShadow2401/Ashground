@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -20,8 +19,8 @@ import HomeTools from '@/components/tool-sections/home-tools';
 import DrawTools from '@/components/tool-sections/draw-tools';
 import ViewTools from '@/components/tool-sections/view-tools';
 import ExportTools from '@/components/tool-sections/export-tools';
-import UnsentLetter from '@/components/unsent-letter';
-import { Flame, Home, Brush, Eye, Upload, Feather, Menu } from 'lucide-react';
+import UnsentMessages from '@/components/unsent-messages';
+import { Flame, Home, Brush, Eye, Upload, MessageSquare, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CelestialSphere } from '@/components/ui/celestial-sphere';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
@@ -63,14 +62,14 @@ export default function AshgroundApp() {
   const [canUndoDrawing, setCanUndoDrawing] = useState<boolean>(false);
 
   const isDrawingMode = activeToolPanel === 'draw';
-  const isLetterView = activeToolPanel === 'letter';
+  const isUnsentView = activeToolPanel === 'unsent';
 
   const navItems = [
     { id: 'home', icon: <Home />, label: 'Home' },
     { id: 'draw', icon: <Brush />, label: 'Draw' },
     { id: 'view', icon: <Eye />, label: 'View' },
     { id: 'export', icon: <Upload />, label: 'Export' },
-    { id: 'letter', icon: <Feather />, label: 'Letter' },
+    { id: 'unsent', icon: <MessageSquare />, label: 'Unsent' },
   ];
 
   useEffect(() => {
@@ -257,7 +256,7 @@ export default function AshgroundApp() {
     <div className="main-app-container">
       <div className={cn(
         "relative w-full min-h-screen",
-        !isLetterView && "overflow-hidden"
+        !isUnsentView && "overflow-hidden"
       )}>
         <CelestialSphere
           hue={250}
@@ -273,7 +272,7 @@ export default function AshgroundApp() {
         
         <div className={cn(
           "w-full transition-opacity duration-300 z-10 p-4 flex flex-col",
-          !isLetterView ? "h-screen" : "",
+          !isUnsentView ? "h-screen" : "",
           isBurningAnimationActive ? "opacity-0 pointer-events-none" : "opacity-100"
         )}>
             {isMounted ? (
@@ -310,7 +309,7 @@ export default function AshgroundApp() {
                           </SheetContent>
                         </Sheet>
                       )}
-                      {!isLetterView && (
+                      {!isUnsentView && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
@@ -356,8 +355,10 @@ export default function AshgroundApp() {
                   )}
                 </div>
                 
-                {isLetterView ? (
-                  <UnsentLetter />
+                {isUnsentView ? (
+                  <div className="flex-grow flex justify-center items-start min-h-0">
+                    <UnsentMessages />
+                  </div>
                 ) : (
                   isMobile ? (
                      <div className="flex-grow rounded-lg border bg-card/50 backdrop-blur-sm min-h-0">
