@@ -363,7 +363,7 @@ export default function AshgroundApp() {
                   isMobile ? (
                      <div className="flex-grow rounded-lg border bg-card/50 backdrop-blur-sm">
                         <ScrollArea className="h-full">
-                          <div className="p-4 sm:p-6 md:p-8 h-full">
+                          <div className="p-2 sm:p-3 h-full">
                               <PageEditor
                                   ref={pageEditorComponentRef}
                                   editorTiptapRef={editorRef}
@@ -387,15 +387,15 @@ export default function AshgroundApp() {
                       </div>
                   ) : (
                     <ResizablePanelGroup direction="horizontal" className="flex-grow rounded-lg border bg-card/50 backdrop-blur-sm">
-                        <ResizablePanel defaultSize={25} minSize={20} className="!overflow-y-auto p-0">
+                        <ResizablePanel defaultSize={20} minSize={15} className="!overflow-y-auto p-0">
                            {ToolPanelsContent}
                         </ResizablePanel>
 
                         <ResizableHandle withHandle />
 
-                        <ResizablePanel defaultSize={75} className="bg-transparent p-0">
+                        <ResizablePanel defaultSize={80} className="bg-transparent p-0">
                           <ScrollArea className="h-full">
-                             <div className="p-4 h-full">
+                             <div className="p-2 md:p-4 h-full">
                                 <PageEditor
                                     ref={pageEditorComponentRef}
                                     editorTiptapRef={editorRef}
