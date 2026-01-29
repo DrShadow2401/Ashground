@@ -11,6 +11,7 @@ import html2canvas from 'html2canvas';
 import NeuralBackground from '@/components/ui/neural-background';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
 type Mode = 'messages' | 'letter';
 type MessageLayout = 'minimal' | 'classic' | 'green' | 'photo';
@@ -116,7 +117,7 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose, theme }) =
   const renderMessagesUI = () => (
     <div className="flex flex-col h-full">
       <ScrollArea className="flex-grow">
-        <div className="p-4 md:p-6 flex flex-col justify-end min-h-full">
+        <div className="p-4 pt-2 md:p-6 flex flex-col justify-end min-h-full">
           {messagesToShow.map((msg, index) => (
             <motion.div
               key={index}
@@ -143,7 +144,7 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose, theme }) =
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Write what you can't say..."
-          className="w-full bg-transparent border-0 focus-visible:ring-0 text-foreground placeholder:text-muted-foreground resize-none text-base p-2"
+          className="w-full bg-transparent border-0 focus-visible:ring-0 text-foreground placeholder:text-muted-foreground resize-none text-base p-2 min-h-[44px] max-h-[150px]"
           rows={1}
         />
         <button onClick={handlePseudoSend} className="hidden">Send</button>
@@ -153,7 +154,7 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose, theme }) =
 
   const renderLetterUI = () => (
     <ScrollArea className="flex-grow">
-      <div className="p-4 md:p-8 flex flex-col font-body text-foreground">
+      <div className="p-4 md:p-6 flex flex-col font-body text-foreground">
         <Textarea
           value={opening}
           onChange={(e) => setOpening(e.target.value)}
@@ -191,7 +192,7 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose, theme }) =
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
       className={cn(
-        "relative w-full h-full flex flex-col",
+        "w-full h-full flex flex-col",
         theme === 'dark' ? 'bg-[#0a0a0a]/50 text-gray-200' : 'bg-background/50 text-foreground',
         isExiting && "opacity-0"
       )}
@@ -211,22 +212,22 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose, theme }) =
       )}
 
       <div className={cn(
-        "relative z-10 w-full h-full flex flex-col transition-opacity duration-300 p-2 md:p-4",
+        "relative z-10 w-full flex-grow min-h-0 flex flex-col transition-opacity duration-300 p-2 md:p-4",
         isBurning && "opacity-0 pointer-events-none"
       )}>
 
         {/* Writing Surface */}
         <div ref={captureRef} className={cn(
           "w-full flex-grow min-h-0 flex flex-col rounded-2xl border shadow-2xl overflow-hidden backdrop-blur-xl",
-           theme === 'dark' ? 'bg-black/40 border-white/10' : 'bg-card/60 border-border'
+           theme === 'dark' ? 'bg-[#111111]/90 border-white/10' : 'bg-background/95 border-border'
         )}>
             {/* Header */}
-            <div className="flex-shrink-0 p-4 flex justify-between items-center border-b border-border">
+            <div className="flex-shrink-0 px-4 pt-4 pb-2 md:px-6 md:pt-6 md:pb-3 flex justify-between items-center">
                 <Input
                     value={to}
                     onChange={(e) => setTo(e.target.value)}
                     placeholder="To: A person, a memory, the void…"
-                    className="text-lg bg-transparent border-0 h-auto p-1 text-muted-foreground placeholder:text-muted-foreground/80 focus-visible:ring-0 flex-grow"
+                    className="text-lg bg-transparent border-0 h-auto p-1 text-foreground placeholder:text-muted-foreground focus-visible:ring-0 flex-grow"
                 />
                 <Button
                     onClick={handleBurn}
@@ -238,6 +239,7 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose, theme }) =
                     <Flame size={20} />
                 </Button>
             </div>
+            <Separator className="mx-4 md:mx-6 w-auto bg-border/50 mb-2 md:mb-4" />
             
             {/* Main Content */}
             <main className="flex-grow flex flex-col min-h-0">
