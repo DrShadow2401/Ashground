@@ -358,7 +358,7 @@ export default function AshgroundApp() {
                 <div className="flex-grow min-h-0 flex flex-col">
                   {activeToolPanel === 'unsent' ? (
                     <div className="h-full">
-                      <UnsentExperience onClose={handleCloseUnsent} />
+                      <UnsentExperience onClose={handleCloseUnsent} theme={pageTheme} />
                     </div>
                   ) : (
                     <>

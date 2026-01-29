@@ -14,12 +14,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 type Mode = 'messages' | 'letter';
 type MessageLayout = 'minimal' | 'classic' | 'green' | 'photo';
+type Theme = 'light' | 'dark';
 
 interface UnsentExperienceProps {
   onClose: () => void;
+  theme: Theme;
 }
 
-const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose }) => {
+const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose, theme }) => {
   const [mode, setMode] = useState<Mode>('messages');
   const [messageLayout, setMessageLayout] = useState<MessageLayout>('minimal');
 
@@ -52,12 +54,16 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose }) => {
 
   const handleBurn = async () => {
     if (!captureRef.current) return;
+    
+    const originalBackgroundColor = captureRef.current.style.backgroundColor;
+    captureRef.current.style.backgroundColor = theme === 'dark' ? '#000000' : '#FFFFFF';
+
 
     try {
       const canvas = await html2canvas(captureRef.current, {
         scale: 1.5,
         useCORS: true,
-        backgroundColor: '#000000', // Match the dark background
+        backgroundColor: theme === 'dark' ? '#000000' : '#FFFFFF',
         removeContainer: true,
       });
       const imageUri = canvas.toDataURL('image/png');
@@ -65,6 +71,10 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose }) => {
       setIsBurning(true);
     } catch (error) {
       console.error("Failed to capture for burning:", error);
+    } finally {
+        if(captureRef.current) {
+           captureRef.current.style.backgroundColor = originalBackgroundColor;
+        }
     }
 
     setTimeout(() => {
@@ -95,10 +105,10 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose }) => {
   };
 
   const messageLayouts = {
-    minimal: { bubbleBg: 'bg-blue-600/60', bubbleText: 'text-white' },
-    classic: { bubbleBg: 'bg-gray-700/60', bubbleText: 'text-gray-100' },
-    green: { bubbleBg: 'bg-green-700/60', bubbleText: 'text-white' },
-    photo: { bubbleBg: 'bg-black/30', bubbleText: 'text-white' },
+    minimal: { bubbleBg: 'bg-primary', bubbleText: 'text-primary-foreground' },
+    classic: { bubbleBg: 'bg-secondary', bubbleText: 'text-secondary-foreground' },
+    green: { bubbleBg: 'dark:bg-green-900/70 bg-green-100/90', bubbleText: 'dark:text-green-100 text-green-900' },
+    photo: { bubbleBg: 'dark:bg-black/30 bg-white/30', bubbleText: 'text-foreground' },
   };
 
   const currentMessageLayout = messageLayouts[messageLayout];
@@ -127,13 +137,13 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose }) => {
           <div ref={messageEndRef} />
         </div>
       </ScrollArea>
-      <div className="flex-shrink-0 p-3 md:p-4 border-t border-white/10">
+      <div className="flex-shrink-0 p-3 md:p-4 border-t border-border">
         <Textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Write what you can't say..."
-          className="w-full bg-transparent border-0 focus-visible:ring-0 text-gray-200 placeholder:text-gray-500 resize-none text-base p-2"
+          className="w-full bg-transparent border-0 focus-visible:ring-0 text-foreground placeholder:text-muted-foreground resize-none text-base p-2"
           rows={1}
         />
         <button onClick={handlePseudoSend} className="hidden">Send</button>
@@ -143,32 +153,32 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose }) => {
 
   const renderLetterUI = () => (
     <ScrollArea className="flex-grow">
-      <div className="p-4 md:p-8 flex flex-col font-body text-gray-300">
+      <div className="p-4 md:p-8 flex flex-col font-body text-foreground">
         <Textarea
           value={opening}
           onChange={(e) => setOpening(e.target.value)}
           placeholder="Dear..."
-          className="text-lg bg-transparent border-0 rounded-none focus-visible:ring-0 resize-none p-1 mb-6"
+          className="text-lg bg-transparent border-0 rounded-none focus-visible:ring-0 resize-none p-1 mb-6 placeholder:text-muted-foreground"
           rows={1}
         />
         <Textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder="Let it all out..."
-          className="text-lg bg-transparent border-0 focus-visible:ring-0 resize-y min-h-[40vh] flex-grow p-1 mb-6"
+          className="text-lg bg-transparent border-0 focus-visible:ring-0 resize-y min-h-[40vh] flex-grow p-1 mb-6 placeholder:text-muted-foreground"
         />
         <Textarea
           value={closing}
           onChange={(e) => setClosing(e.target.value)}
           placeholder="Yours,"
-          className="text-lg bg-transparent border-0 rounded-none focus-visible:ring-0 resize-none p-1 mb-8"
+          className="text-lg bg-transparent border-0 rounded-none focus-visible:ring-0 resize-none p-1 mb-8 placeholder:text-muted-foreground"
           rows={1}
         />
          <Input
             value={from}
             onChange={(e) => setFrom(e.target.value)}
             placeholder="Anonymous"
-            className="text-lg bg-transparent border-0 rounded-none focus-visible:ring-0 p-1 h-auto"
+            className="text-lg bg-transparent border-0 rounded-none focus-visible:ring-0 p-1 h-auto placeholder:text-muted-foreground"
         />
       </div>
     </ScrollArea>
@@ -181,22 +191,23 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose }) => {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
       className={cn(
-        "relative w-full h-full flex flex-col items-center justify-center bg-[#0a0a0a] text-gray-200",
+        "relative w-full h-full flex flex-col items-center justify-center",
+        theme === 'dark' ? 'bg-[#0a0a0a] text-gray-200' : 'bg-background text-foreground',
         isExiting && "opacity-0"
       )}
     >
-      <NeuralBackground className="absolute inset-0 opacity-25" trailOpacity={0.08} particleCount={300} speed={0.7} />
+      {theme === 'dark' && <NeuralBackground className="absolute inset-0 opacity-25" trailOpacity={0.08} particleCount={300} speed={0.7} />}
       <Button
         onClick={handleClose}
         variant="ghost"
         size="icon"
-        className="absolute top-4 right-4 z-20 text-gray-500 hover:text-gray-200 hover:bg-white/5 rounded-full"
+        className="absolute top-4 right-4 z-20 text-muted-foreground hover:text-foreground hover:bg-accent rounded-full"
       >
         <X size={22} />
       </Button>
 
       {isBurning && burnImageUri && (
-        <BurnAnimation bgImageUri={burnImageUri} isLightMode={false} />
+        <BurnAnimation bgImageUri={burnImageUri} isLightMode={theme === 'light'} />
       )}
 
       <div className={cn(
@@ -205,20 +216,23 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose }) => {
       )}>
 
         {/* Writing Surface */}
-        <div ref={captureRef} className="w-full max-w-2xl h-full flex flex-col bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+        <div ref={captureRef} className={cn(
+          "w-full max-w-2xl h-full flex flex-col rounded-2xl border shadow-2xl overflow-hidden backdrop-blur-xl",
+           theme === 'dark' ? 'bg-black/40 border-white/10' : 'bg-card/60 border-border'
+        )}>
             {/* Header */}
-            <div className="flex-shrink-0 p-4 flex justify-between items-center border-b border-white/10">
+            <div className="flex-shrink-0 p-4 flex justify-between items-center border-b border-border">
                 <Input
                     value={to}
                     onChange={(e) => setTo(e.target.value)}
                     placeholder="To: A person, a memory, the void…"
-                    className="text-lg bg-transparent border-0 h-auto p-1 text-gray-400 placeholder:text-gray-500 focus-visible:ring-0 flex-grow"
+                    className="text-lg bg-transparent border-0 h-auto p-1 text-muted-foreground placeholder:text-muted-foreground/80 focus-visible:ring-0 flex-grow"
                 />
                 <Button
                     onClick={handleBurn}
                     variant="ghost"
                     size="icon"
-                    className="text-amber-400/70 hover:text-amber-400 hover:bg-white/5 rounded-full"
+                    className="text-amber-500/80 dark:text-amber-400/70 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-accent rounded-full"
                     title="Burn this message"
                 >
                     <Flame size={20} />
@@ -242,17 +256,17 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose }) => {
             </main>
             
             {/* Footer */}
-            <footer className="flex-shrink-0 p-3 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500 border-t border-white/10">
+            <footer className="flex-shrink-0 p-3 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-muted-foreground border-t border-border">
                <div className="flex items-center gap-4">
                     <button
                         onClick={() => setMode('messages')}
-                        className={cn("transition-colors px-2 py-1 rounded-md", mode === 'messages' ? 'text-gray-200 bg-white/10' : 'hover:text-gray-300')}
+                        className={cn("transition-colors px-2 py-1 rounded-md", mode === 'messages' ? 'text-foreground bg-muted' : 'hover:text-foreground/80')}
                     >
                         Messages
                     </button>
                      <button
                         onClick={() => setMode('letter')}
-                        className={cn("transition-colors px-2 py-1 rounded-md", mode === 'letter' ? 'text-gray-200 bg-white/10' : 'hover:text-gray-300')}
+                        className={cn("transition-colors px-2 py-1 rounded-md", mode === 'letter' ? 'text-foreground bg-muted' : 'hover:text-foreground/80')}
                     >
                         Letter
                     </button>
@@ -271,7 +285,7 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose }) => {
                             <button
                                 key={layoutKey}
                                 onClick={() => setMessageLayout(layoutKey as MessageLayout)}
-                                className={cn("capitalize transition-colors text-xs sm:text-sm px-2 py-1 rounded-md", messageLayout === layoutKey ? 'text-gray-200 bg-white/10' : 'hover:text-gray-300')}
+                                className={cn("capitalize transition-colors text-xs sm:text-sm px-2 py-1 rounded-md", messageLayout === layoutKey ? 'text-foreground bg-muted' : 'hover:text-foreground/80')}
                             >
                                 {layoutKey}
                             </button>
@@ -282,7 +296,7 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose }) => {
             </footer>
         </div>
 
-        <p className="text-center text-xs text-gray-600 pt-6">
+        <p className="text-center text-xs text-muted-foreground pt-6">
             You don’t have to send this to let it go.
         </p>
       </div>
