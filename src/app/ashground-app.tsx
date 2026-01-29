@@ -19,7 +19,6 @@ import HomeTools from '@/components/tool-sections/home-tools';
 import DrawTools from '@/components/tool-sections/draw-tools';
 import ViewTools from '@/components/tool-sections/view-tools';
 import ExportTools from '@/components/tool-sections/export-tools';
-import UnsentExperience from '@/components/unsent-experience';
 import { Flame, Home, Brush, Eye, Upload, MessageSquare, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CelestialSphere } from '@/components/ui/celestial-sphere';
@@ -38,10 +37,14 @@ export type LineStyle = 'solid' | 'dashed' | 'dotted';
 
 const ANIMATION_DURATION = 5000;
 
-export default function AshgroundApp() {
+interface AshgroundAppProps {
+  activeToolPanel: string;
+  setActiveToolPanel: (tool: string) => void;
+}
+
+export default function AshgroundApp({ activeToolPanel, setActiveToolPanel }: AshgroundAppProps) {
   const [noteTitle, setNoteTitle] = useState<string>('Untitled Note');
   const [noteContent, setNoteContent] = useState<string>('<p></p>');
-  const [activeToolPanel, setActiveToolPanel] = useState<string>('home');
   const [pageBackground, setPageBackground] = useState<PageBackground>('plain');
   const [pageTheme, setPageTheme] = useState<PageTheme>('light');
   const [isMounted, setIsMounted] = useState(false);
@@ -61,7 +64,6 @@ export default function AshgroundApp() {
   const [currentLineStyle, setCurrentLineStyle] = useState<LineStyle>('solid');
   const [canUndoDrawing, setCanUndoDrawing] = useState<boolean>(false);
 
-  const isUnsentView = activeToolPanel === 'unsent';
   const isDrawingMode = activeToolPanel === 'draw';
 
   const navItems = [
@@ -220,10 +222,6 @@ export default function AshgroundApp() {
     }, ANIMATION_DURATION);
   };
   
-  const handleCloseUnsent = () => {
-    setActiveToolPanel('home');
-  };
-
   const ToolPanelsContent = (
     <ScrollArea className="h-full p-4">
         {activeToolPanel === 'home' && (isEditorInitialized ? <HomeTools editorRef={editorRef} /> : <p className="text-muted-foreground text-sm px-4">Editor loading...</p>)}
@@ -255,10 +253,6 @@ export default function AshgroundApp() {
         )}
     </ScrollArea>
   );
-
-  if (isUnsentView) {
-    return <UnsentExperience onClose={handleCloseUnsent} />;
-  }
 
   return (
     <div className="main-app-container h-full w-full">
