@@ -253,9 +253,9 @@ export default function AshgroundApp() {
   );
 
   return (
-    <div className="main-app-container">
+    <div className="main-app-container h-full">
       <div className={cn(
-        "relative w-full min-h-screen",
+        "relative w-full h-full",
         !isUnsentView && "overflow-hidden"
       )}>
         <CelestialSphere
@@ -272,7 +272,7 @@ export default function AshgroundApp() {
         
         <div className={cn(
           "w-full transition-opacity duration-300 z-10 p-4 flex flex-col",
-          !isUnsentView ? "h-screen" : "",
+          !isUnsentView ? "h-full" : "",
           isBurningAnimationActive ? "opacity-0 pointer-events-none" : "opacity-100"
         )}>
             {isMounted ? (
