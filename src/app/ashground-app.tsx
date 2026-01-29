@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -253,11 +254,8 @@ export default function AshgroundApp() {
   );
 
   return (
-    <div className="main-app-container h-full">
-      <div className={cn(
-        "relative w-full h-full",
-        !isUnsentView && "overflow-hidden"
-      )}>
+    <div className="main-app-container h-full w-full">
+      <div className={cn("relative w-full h-full")}>
         <CelestialSphere
           hue={250}
           speed={0.2}
@@ -346,7 +344,7 @@ export default function AshgroundApp() {
                     <div className="flex justify-center">
                        <LimelightNav
                           items={navItems}
-                          defaultActiveIndex={0}
+                          defaultActiveIndex={navItems.findIndex(item => item.id === activeToolPanel)}
                           onTabChange={(index) => setActiveToolPanel(navItems[index].id)}
                           className="mx-auto"
                           />
@@ -354,47 +352,16 @@ export default function AshgroundApp() {
                   )}
                 </div>
                 
-                {isUnsentView ? (
-                  <div className="flex-grow flex justify-center items-start min-h-0">
-                    <UnsentPanel />
-                  </div>
-                ) : (
-                  isMobile ? (
-                     <div className="flex-grow rounded-lg border bg-card/50 backdrop-blur-sm min-h-0">
-                        <ScrollArea className="h-full">
-                          <div className="p-2 sm:p-3 min-h-full">
-                              <PageEditor
-                                  ref={pageEditorComponentRef}
-                                  editorTiptapRef={editorRef}
-                                  onEditorReady={handleEditorReady}
-                                  noteTitle={noteTitle}
-                                  onNoteTitleChange={setNoteTitle}
-                                  noteContent={noteContent}
-                                  onNoteChange={handleNoteContentChange}
-                                  backgroundStyle={pageBackground}
-                                  pageTheme={pageTheme}
-                                  isDrawingMode={isDrawingMode}
-                                  currentDrawTool={currentDrawTool}
-                                  drawColor={drawColor}
-                                  drawStrokeWidth={drawStrokeWidth}
-                                  currentLineStyle={currentLineStyle}
-                                  onDrawColorChange={setDrawColor}
-                                  onUndoStateChange={handleDrawingUndoStateChange}
-                              />
-                            </div>
-                        </ScrollArea>
+                <div className="flex-grow min-h-0">
+                  {isUnsentView ? (
+                      <div className="h-full w-full overflow-y-auto rounded-lg">
+                        <UnsentPanel />
                       </div>
                   ) : (
-                    <ResizablePanelGroup direction="horizontal" className="flex-grow min-h-0 rounded-lg border bg-card/50 backdrop-blur-sm">
-                        <ResizablePanel defaultSize={20} minSize={15} className="!overflow-y-auto p-0">
-                           {ToolPanelsContent}
-                        </ResizablePanel>
-
-                        <ResizableHandle withHandle />
-
-                        <ResizablePanel defaultSize={80} className="bg-transparent p-0">
+                    isMobile ? (
+                       <div className="h-full rounded-lg border bg-card/50 backdrop-blur-sm">
                           <ScrollArea className="h-full">
-                             <div className="p-2 md:p-4 min-h-full">
+                            <div className="p-2 sm:p-3 min-h-full">
                                 <PageEditor
                                     ref={pageEditorComponentRef}
                                     editorTiptapRef={editorRef}
@@ -415,10 +382,43 @@ export default function AshgroundApp() {
                                 />
                               </div>
                           </ScrollArea>
-                        </ResizablePanel>
-                    </ResizablePanelGroup>
-                  )
-                )}
+                        </div>
+                    ) : (
+                      <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg border bg-card/50 backdrop-blur-sm">
+                          <ResizablePanel defaultSize={20} minSize={15} className="!overflow-y-auto p-0">
+                             {ToolPanelsContent}
+                          </ResizablePanel>
+
+                          <ResizableHandle withHandle />
+
+                          <ResizablePanel defaultSize={80} className="bg-transparent p-0">
+                            <ScrollArea className="h-full">
+                               <div className="p-2 md:p-4 min-h-full">
+                                  <PageEditor
+                                      ref={pageEditorComponentRef}
+                                      editorTiptapRef={editorRef}
+                                      onEditorReady={handleEditorReady}
+                                      noteTitle={noteTitle}
+                                      onNoteTitleChange={setNoteTitle}
+                                      noteContent={noteContent}
+                                      onNoteChange={handleNoteContentChange}
+                                      backgroundStyle={pageBackground}
+                                      pageTheme={pageTheme}
+                                      isDrawingMode={isDrawingMode}
+                                      currentDrawTool={currentDrawTool}
+                                      drawColor={drawColor}
+                                      drawStrokeWidth={drawStrokeWidth}
+                                      currentLineStyle={currentLineStyle}
+                                      onDrawColorChange={setDrawColor}
+                                      onUndoStateChange={handleDrawingUndoStateChange}
+                                  />
+                                </div>
+                            </ScrollArea>
+                          </ResizablePanel>
+                      </ResizablePanelGroup>
+                    )
+                  )}
+                </div>
               </>
             ) : null}
         </div>
