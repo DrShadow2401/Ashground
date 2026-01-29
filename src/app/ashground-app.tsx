@@ -62,6 +62,7 @@ export default function AshgroundApp() {
   const [canUndoDrawing, setCanUndoDrawing] = useState<boolean>(false);
 
   const isUnsentView = activeToolPanel === 'unsent';
+  const isDrawingMode = activeToolPanel === 'draw';
 
   const navItems = [
     { id: 'home', icon: <Home />, label: 'Home' },
