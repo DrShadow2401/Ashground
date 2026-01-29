@@ -105,9 +105,9 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose, theme }) =
   };
 
   const messageLayouts = {
-    minimal: { bubbleBg: 'bg-primary', bubbleText: 'text-primary-foreground' },
+    minimal: { bubbleBg: 'bg-primary/80', bubbleText: 'text-primary-foreground' },
     classic: { bubbleBg: 'bg-secondary', bubbleText: 'text-secondary-foreground' },
-    green: { bubbleBg: 'dark:bg-green-900/70 bg-green-100/90', bubbleText: 'dark:text-green-100 text-green-900' },
+    green: { bubbleBg: 'dark:bg-green-900/70 bg-green-200/90', bubbleText: 'dark:text-green-100 text-green-900' },
     photo: { bubbleBg: 'dark:bg-black/30 bg-white/30', bubbleText: 'text-foreground' },
   };
 
@@ -191,8 +191,8 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose, theme }) =
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
       className={cn(
-        "relative w-full h-full flex flex-col items-center justify-center",
-        theme === 'dark' ? 'bg-[#0a0a0a] text-gray-200' : 'bg-background text-foreground',
+        "relative w-full h-full flex flex-col",
+        theme === 'dark' ? 'bg-[#0a0a0a]/50 text-gray-200' : 'bg-background/50 text-foreground',
         isExiting && "opacity-0"
       )}
     >
@@ -211,13 +211,13 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose, theme }) =
       )}
 
       <div className={cn(
-        "relative z-10 w-full h-full flex flex-col justify-center items-center transition-opacity duration-300 p-4 sm:p-6 md:p-8",
+        "relative z-10 w-full h-full flex flex-col transition-opacity duration-300 p-2 md:p-4",
         isBurning && "opacity-0 pointer-events-none"
       )}>
 
         {/* Writing Surface */}
         <div ref={captureRef} className={cn(
-          "w-full max-w-2xl h-full flex flex-col rounded-2xl border shadow-2xl overflow-hidden backdrop-blur-xl",
+          "w-full flex-grow min-h-0 flex flex-col rounded-2xl border shadow-2xl overflow-hidden backdrop-blur-xl",
            theme === 'dark' ? 'bg-black/40 border-white/10' : 'bg-card/60 border-border'
         )}>
             {/* Header */}
@@ -296,7 +296,7 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose, theme }) =
             </footer>
         </div>
 
-        <p className="text-center text-xs text-muted-foreground pt-6">
+        <p className="text-center text-xs text-muted-foreground pt-4 flex-shrink-0">
             You don’t have to send this to let it go.
         </p>
       </div>
