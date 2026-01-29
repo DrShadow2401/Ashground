@@ -29,6 +29,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import BurnAnimation from '@/components/ui/burn-animation';
 import html2canvas from 'html2canvas';
+import UnsentExperience from '@/components/unsent-experience';
 
 
 type PageBackground = 'plain' | 'lined' | 'grid';
@@ -37,12 +38,8 @@ export type LineStyle = 'solid' | 'dashed' | 'dotted';
 
 const ANIMATION_DURATION = 5000;
 
-interface AshgroundAppProps {
-  activeToolPanel: string;
-  setActiveToolPanel: (tool: string) => void;
-}
-
-export default function AshgroundApp({ activeToolPanel, setActiveToolPanel }: AshgroundAppProps) {
+export default function AshgroundApp() {
+  const [activeToolPanel, setActiveToolPanel] = useState('home');
   const [noteTitle, setNoteTitle] = useState<string>('Untitled Note');
   const [noteContent, setNoteContent] = useState<string>('<p></p>');
   const [pageBackground, setPageBackground] = useState<PageBackground>('plain');
@@ -222,6 +219,10 @@ export default function AshgroundApp({ activeToolPanel, setActiveToolPanel }: As
     }, ANIMATION_DURATION);
   };
   
+  const handleCloseUnsent = () => {
+    setActiveToolPanel('home');
+  };
+
   const ToolPanelsContent = (
     <ScrollArea className="h-full p-4">
         {activeToolPanel === 'home' && (isEditorInitialized ? <HomeTools editorRef={editorRef} /> : <p className="text-muted-foreground text-sm px-4">Editor loading...</p>)}
@@ -280,7 +281,7 @@ export default function AshgroundApp({ activeToolPanel, setActiveToolPanel }: As
                     <h1 className="font-headline text-2xl font-bold text-foreground">ASHGROUND</h1>
                     
                     <div className="flex items-center gap-2">
-                      {isMobile && (
+                      {isMobile && activeToolPanel !== 'unsent' && (
                         <Sheet open={isMobileSheetOpen} onOpenChange={setMobileSheetOpen}>
                           <SheetTrigger asChild>
                             <Button variant="outline" size="icon" className="h-10 w-10">
@@ -308,6 +309,7 @@ export default function AshgroundApp({ activeToolPanel, setActiveToolPanel }: As
                         </Sheet>
                       )}
                       
+                      {activeToolPanel !== 'unsent' && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
@@ -338,7 +340,7 @@ export default function AshgroundApp({ activeToolPanel, setActiveToolPanel }: As
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
-                      
+                      )}
                     </div>
                   </div>
                   {!isMobile && (
@@ -353,44 +355,17 @@ export default function AshgroundApp({ activeToolPanel, setActiveToolPanel }: As
                   )}
                 </div>
                 
-                <div className="flex-grow min-h-0">
-                  
-                    {isMobile ? (
-                       <div className="h-full rounded-lg border bg-card/50 backdrop-blur-sm">
-                          <ScrollArea className="h-full">
-                            <div className="p-2 sm:p-3 min-h-full">
-                                <PageEditor
-                                    ref={pageEditorComponentRef}
-                                    editorTiptapRef={editorRef}
-                                    onEditorReady={handleEditorReady}
-                                    noteTitle={noteTitle}
-                                    onNoteTitleChange={setNoteTitle}
-                                    noteContent={noteContent}
-                                    onNoteChange={handleNoteContentChange}
-                                    backgroundStyle={pageBackground}
-                                    pageTheme={pageTheme}
-                                    isDrawingMode={isDrawingMode}
-                                    currentDrawTool={currentDrawTool}
-                                    drawColor={drawColor}
-                                    drawStrokeWidth={drawStrokeWidth}
-                                    currentLineStyle={currentLineStyle}
-                                    onDrawColorChange={setDrawColor}
-                                    onUndoStateChange={handleDrawingUndoStateChange}
-                                />
-                              </div>
-                          </ScrollArea>
-                        </div>
-                    ) : (
-                      <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg border bg-card/50 backdrop-blur-sm">
-                          <ResizablePanel defaultSize={20} minSize={15} className="!overflow-y-auto p-0">
-                             {ToolPanelsContent}
-                          </ResizablePanel>
-
-                          <ResizableHandle withHandle />
-
-                          <ResizablePanel defaultSize={80} className="bg-transparent p-0">
+                <div className="flex-grow min-h-0 flex flex-col">
+                  {activeToolPanel === 'unsent' ? (
+                    <div className="h-full">
+                      <UnsentExperience onClose={handleCloseUnsent} />
+                    </div>
+                  ) : (
+                    <>
+                      {isMobile ? (
+                         <div className="h-full rounded-lg border bg-card/50 backdrop-blur-sm">
                             <ScrollArea className="h-full">
-                               <div className="p-2 md:p-4 min-h-full">
+                              <div className="p-2 sm:p-3 min-h-full">
                                   <PageEditor
                                       ref={pageEditorComponentRef}
                                       editorTiptapRef={editorRef}
@@ -411,10 +386,43 @@ export default function AshgroundApp({ activeToolPanel, setActiveToolPanel }: As
                                   />
                                 </div>
                             </ScrollArea>
-                          </ResizablePanel>
-                      </ResizablePanelGroup>
-                    )
-                  }
+                          </div>
+                      ) : (
+                        <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg border bg-card/50 backdrop-blur-sm">
+                            <ResizablePanel defaultSize={20} minSize={15} className="!overflow-y-auto p-0">
+                               {ToolPanelsContent}
+                            </ResizablePanel>
+  
+                            <ResizableHandle withHandle />
+  
+                            <ResizablePanel defaultSize={80} className="bg-transparent p-0">
+                              <ScrollArea className="h-full">
+                                 <div className="p-2 md:p-4 min-h-full">
+                                    <PageEditor
+                                        ref={pageEditorComponentRef}
+                                        editorTiptapRef={editorRef}
+                                        onEditorReady={handleEditorReady}
+                                        noteTitle={noteTitle}
+                                        onNoteTitleChange={setNoteTitle}
+                                        noteContent={noteContent}
+                                        onNoteChange={handleNoteContentChange}
+                                        backgroundStyle={pageBackground}
+                                        pageTheme={pageTheme}
+                                        isDrawingMode={isDrawingMode}
+                                        currentDrawTool={currentDrawTool}
+                                        drawColor={drawColor}
+                                        drawStrokeWidth={drawStrokeWidth}
+                                        currentLineStyle={currentLineStyle}
+                                        onDrawColorChange={setDrawColor}
+                                        onUndoStateChange={handleDrawingUndoStateChange}
+                                    />
+                                  </div>
+                              </ScrollArea>
+                            </ResizablePanel>
+                        </ResizablePanelGroup>
+                      )}
+                    </>
+                  )}
                 </div>
               </>
             ) : null}

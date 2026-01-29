@@ -176,7 +176,7 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose }) => {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
       className={cn(
-        "fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0a0a0a] text-gray-200 p-4 sm:p-6 md:p-8",
+        "relative w-full h-full flex flex-col items-center justify-center bg-[#0a0a0a] text-gray-200",
         isExiting && "opacity-0"
       )}
     >
@@ -195,7 +195,7 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose }) => {
       )}
 
       <div className={cn(
-        "relative z-10 w-full h-full flex flex-col justify-center items-center transition-opacity duration-300",
+        "relative z-10 w-full h-full flex flex-col justify-center items-center transition-opacity duration-300 p-4 sm:p-6 md:p-8",
         isBurning && "opacity-0 pointer-events-none"
       )}>
 
