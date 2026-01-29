@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -20,7 +19,7 @@ import HomeTools from '@/components/tool-sections/home-tools';
 import DrawTools from '@/components/tool-sections/draw-tools';
 import ViewTools from '@/components/tool-sections/view-tools';
 import ExportTools from '@/components/tool-sections/export-tools';
-import UnsentPanel from '@/components/unsent-panel';
+import UnsentExperience from '@/components/unsent-experience';
 import { Flame, Home, Brush, Eye, Upload, MessageSquare, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CelestialSphere } from '@/components/ui/celestial-sphere';
@@ -62,7 +61,6 @@ export default function AshgroundApp() {
   const [currentLineStyle, setCurrentLineStyle] = useState<LineStyle>('solid');
   const [canUndoDrawing, setCanUndoDrawing] = useState<boolean>(false);
 
-  const isDrawingMode = activeToolPanel === 'draw';
   const isUnsentView = activeToolPanel === 'unsent';
 
   const navItems = [
@@ -220,6 +218,10 @@ export default function AshgroundApp() {
       setBurnImageUri(null);
     }, ANIMATION_DURATION);
   };
+  
+  const handleCloseUnsent = () => {
+    setActiveToolPanel('home');
+  };
 
   const ToolPanelsContent = (
     <ScrollArea className="h-full p-4">
@@ -252,6 +254,10 @@ export default function AshgroundApp() {
         )}
     </ScrollArea>
   );
+
+  if (isUnsentView) {
+    return <UnsentExperience onClose={handleCloseUnsent} />;
+  }
 
   return (
     <div className="main-app-container h-full w-full">
@@ -306,7 +312,7 @@ export default function AshgroundApp() {
                           </SheetContent>
                         </Sheet>
                       )}
-                      {!isUnsentView && (
+                      
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
@@ -337,7 +343,7 @@ export default function AshgroundApp() {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
-                      )}
+                      
                     </div>
                   </div>
                   {!isMobile && (
@@ -353,12 +359,8 @@ export default function AshgroundApp() {
                 </div>
                 
                 <div className="flex-grow min-h-0">
-                  {isUnsentView ? (
-                      <div className="h-full w-full overflow-y-auto rounded-lg">
-                        <UnsentPanel />
-                      </div>
-                  ) : (
-                    isMobile ? (
+                  
+                    {isMobile ? (
                        <div className="h-full rounded-lg border bg-card/50 backdrop-blur-sm">
                           <ScrollArea className="h-full">
                             <div className="p-2 sm:p-3 min-h-full">
@@ -417,7 +419,7 @@ export default function AshgroundApp() {
                           </ResizablePanel>
                       </ResizablePanelGroup>
                     )
-                  )}
+                  }
                 </div>
               </>
             ) : null}
