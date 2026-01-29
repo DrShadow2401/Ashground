@@ -16,10 +16,10 @@ export default function IntroPage() {
     <div className="relative w-full h-screen overflow-hidden flex flex-col justify-center items-center text-center p-4">
       <LiquidGradient showPauseButton={false} />
       <div className="absolute inset-0 flex flex-col justify-center items-center z-10 text-foreground">
-        <h1 className="font-body text-7xl md:text-9xl font-bold tracking-tighter">
+        <h1 className="font-body text-5xl md:text-7xl font-bold tracking-tighter">
           ASHGROUND
         </h1>
-        <div className="max-w-2xl mx-auto my-8 text-foreground/80 text-lg md:text-xl space-y-2">
+        <div className="max-w-2xl mx-auto my-8 text-foreground/80 text-base md:text-lg space-y-2">
           <p>A private space to write what you feel.</p>
           <p>There are no accounts and no history.</p>
           <p>What you write is gone when you close the page.</p>
