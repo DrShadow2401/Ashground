@@ -10,6 +10,7 @@ import BurnAnimation from '@/components/ui/burn-animation';
 import html2canvas from 'html2canvas';
 import NeuralBackground from '@/components/ui/neural-background';
 import { AnimatePresence, motion } from 'framer-motion';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type Mode = 'messages' | 'letter';
 type MessageLayout = 'minimal' | 'classic' | 'green' | 'photo';
@@ -104,26 +105,28 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose }) => {
 
   const renderMessagesUI = () => (
     <div className="flex flex-col h-full">
-      <div className="flex-grow overflow-y-auto p-4 md:p-6 flex flex-col justify-end">
-        {messagesToShow.map((msg, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="flex justify-end mb-3"
-          >
-            <div className={cn(
-              "py-3 px-4 rounded-2xl max-w-[80%] break-words shadow-md backdrop-blur-sm",
-              currentMessageLayout.bubbleBg,
-              currentMessageLayout.bubbleText,
-            )}>
-              <p className="text-sm md:text-base leading-relaxed">{msg}</p>
-            </div>
-          </motion.div>
-        ))}
-        <div ref={messageEndRef} />
-      </div>
+      <ScrollArea className="flex-grow">
+        <div className="p-4 md:p-6 flex flex-col justify-end min-h-full">
+          {messagesToShow.map((msg, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="flex justify-end mb-3"
+            >
+              <div className={cn(
+                "py-3 px-4 rounded-2xl max-w-[80%] break-words shadow-md backdrop-blur-sm",
+                currentMessageLayout.bubbleBg,
+                currentMessageLayout.bubbleText,
+              )}>
+                <p className="text-sm md:text-base leading-relaxed">{msg}</p>
+              </div>
+            </motion.div>
+          ))}
+          <div ref={messageEndRef} />
+        </div>
+      </ScrollArea>
       <div className="flex-shrink-0 p-3 md:p-4 border-t border-white/10">
         <Textarea
           value={message}
@@ -139,34 +142,36 @@ const UnsentExperience: React.FC<UnsentExperienceProps> = ({ onClose }) => {
   );
 
   const renderLetterUI = () => (
-    <div className="flex-grow overflow-y-auto p-4 md:p-8 flex flex-col font-body text-gray-300">
-      <Textarea
-        value={opening}
-        onChange={(e) => setOpening(e.target.value)}
-        placeholder="Dear..."
-        className="text-lg bg-transparent border-0 rounded-none focus-visible:ring-0 resize-none p-1 mb-6"
-        rows={1}
-      />
-      <Textarea
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        placeholder="Let it all out..."
-        className="text-lg bg-transparent border-0 focus-visible:ring-0 resize-y min-h-[40vh] flex-grow p-1 mb-6"
-      />
-      <Textarea
-        value={closing}
-        onChange={(e) => setClosing(e.target.value)}
-        placeholder="Yours,"
-        className="text-lg bg-transparent border-0 rounded-none focus-visible:ring-0 resize-none p-1 mb-8"
-        rows={1}
-      />
-       <Input
-          value={from}
-          onChange={(e) => setFrom(e.target.value)}
-          placeholder="Anonymous"
-          className="text-lg bg-transparent border-0 rounded-none focus-visible:ring-0 p-1 h-auto"
-      />
-    </div>
+    <ScrollArea className="flex-grow">
+      <div className="p-4 md:p-8 flex flex-col font-body text-gray-300">
+        <Textarea
+          value={opening}
+          onChange={(e) => setOpening(e.target.value)}
+          placeholder="Dear..."
+          className="text-lg bg-transparent border-0 rounded-none focus-visible:ring-0 resize-none p-1 mb-6"
+          rows={1}
+        />
+        <Textarea
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          placeholder="Let it all out..."
+          className="text-lg bg-transparent border-0 focus-visible:ring-0 resize-y min-h-[40vh] flex-grow p-1 mb-6"
+        />
+        <Textarea
+          value={closing}
+          onChange={(e) => setClosing(e.target.value)}
+          placeholder="Yours,"
+          className="text-lg bg-transparent border-0 rounded-none focus-visible:ring-0 resize-none p-1 mb-8"
+          rows={1}
+        />
+         <Input
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            placeholder="Anonymous"
+            className="text-lg bg-transparent border-0 rounded-none focus-visible:ring-0 p-1 h-auto"
+        />
+      </div>
+    </ScrollArea>
   );
 
   return (
