@@ -27,7 +27,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LimelightNav } from '@/components/ui/limelight-nav';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import BurnAnimation from '@/components/ui/burn-animation';
 import html2canvas from 'html2canvas';
 
@@ -271,8 +271,7 @@ export default function AshgroundApp() {
         )}
         
         <div className={cn(
-          "w-full transition-opacity duration-300 z-10 p-4 flex flex-col",
-          !isUnsentView ? "h-full" : "",
+          "w-full transition-opacity duration-300 z-10 p-4 flex flex-col h-full",
           isBurningAnimationActive ? "opacity-0 pointer-events-none" : "opacity-100"
         )}>
             {isMounted ? (
