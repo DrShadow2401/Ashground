@@ -14,12 +14,14 @@ const BurnAnimation: React.FC<BurnAnimationProps> = ({ bgImageUri, isLightMode }
                 className="absolute inset-0 bg-cover bg-center"
                 style={{ backgroundImage: `url(${bgImageUri})` }}
             />
-            {/* The new intense spreading fire animation */}
-            <div className="absolute inset-0 mix-blend-screen">
+            
+            {/* Darkening overlay that intensifies the fire visuals */}
+            <div className="absolute inset-0 bg-black/40 mix-blend-multiply" />
+
+            {/* The new intense spreading fire animation - rendered directly for clarity */}
+            <div className="absolute inset-0">
                 <CellularFire />
             </div>
-            {/* Darkening overlay that intensifies as fire spreads */}
-            <div className="absolute inset-0 bg-black/30 mix-blend-multiply pointer-events-none" />
         </div>
     );
 };
