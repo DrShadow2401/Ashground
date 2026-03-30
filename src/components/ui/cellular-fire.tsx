@@ -19,7 +19,7 @@ export const CellularFire: React.FC<CellularFireProps> = ({ className }) => {
     let W = window.innerWidth;
     let H = window.innerHeight;
 
-    // Grid and image data variables - defined here so they are accessible to the loop
+    // Grid and image data variables
     let COLS: number;
     let ROWS: number;
     let grid: Float32Array;
@@ -27,6 +27,7 @@ export const CellularFire: React.FC<CellularFireProps> = ({ className }) => {
     let imageData: ImageData;
     let px: Uint8ClampedArray;
     let spreadCols: number = 2;
+    const spreadRate: number = 4; // columns per frame — FAST
 
     const initCanvas = () => {
       W = window.innerWidth;
@@ -34,7 +35,7 @@ export const CellularFire: React.FC<CellularFireProps> = ({ className }) => {
       canvas.width = W;
       canvas.height = H;
 
-      // Re-initialize all dependent values on resize to avoid stale references
+      // Re-initialize all dependent values on resize
       COLS = Math.floor(W / 3);
       ROWS = Math.floor(H / 3);
       grid = new Float32Array(COLS * ROWS);
@@ -58,9 +59,8 @@ export const CellularFire: React.FC<CellularFireProps> = ({ className }) => {
     const stepFire = () => {
       // inject heat at bottom of burned columns
       for (let c = 0; c < spreadCols && c < COLS; c++) {
-        // Change #2: grid fire starts higher (ROWS is H/3, so ROWS/6 is H/18)
         const base = Math.floor(ROWS / 6) - 1; 
-        if (base < 0) return; // Guard against small heights
+        if (base < 0) return; 
         
         for (let r = base; r < ROWS; r++) {
           grid[idx(c, r)] = 0.85 + Math.random() * 0.15;
@@ -231,12 +231,9 @@ export const CellularFire: React.FC<CellularFireProps> = ({ className }) => {
           particles.push({
             x: px2, y: py,
             vx: (Math.random() - 0.5) * 1.5,
-            // Change #1: Particle upward velocity
             vy: -(Math.random() * 12 + 6) * intensity, 
             life: 1.0,
-            // Change #4: Slower decay
             decay: Math.random() * 0.012 + 0.007,
-            // Change #3: Particle size
             size: Math.random() * 28 + 14, 
             wobble: Math.random() * Math.PI * 2
           });
