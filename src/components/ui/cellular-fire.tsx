@@ -59,11 +59,12 @@ export const CellularFire: React.FC<CellularFireProps> = ({ className }) => {
     const stepFire = () => {
       // inject heat at bottom of burned columns
       for (let c = 0; c < spreadCols && c < COLS; c++) {
-        const base = Math.floor(ROWS / 6) - 1; 
-        if (base < 0) return; 
+        // Corrected: Heat only at the very bottom
+        const base = ROWS - 4; 
+        if (base < 0) continue; 
         
         for (let r = base; r < ROWS; r++) {
-          grid[idx(c, r)] = 0.85 + Math.random() * 0.15;
+          grid[idx(c, r)] = 0.7 + Math.random() * 0.2;
         }
         // random hot spots mid-way to make it turbulent
         if (Math.random() < 0.3) {
