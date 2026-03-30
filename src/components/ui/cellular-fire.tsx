@@ -34,8 +34,8 @@ export const CellularFire: React.FC<CellularFireProps> = ({ className }) => {
     // Cellular fire grid
     const COLS = Math.floor(W / 3);
     const ROWS = Math.floor(H / 3);
-    let grid = new Float32Array(COLS * ROWS);
-    let next = new Float32Array(COLS * ROWS);
+    const grid = new Float32Array(COLS * ROWS);
+    const next = new Float32Array(COLS * ROWS);
     const imageData = ctx.createImageData(W, H);
     const px = imageData.data;
 
@@ -54,7 +54,8 @@ export const CellularFire: React.FC<CellularFireProps> = ({ className }) => {
     const stepFire = () => {
       // inject heat at bottom of burned columns
       for (let c = 0; c < spreadCols && c < COLS; c++) {
-        const base = ROWS - 1; // Inject at the very bottom of the grid
+        // Change #2: grid fire starts higher (ROWS is H/3, so ROWS/2 is H/6)
+        const base = Math.floor(ROWS / 2); 
         for (let r = base; r < ROWS; r++) {
           grid[idx(c, r)] = 0.85 + Math.random() * 0.15;
         }
@@ -224,10 +225,13 @@ export const CellularFire: React.FC<CellularFireProps> = ({ className }) => {
           particles.push({
             x: px2, y: py,
             vx: (Math.random() - 0.5) * 1.5,
-            vy: -(Math.random() * 6 + 3) * intensity,
+            // Change #1: Particle upward velocity
+            vy: -(Math.random() * 12 + 6) * intensity, 
             life: 1.0,
-            decay: Math.random() * 0.02 + 0.012,
-            size: Math.random() * 16 + 8,
+            // Change #4: Slower decay
+            decay: Math.random() * 0.012 + 0.007,
+            // Change #3: Particle size
+            size: Math.random() * 28 + 14, 
             wobble: Math.random() * Math.PI * 2
           });
         }
