@@ -19,29 +19,33 @@ export const CellularFire: React.FC<CellularFireProps> = ({ className }) => {
     let W = window.innerWidth;
     let H = window.innerHeight;
 
+    // Grid and image data variables - defined here so they are accessible to the loop
+    let COLS: number;
+    let ROWS: number;
+    let grid: Float32Array;
+    let next: Float32Array;
+    let imageData: ImageData;
+    let px: Uint8ClampedArray;
+    let spreadCols: number = 2;
+
     const initCanvas = () => {
       W = window.innerWidth;
       H = window.innerHeight;
       canvas.width = W;
       canvas.height = H;
+
+      // Re-initialize all dependent values on resize to avoid stale references
+      COLS = Math.floor(W / 3);
+      ROWS = Math.floor(H / 3);
+      grid = new Float32Array(COLS * ROWS);
+      next = new Float32Array(COLS * ROWS);
+      imageData = ctx.createImageData(W, H);
+      px = imageData.data;
+      spreadCols = 2; // Reset spread on resize
     };
 
     initCanvas();
     window.addEventListener('resize', initCanvas);
-
-    // --- NOISE-BASED FIRE using pixel simulation + particle layer ---
-
-    // Cellular fire grid
-    const COLS = Math.floor(W / 3);
-    const ROWS = Math.floor(H / 3);
-    const grid = new Float32Array(COLS * ROWS);
-    const next = new Float32Array(COLS * ROWS);
-    const imageData = ctx.createImageData(W, H);
-    const px = imageData.data;
-
-    // spread front
-    let spreadCols = 2;
-    const spreadRate = 4; // columns per frame — FAST
 
     // Particles for volumetric layer
     const particles: any[] = [];
@@ -54,8 +58,10 @@ export const CellularFire: React.FC<CellularFireProps> = ({ className }) => {
     const stepFire = () => {
       // inject heat at bottom of burned columns
       for (let c = 0; c < spreadCols && c < COLS; c++) {
-        // Change #2: grid fire starts higher (ROWS is H/3, so ROWS/2 is H/6)
-        const base = Math.floor(ROWS / 2); 
+        // Change #2: grid fire starts higher (ROWS is H/3, so ROWS/6 is H/18)
+        const base = Math.floor(ROWS / 6) - 1; 
+        if (base < 0) return; // Guard against small heights
+        
         for (let r = base; r < ROWS; r++) {
           grid[idx(c, r)] = 0.85 + Math.random() * 0.15;
         }
